@@ -16,6 +16,8 @@ class RecipeConan(ConanFile):
     def requirements(self):
         if self.options.build_tests:
            self.requires("gtest/cci.20210126")
+        self.requires("eigen/3.3.7@conan/stable")
+        self.requires("sophus/1.0.0")
 
     def config_options(self):
         if self.settings.os == "Windows":
