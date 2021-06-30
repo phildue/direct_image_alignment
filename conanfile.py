@@ -2,13 +2,13 @@ from conans import ConanFile, CMake, tools
 
 
 class RecipeConan(ConanFile):
-    name = "MyLibrary"
+    name = "direct_image_alignment"
     version = "1.0.0"
-    license = "https://github.com/phildue/lib_template/blob/master/LICENSE"
+    license = "https://github.com/phildue/direct_image_alignment/blob/master/LICENSE"
     author = "<Put your name here> <And your email here>"
-    url = "https://github.com/phildue/lib_template"
-    description = "Template for c++ lib as conan package."
-    topics = ("C++", "Conan", "DevOps")
+    url = "https://github.com/phildue/direct_image_alignment"
+    description = "https://github.com/phildue/direct_image_alignment/blob/master/README.md"
+    topics = ("C++", "Computer Vision", "Visual Odometry")
     settings = "os", "compiler", "build_type", "arch"
     options = {"shared": [True, False], "fPIC": [True, False], "build_tests":[True, False]}
     default_options = {"shared": False, "fPIC": True, "build_tests": False}

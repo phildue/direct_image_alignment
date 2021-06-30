@@ -1,16 +1,24 @@
 cmake_minimum_required(VERSION 3.8)
-project(MyLibrary VERSION 1.0.0)
+project(direct_image_alignment VERSION 1.0.0)
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/tools)
 include(Macros)
 
 set(sources
-		src/MyAlgorithm/MyAlgorithm.cpp
+		src/Frame.cpp
+		src/ImageAlignment.cpp
+		src/Feature2D.cpp
+		src/Point3D.cpp
+		src/Pose.cpp
 		)
 
 set(headers
-		src/MyAlgorithm/MyAlgorithm.h
-		include/MyLibrary/MyLibrary.h
+		src/Frame.h
+		src/ImageAlignment.h
+		src/Feature2D.h
+		src/Point3D.h
+		src/Pose.h
+		include/direct_image_alignment/direct_image_alignment.h
 		)
 
 setup_package(${PROJECT_NAME} ${PROJECT_VERSION} "${sources}" "${headers}" PD)
