@@ -1,3 +1,3 @@
-# lib_template
+# Direct Image Alignment
 
-Template for c++ lib as conan package.
+Implements a direct image alignment algorithm
