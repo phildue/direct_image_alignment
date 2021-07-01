@@ -17,4 +17,4 @@ namespace pd{
         Eigen::Vector3d Camera::image2ray(const Eigen::Vector2d &pImage) const {
             return _Kinv * Eigen::Vector3d({pImage.x(),pImage.y(),1});
         }
-}
+}}
