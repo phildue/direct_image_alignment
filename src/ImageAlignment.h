@@ -12,7 +12,8 @@ class ImageAlignment
 public:
 
     Pose::ShConstPtr align(Frame::ShConstPtr referenceFrame, Frame::ShConstPtr targetFrame);
-
+private:
+    int _levelMax,_levelMin;
 };
 
 }}

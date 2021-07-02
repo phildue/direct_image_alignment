@@ -6,11 +6,14 @@
 #define DIRECT_IMAGE_ALIGNMENT_CAMERA_H
 
 #include <Eigen/Dense>
+#include <memory>
 namespace pd{
     namespace vision {
 
         class Camera {
         public:
+            using ConstShPtr = std::shared_ptr<const Camera>;
+            using ShPtr = std::shared_ptr<Camera>;
             Eigen::Vector2d camera2image(const Eigen::Vector3d &pCamera) const;
             Eigen::Vector3d image2camera(const Eigen::Vector2d &pImage, double depth = 1.0) const;
             Eigen::Vector3d image2ray(const Eigen::Vector2d &pImage) const;

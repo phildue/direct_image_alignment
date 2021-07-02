@@ -1,7 +1,8 @@
 cmake_minimum_required(VERSION 3.8)
 project(direct_image_alignment VERSION 1.0.0)
 
-list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/tools)
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/tools
+		${CMAKE_BINARY_DIR}/)
 include(Macros)
 
 set(sources
@@ -11,6 +12,7 @@ set(sources
 		src/Point3D.cpp
 		src/Pose.cpp
 		src/Camera.cpp
+		src/math.cpp
 		)
 
 set(headers
@@ -20,6 +22,7 @@ set(headers
 		src/Point3D.h
 		src/Pose.h
 		src/Camera.h
+		src/math.h
 		include/direct_image_alignment/direct_image_alignment.h
 		)
 
@@ -27,8 +30,13 @@ setup_package(${PROJECT_NAME} ${PROJECT_VERSION} "${sources}" "${headers}" PD)
 
 
 # Dependencies
-find_package(Eigen3 3.3 REQUIRED)
-target_link_libraries(${PROJECT_NAME} Eigen3::Eigen)
+include(conanbuildinfo)
+conan_basic_setup(TARGETS)
+
+target_link_libraries(${PROJECT_NAME} CONAN_PKG::Eigen3)
+target_link_libraries(${PROJECT_NAME} CONAN_PKG::ceres-solver)
+target_link_libraries(${PROJECT_NAME} CONAN_PKG::sophus)
+
 
 # Add tests
 option(MyLibrary_BUILD_TESTS "Enable to build tests" ON)
