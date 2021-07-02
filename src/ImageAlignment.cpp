@@ -25,6 +25,7 @@ namespace vision{
 
         Frame::ShConstPtr  _frameRef,_frameTarget;
         const int _patchSize;
+        const int _patchArea;
         const int _patchSizeHalf;
         const int _level;
         const double _scale;
@@ -41,13 +42,17 @@ namespace vision{
                         _patchSizeHalf(patchSize/2){
 
             _patchesRef.resize(frameRef->features().size());
+            _jacobian = Eigen::MatrixXd(frameRef->features().size(),patchSize*patchSize*6);
             for ( int idxF = 0; idxF < frameRef->features().size(); idxF++)
             {
                 const auto& f = frameRef->features()[idxF];
                 if ( f->point() )
                 {
+                    const auto pCamera = frameRef->pose() * f->point()->position();
+                    const auto jacobianFeature = frameRef->camera()->J_xyz2uv(pCamera);
                     Eigen::MatrixXd patchRef(_patchSize,_patchSize);
                     const auto pImg = _frameRef->world2image(f->point()->position());
+                    int idxP = 0;
                     for (int i = 0; i < _patchSize; i++)
                     {
                         for (int j = 0; j < _patchSize; j++)
@@ -55,6 +60,10 @@ namespace vision{
                             patchRef(i,j) = math::bilinearInterpolation(_frameRef->grayImage(level),
                                                                          (pImg.y() - _patchSizeHalf + i) *_scale,
                                                                          (pImg.x() - _patchSizeHalf + j) *_scale);
+
+                            double dx = 0.5;
+                            double dy = 0.5;
+                            _jacobian.col(idxF*_patchArea + idxP) = (dx*jacobianFeature.row(0) + dy*jacobianFeature.row(1))*(frameRef->camera()->focalLength() / _scale);
 
                             //TODO compute Jacobian here
                         }

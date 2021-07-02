@@ -29,7 +29,8 @@ namespace pd{
             Camera::ConstShPtr camera() const { return _camera;};
             const std::vector<Feature2D::ShConstPtr>& features() const { return _features;}
             std::vector<Feature2D::ShConstPtr>& features() { return _features;}
-
+            Sophus::SE3d& pose() { return _pose;}
+            const Sophus::SE3d& pose() const { return _pose;}
         private:
             std::vector<Feature2D::ShConstPtr> _features;
             std::vector<Eigen::MatrixXd> _grayImagePyramid;
