@@ -10,10 +10,11 @@ namespace vision{
 class ImageAlignment
 {
 public:
-
-    Pose::ShConstPtr align(Frame::ShConstPtr referenceFrame, Frame::ShConstPtr targetFrame);
+    explicit ImageAlignment(uint32_t levelMax, uint32_t levelMin, uint32_t patchSize);
+    Sophus::SE3d align(Frame::ShConstPtr referenceFrame, Frame::ShConstPtr targetFrame);
 private:
-    int _levelMax,_levelMin;
+    const uint32_t _levelMax,_levelMin;
+    const uint32_t _patchSize;
 };
 
 }}

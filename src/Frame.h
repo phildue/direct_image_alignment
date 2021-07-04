@@ -20,6 +20,9 @@ namespace pd{
         public:
             using ShPtr = std::shared_ptr<Frame>;
             using ShConstPtr = std::shared_ptr<Frame>;
+
+            explicit  Frame(const Eigen::MatrixXd& grayImage, Camera::ConstShPtr camera,uint32_t levels, const Sophus::SE3d& pose = Sophus::SE3d());
+
             const Eigen::MatrixXd& grayImage(int level = 0) const;
             Eigen::MatrixXd& grayImage(int level = 0);
             Eigen::Vector2d world2image(const Eigen::Vector3d &pWorld) const;
@@ -28,9 +31,12 @@ namespace pd{
             Eigen::Vector3d image2camera(const Eigen::Vector2d &pImage, double depth = 1.0) const;
             Camera::ConstShPtr camera() const { return _camera;};
             const std::vector<Feature2D::ShConstPtr>& features() const { return _features;}
-            std::vector<Feature2D::ShConstPtr>& features() { return _features;}
+            uint32_t nObservedPoints() const;
             Sophus::SE3d& pose() { return _pose;}
             const Sophus::SE3d& pose() const { return _pose;}
+            uint32_t width(uint32_t level = 0) const;
+            uint32_t height(uint32_t level = 0) const;
+            bool isVisible(const Eigen::Vector2d& pImage, double border, uint32_t level = 0) const;
         private:
             std::vector<Feature2D::ShConstPtr> _features;
             std::vector<Eigen::MatrixXd> _grayImagePyramid;

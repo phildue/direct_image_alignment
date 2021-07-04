@@ -40,4 +40,10 @@ namespace pd{
             jacobian(1,5) = -x*z_inv;            // x/z
             return jacobian;
         }
+
+        Camera::Camera(double f, double cx, double cy) {
+            _K << f, 0, cx,
+               0, f, cy,
+               0, 0, 1;
+        }
     }}

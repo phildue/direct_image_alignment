@@ -8,7 +8,6 @@
 #include <memory>
 #include <vector>
 #include <Eigen/Dense>
-#include "Feature2D.h"
 
 namespace pd{
     namespace vision {
@@ -20,8 +19,9 @@ class Feature2D;
             using ShConstPtr = std::shared_ptr<Point3D>;
             const Eigen::Vector3d& position() const { return _position;}
             Eigen::Vector3d position() { return _position;}
+            const std::vector<std::shared_ptr<const Feature2D>>& features() const {return _features;}
         private:
-            std::vector<Feature2D::ShConstPtr> _features;
+            std::vector<std::shared_ptr<const Feature2D>> _features;
             Eigen::Vector3d _position;
         };
 

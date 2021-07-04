@@ -57,6 +57,10 @@ namespace pd{
                 return std::sqrt( sum / (patch1.rows() * patch1.cols()));
             }
 
+            Eigen::MatrixXd resize(const Eigen::MatrixXd &mat, double scale) {
+                return Eigen::MatrixXd();
+            }
+
         }
     }
 }

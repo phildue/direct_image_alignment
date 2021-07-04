@@ -6,7 +6,7 @@
 #define DIRECT_IMAGE_ALIGNMENT_FEATURE2D_H
 
 #include <memory>
-#include "Point3D.h"
+#include <Eigen/Dense>
 
 namespace pd{
     namespace vision{
@@ -16,9 +16,11 @@ public:
     using ShPtr = std::shared_ptr<Feature2D>;
     using ShConstPtr = std::shared_ptr<Feature2D>;
 
-    Point3D::ShConstPtr point() const {return _point;}
+    std::shared_ptr<const Point3D> point() const {return _point;}
+    const Eigen::Vector2d& position() const { return _position;}
 private:
-    Point3D::ShConstPtr _point;
+    std::shared_ptr<const Point3D> _point;
+    Eigen::Vector2d _position;
 };
 
     }
