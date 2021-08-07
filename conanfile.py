@@ -18,11 +18,20 @@ class RecipeConan(ConanFile):
            self.requires("gtest/cci.20210126")
         self.requires("eigen/3.3.7@conan/stable")
         self.requires("sophus/1.0.0")
-        self.requires("ceres-solver/2.0.0")
+
+     #   self.requires("ceres-solver/2.0.0") Broken
+        self.requires("glog/0.5.0")
+
+    def configure(self):
+        pass
+        #self.options["ceres-solver"].use_glog = True
+        #self.options["ceres-solver"].use_gflags = True
+
 
     def config_options(self):
         if self.settings.os == "Windows":
             del self.options.fPIC
+
 
     def export_sources(self):
         self.copy("src/*")

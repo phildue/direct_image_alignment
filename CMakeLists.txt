@@ -10,9 +10,9 @@ set(sources
 		src/ImageAlignment.cpp
 		src/Feature2D.cpp
 		src/Point3D.cpp
-		src/Pose.cpp
-		src/Camera.cpp
+        src/Camera.cpp
 		src/math.cpp
+		src/Log.cpp
 		)
 
 set(headers
@@ -20,22 +20,31 @@ set(headers
 		src/ImageAlignment.h
 		src/Feature2D.h
 		src/Point3D.h
-		src/Pose.h
-		src/Camera.h
+        src/Camera.h
 		src/math.h
+		src/Exceptions.h
+		src/Log.h
 		include/direct_image_alignment/direct_image_alignment.h
 		)
 
-setup_package(${PROJECT_NAME} ${PROJECT_VERSION} "${sources}" "${headers}" PD)
+pd_setup_lib(${PROJECT_NAME} ${PROJECT_VERSION} "${sources}" "${headers}" PD)
 
 
 # Dependencies
+
+
 include(conanbuildinfo)
 conan_basic_setup(TARGETS)
 
+#Cannot get ceres via conan since package is broken
+find_package(Ceres REQUIRED)
+target_link_libraries(${PROJECT_NAME} Ceres::ceres)
+#target_link_libraries(${PROJECT_NAME} CONAN_PKG::ceres-solver)
+
+
 target_link_libraries(${PROJECT_NAME} CONAN_PKG::Eigen3)
-target_link_libraries(${PROJECT_NAME} CONAN_PKG::ceres-solver)
 target_link_libraries(${PROJECT_NAME} CONAN_PKG::sophus)
+target_link_libraries(${PROJECT_NAME} CONAN_PKG::glog)
 
 
 # Add tests

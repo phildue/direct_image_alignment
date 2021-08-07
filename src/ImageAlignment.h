@@ -3,8 +3,7 @@
 
 
 #include "Frame.h"
-#include "Pose.h"
-
+#include <sophus/se3.hpp>
 namespace pd{
 namespace vision{
 class ImageAlignment
@@ -13,7 +12,7 @@ public:
     explicit ImageAlignment(uint32_t levelMax, uint32_t levelMin, uint32_t patchSize);
     Sophus::SE3d align(Frame::ShConstPtr referenceFrame, Frame::ShConstPtr targetFrame);
 private:
-    const uint32_t _levelMax,_levelMin;
+    const int _levelMax,_levelMin;
     const uint32_t _patchSize;
 };
 

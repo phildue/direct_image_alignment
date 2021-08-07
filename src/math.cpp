@@ -6,7 +6,7 @@ namespace pd{
     namespace vision{
         namespace math{
 
-            double bilinearInterpolation(const Eigen::MatrixXd& mat, double x, double y)
+            int bilinearInterpolation(const Eigen::MatrixXi& mat, double x, double y)
             {
                 /*We want to interpolate P
                  * http://supercomputingblog.com/graphics/coding-bilinear-interpolation/
@@ -19,27 +19,40 @@ namespace pd{
                  *    _______________________
                  *    x1      x            x2
                  * */
-                const int x1 = static_cast<int> ( std::floor(x) );
-                const int x2 = static_cast<int> ( std::ceil(x));
-                const int y1 = static_cast<int> ( std::floor(y) );
-                const int y2 = static_cast<int> ( std::ceil(y));
-                const double& Q11 = mat(x1,y1);
-                const double& Q12 = mat(x1,y2);
-                const double& Q21 = mat(x2,y1);
-                const double& Q22 = mat(x2,y2);
-                const double R1 = ((x2 - x)/(x2 - x1))*Q11 + ((x - x1)/(x2 - x1))*Q21;
+                const double x1 =  std::floor(x);
+                const double x2 =  std::ceil(x);
+                const double y1 =  std::floor(y);
+                const double y2 =  std::ceil(y);
+                const double Q11 = mat(static_cast<int>(y1),static_cast<int>(x1));
+                const double Q12 = mat(static_cast<int>(y1),static_cast<int>(x2));
+                const double Q21 = mat(static_cast<int>(y2),static_cast<int>(x1));
+                const double Q22 = mat(static_cast<int>(y2),static_cast<int>(x2));
+                double R1 = 0, R2 = 0;
 
-                const double R2 = ((x2 - x)/(x2 - x1))*Q12 + ((x - x1)/(x2 - x1))*Q22;
+                if (x2 == x1)
+                {
+                    R1 = Q11;
+                    R2 = Q12;
+                }else{
+                    R1 = ((x2 - x)/(x2 - x1))*Q11 + ((x - x1)/(x2 - x1))*Q21;
+                    R2 = ((x2 - x)/(x2 - x1))*Q12 + ((x - x1)/(x2 - x1))*Q22;
+                }
 
-                //After the two R values are calculated, the value of P can finally be calculated by a weighted average of R1 and R2.
+                double P = 0;
+                if (y2 == y1)
+                {
+                    P = R1;
+                }else{
+                    //After the two R values are calculated, the value of P can finally be calculated by a weighted average of R1 and R2.
+                    P = ((y2 - y)/(y2 - y1))*R1 + ((y - y1)/(y2- y1))*R2;
 
-                const double P = ((y2 - y)/(y2 - y1))*R1 + ((y - y1)/(y2- y1))*R2;
+                }
 
-                return P;
+                return static_cast<int>(P);
             }
 
 
-            double rmse(const Eigen::MatrixXd& patch1, const Eigen::MatrixXd& patch2)
+            double rmse(const Eigen::MatrixXi& patch1, const Eigen::MatrixXi& patch2)
             {
                 if (patch1.rows() != patch2.rows() || patch1.cols() != patch2.cols())
                 {
@@ -57,8 +70,8 @@ namespace pd{
                 return std::sqrt( sum / (patch1.rows() * patch1.cols()));
             }
 
-            Eigen::MatrixXd resize(const Eigen::MatrixXd &mat, double scale) {
-                return Eigen::MatrixXd();
+            Eigen::MatrixXi resize(const Eigen::MatrixXi &mat, double scale) {
+                return Eigen::MatrixXi();
             }
 
         }

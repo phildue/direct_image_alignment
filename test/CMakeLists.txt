@@ -9,14 +9,9 @@ if(NOT TARGET PD::direct_image_alignment)
 	find_package(direct_image_alignment REQUIRED)
 endif()
 
-add_executable(direct_image_alignmentTests test_image_alignment.cpp)
 
-target_link_libraries(direct_image_alignmentTests
-    PRIVATE
-    PD::direct_image_alignment
-    GTest::Main
-    )
+pd_add_test(camera direct_image_alignment)
+pd_add_test(frame direct_image_alignment)
+pd_add_test(image_alignment direct_image_alignment)
+pd_add_test(math direct_image_alignment)
 
-add_test(NAME direct_image_alignment.UnitTests
-    COMMAND direct_image_alignmentTests
-    )

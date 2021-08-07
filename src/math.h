@@ -9,9 +9,9 @@
 namespace pd{
     namespace vision{
         namespace math{
-            double bilinearInterpolation(const Eigen::MatrixXd& mat, double x, double y);
-            double rmse(const Eigen::MatrixXd& patch1, const Eigen::MatrixXd& patch2);
-            Eigen::MatrixXd resize(const Eigen::MatrixXd& mat,double scale);
+            int bilinearInterpolation(const Eigen::MatrixXi& mat, double x, double y);
+            double rmse(const Eigen::MatrixXi& patch1, const Eigen::MatrixXi& patch2);
+            Eigen::MatrixXi resize(const Eigen::MatrixXi& mat,double scale);
         }
     }
 }

@@ -1,4 +1,4 @@
-function(setup_package name version sources headers namespace)
+function(pd_setup_lib name version sources headers namespace)
 
 # Construct library from sources
 add_library(${name}
@@ -62,4 +62,22 @@ install(FILES "${CMAKE_CURRENT_BINARY_DIR}/${name}Config.cmake" DESTINATION "lib
 
 
 endfunction()
+
+
+macro(pd_add_test unit lib)
+	add_executable(${unit}Test
+			test_${unit}.cpp
+			)
+
+	target_link_libraries(${unit}Test
+			PRIVATE
+			PD::${lib}
+			GTest::Main
+			)
+
+	add_test(NAME ${unit}.UnitTest
+			COMMAND ${unit}Test
+			)
+
+endmacro()
 

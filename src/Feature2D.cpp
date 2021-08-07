@@ -3,3 +3,20 @@
 //
 
 #include "Feature2D.h"
+
+namespace pd{
+    namespace vision{
+
+        std::uint64_t Feature2D::_idCtr = 0U;
+
+        Feature2D::Feature2D(const Eigen::Vector2d& position, std::shared_ptr<Frame> frame,std::shared_ptr<Point3D> p3d)
+        : _position(position)
+        , _frame(frame)
+        , _point(p3d)
+        , _id(_idCtr++)
+        {
+
+        }
+
+    }
+}

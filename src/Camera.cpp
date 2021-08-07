@@ -7,6 +7,10 @@ namespace pd{
     namespace vision {
 
         Eigen::Vector2d Camera::camera2image(const Eigen::Vector3d &pWorld) const {
+            if (pWorld.z() <= 0)
+            {
+                return {std::numeric_limits<double>::quiet_NaN(),std::numeric_limits<double>::signaling_NaN()};
+            }
             auto pProj = _K * pWorld;
             return {pProj.x()/pProj.z(), pProj.y()/pProj.z()};
         }
@@ -45,5 +49,12 @@ namespace pd{
             _K << f, 0, cx,
                0, f, cy,
                0, 0, 1;
+            _Kinv = _K.inverse();
+        }
+
+        std::pair<double, double> Camera::camera2image(double x, double y, double z) const {
+            double u = focalLength()*x/z + _K(0,2);
+            double v = focalLength()*y/z + _K(1,2);
+            return {u,v};
         }
     }}
