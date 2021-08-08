@@ -2,7 +2,7 @@ from conans import ConanFile, CMake, tools
 
 
 class RecipeConan(ConanFile):
-    name = "direct_image_alignment"
+    name = "vslam"
     version = "1.0.0"
     license = "https://github.com/phildue/direct_image_alignment/blob/master/LICENSE"
     author = "<Put your name here> <And your email here>"

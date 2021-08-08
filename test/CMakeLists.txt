@@ -5,13 +5,14 @@ include(../tools/Macros.cmake)
 enable_testing()
 find_package(GTest MODULE REQUIRED)
 
-if(NOT TARGET PD::direct_image_alignment)
-	find_package(direct_image_alignment REQUIRED)
+if(NOT TARGET pd::vslam)
+	find_package(vslam REQUIRED)
 endif()
 
 
-pd_add_test(camera direct_image_alignment)
-pd_add_test(frame direct_image_alignment)
-pd_add_test(image_alignment direct_image_alignment)
-pd_add_test(math direct_image_alignment)
+pd_add_test(camera vslam)
+pd_add_test(frame vslam)
+pd_add_test(image_alignment vslam)
+pd_add_test(algorithm vslam)
+pd_add_test(feature_extraction vslam)
 

@@ -24,8 +24,13 @@ namespace pd{
             explicit  Frame(const Eigen::MatrixXi& grayImage, Camera::ConstShPtr camera,uint32_t levels = 1, const Sophus::SE3d& pose = Sophus::SE3d());
             void addFeature(Feature2D::ShConstPtr ft);
             void removeFeatures();
+
             const Eigen::MatrixXi& grayImage(int level = 0) const;
             Eigen::MatrixXi& grayImage(int level = 0);
+
+            const Eigen::MatrixXi& gradientImage(int level = 0) const;
+            Eigen::MatrixXi& gradientImage(int level = 0);
+
             Eigen::Vector2d world2image(const Eigen::Vector3d &pWorld) const;
             Eigen::Vector3d image2world(const Eigen::Vector2d &pImage, double depth = 1.0) const;
             Eigen::Vector2d camera2image(const Eigen::Vector3d &pCamera) const;
@@ -42,6 +47,7 @@ namespace pd{
         private:
             std::vector<Feature2D::ShConstPtr> _features;
             std::vector<Eigen::MatrixXi> _grayImagePyramid;
+            std::vector<Eigen::MatrixXi> _gradientImagePyramid;
             Camera::ConstShPtr _camera;
             Sophus::SE3d _pose,_poseInv;
         };

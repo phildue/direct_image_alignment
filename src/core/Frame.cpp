@@ -5,8 +5,8 @@
 //
 
 #include "Frame.h"
-#include "math.h"
-#include "Exceptions.h"
+#include "algorithm.h"
+#include "utils/Exceptions.h"
 namespace pd{
     namespace vision{
 
@@ -20,12 +20,19 @@ namespace pd{
             {
                 throw pd::Exception("Frame needs at least 1 level");
             }
+            //TODO we could think of a sort of lazy evaluation here and only compute the respective image when needed
             _grayImagePyramid.resize(levels);
+            _gradientImagePyramid.resize(levels);
             _grayImagePyramid[0] = grayImage;
+            _gradientImagePyramid[0] = algorithm::gradient(_grayImagePyramid[0]);
             for ( uint32_t i = 1 ; i < levels; i++)
             {
-                _grayImagePyramid.push_back(math::resize(grayImage,1.0 / (1U << i)));
+                const auto imageAtLevel = algorithm::resize(grayImage,1.0 / (1U << i));
+                const auto gradientAtLevel = algorithm::gradient(imageAtLevel);
+                _grayImagePyramid[i] = imageAtLevel;
+                _gradientImagePyramid[i] = gradientAtLevel;
             }
+
         }
         const Eigen::MatrixXi& Frame::grayImage(int level) const {
             if ( level >= levels()  )
@@ -41,6 +48,22 @@ namespace pd{
                 throw pd::Exception("Frame has only [" + std::to_string(levels()) + "]");
             }
             return _grayImagePyramid[level];
+        }
+
+        const Eigen::MatrixXi& Frame::gradientImage(int level) const {
+            if ( level >= levels()  )
+            {
+                throw pd::Exception("Frame has only [" + std::to_string(levels()) + "]");
+            }
+            return _gradientImagePyramid[level];
+        }
+
+        Eigen::MatrixXi& Frame::gradientImage(int level) {
+            if ( level >= levels()  )
+            {
+                throw pd::Exception("Frame has only [" + std::to_string(levels()) + "]");
+            }
+            return _gradientImagePyramid[level];
         }
 
         Eigen::Vector2d Frame::world2image(const Eigen::Vector3d &pWorld) const

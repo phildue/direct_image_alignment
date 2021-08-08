@@ -3,8 +3,8 @@
 //
 
 #include <gtest/gtest.h>
-#include <Exceptions.h>
-#include "direct_image_alignment/direct_image_alignment.h"
+#include "core/Frame.h"
+#include "utils/Exceptions.h"
 using namespace testing;
 using namespace pd;
 using namespace pd::vision;
@@ -17,6 +17,11 @@ TEST(FrameTest,Constructor)
     auto frame = std::make_shared<Frame>(mat,camera,1);
     EXPECT_EQ(frame->width(),50);
     EXPECT_EQ(frame->height(),50);
+    auto img = frame->grayImage(0);
+    auto dImg = frame->gradientImage(0);
+    EXPECT_EQ(img.cols(), dImg.cols());
+    EXPECT_EQ(img.rows(), dImg.rows());
+
 }
 
 TEST(FrameTest,ConstructorDeath)

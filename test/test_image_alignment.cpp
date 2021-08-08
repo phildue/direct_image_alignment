@@ -3,8 +3,10 @@
 //
 
 #include <gtest/gtest.h>
-#include "direct_image_alignment/direct_image_alignment.h"
-#include "Log.h"
+#include "image_alignment/ImageAlignment.h"
+#include "core/Point3D.h"
+#include "core/Feature2D.h"
+#include "utils/Log.h"
 using namespace testing;
 using namespace pd;
 using namespace pd::vision;
@@ -29,7 +31,7 @@ TEST(ImageAlignmentTest,Align)
     VLOG(3) << ft->id() << ":[" << pImage.x() << "," << pImage.y() << "]" << "-> [" << p3d->position().x() << "," << p3d->position().y() << "," <<p3d->position().z() << "]";
 
 
-            p3d->addFeature(ft);
+    p3d->addFeature(ft);
     frameRef->addFeature(ft);
     auto frameTarget = std::make_shared<Frame>(imgRef,camera);
 

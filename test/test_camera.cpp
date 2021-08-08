@@ -3,7 +3,7 @@
 //
 
 #include <gtest/gtest.h>
-#include "direct_image_alignment/direct_image_alignment.h"
+#include "vslam/vslam.h"
 using namespace testing;
 using namespace pd;
 using namespace pd::vision;

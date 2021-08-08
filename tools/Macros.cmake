@@ -71,7 +71,7 @@ macro(pd_add_test unit lib)
 
 	target_link_libraries(${unit}Test
 			PRIVATE
-			PD::${lib}
+			pd::${lib}
 			GTest::Main
 			)
 

@@ -1,33 +1,37 @@
 cmake_minimum_required(VERSION 3.8)
-project(direct_image_alignment VERSION 1.0.0)
+project(vslam VERSION 1.0.0)
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/tools
 		${CMAKE_BINARY_DIR}/)
 include(Macros)
 
 set(sources
-		src/Frame.cpp
-		src/ImageAlignment.cpp
-		src/Feature2D.cpp
-		src/Point3D.cpp
-        src/Camera.cpp
-		src/math.cpp
-		src/Log.cpp
+		src/core/Frame.cpp
+		src/core/Feature2D.cpp
+		src/core/Point3D.cpp
+        src/core/Camera.cpp
+		src/core/algorithm.cpp
+		src/utils/Log.cpp
+		src/system/StereoAlignment.cpp
+		src/image_alignment/ImageAlignment.cpp
+		src/feature_extraction/FeatureExtraction.cpp
 		)
 
 set(headers
-		src/Frame.h
-		src/ImageAlignment.h
-		src/Feature2D.h
-		src/Point3D.h
-        src/Camera.h
-		src/math.h
-		src/Exceptions.h
-		src/Log.h
-		include/direct_image_alignment/direct_image_alignment.h
+		src/core/Frame.h
+		src/core/Feature2D.h
+		src/core/Point3D.h
+        src/core/Camera.h
+		src/core/algorithm.h
+		src/utils/Exceptions.h
+		src/utils/Log.h
+		src/image_alignment/ImageAlignment.h
+		src/feature_extraction/FeatureExtraction.h
+		src/system/StereoAlignment.h
+		include/vslam/vslam.h
 		)
 
-pd_setup_lib(${PROJECT_NAME} ${PROJECT_VERSION} "${sources}" "${headers}" PD)
+pd_setup_lib(${PROJECT_NAME} ${PROJECT_VERSION} "${sources}" "${headers}" pd)
 
 
 # Dependencies

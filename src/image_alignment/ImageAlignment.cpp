@@ -6,13 +6,13 @@
 #include <ceres/ceres.h>
 #include <ceres/cubic_interpolation.h>
 #include <ceres/rotation.h>
-#include "Log.h"
+#include "utils/Log.h"
 #include "ImageAlignment.h"
-#include "Camera.h"
-#include "math.h"
-#include "Point3D.h"
-#include "Feature2D.h"
-#include "Exceptions.h"
+#include "core/Camera.h"
+#include "core/algorithm.h"
+#include "core/Point3D.h"
+#include "core/Feature2D.h"
+#include "utils/Exceptions.h"
 
 namespace pd{
 namespace vision{
@@ -66,20 +66,20 @@ namespace vision{
             {
                 for (int j = 0; j < _patchSize; j++)
                 {
-                    _patchRef(i,j) = math::bilinearInterpolation(mat,
+                    _patchRef(i,j) = algorithm::bilinearInterpolation(mat,
                                                                 (pImg.y() - _patchSizeHalf + i) *_scale,
                                                                 (pImg.x() - _patchSizeHalf + j) *_scale);
 
-                    const double fx1 = math::bilinearInterpolation(mat,
+                    const double fx1 = algorithm::bilinearInterpolation(mat,
                                                                    (pImg.y() - _patchSizeHalf + i) *_scale,
                                                                    (pImg.x() - _patchSizeHalf + j + 1) *_scale);
-                    const double fx0 = math::bilinearInterpolation(mat,
+                    const double fx0 = algorithm::bilinearInterpolation(mat,
                                                                    (pImg.y() - _patchSizeHalf + i ) *_scale,
                                                                    (pImg.x() - _patchSizeHalf + j ) *_scale);
-                    const double fy1 = math::bilinearInterpolation(mat,
+                    const double fy1 = algorithm::bilinearInterpolation(mat,
                                                                    (pImg.y() - _patchSizeHalf + i + 1) *_scale,
                                                                    (pImg.x() - _patchSizeHalf + j) *_scale);
-                    const double fy0 = math::bilinearInterpolation(mat,
+                    const double fy0 = algorithm::bilinearInterpolation(mat,
                                                                    (pImg.y() - _patchSizeHalf + i ) *_scale,
                                                                    (pImg.x() - _patchSizeHalf + j ) *_scale);
 
@@ -114,7 +114,7 @@ namespace vision{
                     {
                         auto idxRow = static_cast<std::uint32_t > ( i * _scale);
                         auto idxCol = static_cast<std::uint32_t > ( j * _scale);
-                        double grayTarget =     math::bilinearInterpolation(_frameTarget->grayImage(_level),
+                        double grayTarget =     algorithm::bilinearInterpolation(_frameTarget->grayImage(_level),
                                                                             (pImg.y() - _patchSizeHalf + i) *_scale,
                                                                             (pImg.x() - _patchSizeHalf + j) *_scale);
                         residuals[idxPixel] = (_patchRef(i,j) - grayTarget);
@@ -180,7 +180,7 @@ namespace vision{
             for (int i = 0; i < _patchSize; i++)
             {
                 for (int j = 0; j < _patchSize; j++) {
-                    _patchRef(i, j) = math::bilinearInterpolation(mat,
+                    _patchRef(i, j) = algorithm::bilinearInterpolation(mat,
                                                                   (pImg.y() - _patchSizeHalf + i) * _scale,
                                                                   (pImg.x() - _patchSizeHalf + j) * _scale);
                 }
@@ -230,7 +230,7 @@ namespace vision{
 
 
 
-    Sophus::SE3d ImageAlignment::align(Frame::ShConstPtr referenceFrame, Frame::ShConstPtr targetFrame) {
+    Sophus::SE3d ImageAlignment::align(Frame::ShConstPtr referenceFrame, Frame::ShConstPtr targetFrame) const{
 
         for (int level = _levelMax; level >= _levelMin; --level)
         {
