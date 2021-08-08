@@ -39,8 +39,6 @@ TEST(ImageAlignmentTest,Align)
     //Load reference frame with 3D data
     //Load target frame
     //Align
-    p3d->removeFeatures();
-    frameRef->removeFeatures();
     //EXPECT_TRUE(pose.translation().norm() > 1);
 }
 

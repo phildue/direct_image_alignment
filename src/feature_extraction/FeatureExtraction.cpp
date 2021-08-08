@@ -2,6 +2,7 @@
 // Created by phil on 07.08.21.
 //
 
+#include "utils/Log.h"
 #include "FeatureExtraction.h"
 namespace pd{ namespace vision
 {
@@ -11,15 +12,16 @@ namespace pd{ namespace vision
 
         std::vector<KeyPoint> keyPoints;
         keyPoints.reserve(frame->width() * frame->height());
-        for (int level = _levels; level >= 0; --level)
+        for (int level = _levels -1 ; level >= 0; --level)
         {
+            VLOG(4) << "Extracting features for frame [" << frame->_id << "] at level [" << level <<"]";
             const auto img = frame->gradientImage(level);
 
             for (int i = 0; i < frame->height(); i++)
             {
                 for (int j = 0; j < frame->width(); j++)
                 {
-                    if ( img(i,j) > _threshold )
+                    if ( img(i,j) >= _threshold )
                     {
                         Eigen::Vector2d pos(i,j);
                         keyPoints.push_back(KeyPoint{pos,img(i,j)});

@@ -5,16 +5,19 @@
 //
 
 #include "Frame.h"
+#include "Point3D.h"
 #include "algorithm.h"
 #include "utils/Exceptions.h"
 namespace pd{
     namespace vision{
 
+        std::uint64_t Frame::_idCtr = 0U;
         Frame::Frame(const Eigen::MatrixXi &grayImage, Camera::ConstShPtr camera, uint32_t levels,
                      const Sophus::SE3d &pose)
         : _camera(std::move(camera))
         , _pose(pose)
         , _poseInv(pose.inverse())
+        , _id(_idCtr++)
         {
             if ( levels < 1  )
             {
@@ -37,7 +40,7 @@ namespace pd{
         const Eigen::MatrixXi& Frame::grayImage(int level) const {
             if ( level >= levels()  )
             {
-                throw pd::Exception("Frame has only [" + std::to_string(levels()) + "]");
+                throw pd::Exception("Frame has only [" + std::to_string(levels()) + "] level.");
             }
             return _grayImagePyramid[level];
         }
@@ -45,7 +48,7 @@ namespace pd{
         Eigen::MatrixXi& Frame::grayImage(int level) {
             if ( level >= levels()  )
             {
-                throw pd::Exception("Frame has only [" + std::to_string(levels()) + "]");
+                throw pd::Exception("Frame has only [" + std::to_string(levels()) + "] level.");
             }
             return _grayImagePyramid[level];
         }
@@ -53,7 +56,7 @@ namespace pd{
         const Eigen::MatrixXi& Frame::gradientImage(int level) const {
             if ( level >= levels()  )
             {
-                throw pd::Exception("Frame has only [" + std::to_string(levels()) + "]");
+                throw pd::Exception("Frame has only [" + std::to_string(levels()) + "] level.");
             }
             return _gradientImagePyramid[level];
         }
@@ -61,7 +64,7 @@ namespace pd{
         Eigen::MatrixXi& Frame::gradientImage(int level) {
             if ( level >= levels()  )
             {
-                throw pd::Exception("Frame has only [" + std::to_string(levels()) + "]");
+                throw pd::Exception("Frame has only [" + std::to_string(levels()) + "] level.");
             }
             return _gradientImagePyramid[level];
         }
@@ -111,12 +114,44 @@ namespace pd{
             return nPoints;
         }
 
-        void Frame::addFeature(Feature2D::ShConstPtr ft) {
+        void Frame::addFeature(Feature2D::ShPtr ft) {
             _features.push_back(ft);
         }
 
         void Frame::removeFeatures() {
+
+            for (const auto& ft : _features)
+            {
+                ft->frame() = nullptr;
+                if ( ft->point() )
+                {
+                    ft->point()->removeFeature(ft);
+                    ft->point() = nullptr;
+                }
+            }
+
             _features.clear();
+        }
+        void Frame::removeFeature(std::shared_ptr< Feature2D> ft)
+        {
+            auto it = std::find(_features.begin(),_features.end(),ft);
+
+            if (it == _features.end())
+            {
+                throw pd::Exception("Did not find feature: [" + std::to_string(ft->id()) + " ] in frame: [" + std::to_string(_id) +"]");
+            }
+            _features.erase(it);
+            ft->frame() = nullptr;
+
+            if ( ft->point() )
+            {
+                ft->point()->removeFeature(ft);
+            }
+        }
+
+        Frame::~Frame()
+        {
+            removeFeatures();
         }
 
     }

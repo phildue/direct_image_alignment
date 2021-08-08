@@ -22,8 +22,9 @@ namespace pd{
             using ShConstPtr = std::shared_ptr<Frame>;
 
             explicit  Frame(const Eigen::MatrixXi& grayImage, Camera::ConstShPtr camera,uint32_t levels = 1, const Sophus::SE3d& pose = Sophus::SE3d());
-            void addFeature(Feature2D::ShConstPtr ft);
+            void addFeature(Feature2D::ShPtr ft);
             void removeFeatures();
+            void removeFeature(std::shared_ptr< Feature2D> f);
 
             const Eigen::MatrixXi& grayImage(int level = 0) const;
             Eigen::MatrixXi& grayImage(int level = 0);
@@ -44,12 +45,16 @@ namespace pd{
             uint32_t height(uint32_t level = 0) const;
             bool isVisible(const Eigen::Vector2d& pImage, double border, uint32_t level = 0) const;
             int levels() const { return _grayImagePyramid.size();};
+            ~Frame();
+            const std::uint64_t _id;
         private:
-            std::vector<Feature2D::ShConstPtr> _features;
+            std::vector<Feature2D::ShPtr> _features;
             std::vector<Eigen::MatrixXi> _grayImagePyramid;
             std::vector<Eigen::MatrixXi> _gradientImagePyramid;
             Camera::ConstShPtr _camera;
             Sophus::SE3d _pose,_poseInv;
+            static std::uint64_t _idCtr;
+
         };
     }}
 

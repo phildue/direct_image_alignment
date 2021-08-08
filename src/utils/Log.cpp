@@ -5,7 +5,6 @@
 #include "Log.h"
 
 void Log::init(int loglevel) {
-    google::InitGoogleLogging(" ");
     FLAGS_logtostderr = true;
     FLAGS_v = loglevel;
 }

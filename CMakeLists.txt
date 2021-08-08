@@ -45,8 +45,12 @@ find_package(Ceres REQUIRED)
 target_link_libraries(${PROJECT_NAME} Ceres::ceres)
 #target_link_libraries(${PROJECT_NAME} CONAN_PKG::ceres-solver)
 
+if (TARGET Eigen3::Eigen)
+	target_link_libraries(${PROJECT_NAME} Eigen3::Eigen)
+else()
+	target_link_libraries(${PROJECT_NAME} CONAN_PKG::Eigen3)
+endif()
 
-target_link_libraries(${PROJECT_NAME} CONAN_PKG::Eigen3)
 target_link_libraries(${PROJECT_NAME} CONAN_PKG::sophus)
 target_link_libraries(${PROJECT_NAME} CONAN_PKG::glog)
 

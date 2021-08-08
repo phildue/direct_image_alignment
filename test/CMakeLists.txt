@@ -15,4 +15,5 @@ pd_add_test(frame vslam)
 pd_add_test(image_alignment vslam)
 pd_add_test(algorithm vslam)
 pd_add_test(feature_extraction vslam)
+pd_add_test(stereo_alignment vslam)
 

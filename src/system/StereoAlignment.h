@@ -21,6 +21,10 @@ public:
         int levelMax;
         int levelMin;
         int patchSize;
+        double cx;
+        double cy;
+        double fx;
+        double fy;
     };
 
     explicit StereoAlignment(const Config& config);

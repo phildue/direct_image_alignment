@@ -232,11 +232,12 @@ namespace vision{
 
     Sophus::SE3d ImageAlignment::align(Frame::ShConstPtr referenceFrame, Frame::ShConstPtr targetFrame) const{
 
-        for (int level = _levelMax; level >= _levelMin; --level)
+        Sophus::SE3d pose = targetFrame->pose();
+        for (int level = _levelMax-1; level >= _levelMin; --level)
         {
 
-            const Eigen::Matrix<double,6,1> v6d = targetFrame->pose().log();
-            double pose[6] = {v6d(0),v6d(1),v6d(2),v6d(3),v6d(4),v6d(5)};
+            const Eigen::Matrix<double,6,1> v6d = pose.log();
+            double poseArray[6] = {v6d(0),v6d(1),v6d(2),v6d(3),v6d(4),v6d(5)};
 
             VLOG(4) << "IA init: " << " Level: " << level << " Pose: " << v6d << " #Features: " << referenceFrame->features().size();
             ceres::Problem problem;
@@ -250,7 +251,7 @@ namespace vision{
                     {
                         auto cost = new PhotometricLoss(f,targetFrame,_patchSize,level);
                     //    auto cost = new ceres::AutoDiffCostFunction<PhotometricError,49,6>(new PhotometricError(f,targetFrame,_patchSize,level));
-                        problem.AddResidualBlock(cost,new ceres::HuberLoss(10.0),&pose[0]);
+                        problem.AddResidualBlock(cost,new ceres::HuberLoss(10.0),&poseArray[0]);
 
                     }
                 }
@@ -264,6 +265,7 @@ namespace vision{
             VLOG(4) << "Setup IA with #Parameters: " << problem.NumParameters() << ", #Residuals: " << problem.NumResiduals();
             ceres::Solve(options, &problem, &summary);
 
+            //TODO: set output pose again
             if (VLOG_IS_ON(4))
             {
                 VLOG(4) << summary.FullReport();
@@ -276,7 +278,7 @@ namespace vision{
         }
 
 
-        return Sophus::SE3d();
+        return pose;
     }
 
     ImageAlignment::ImageAlignment(uint32_t levelMax, uint32_t levelMin, uint32_t patchSize)
