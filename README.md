@@ -1,3 +1,3 @@
-# Direct Image Alignment
+# Vslam
 
-Implements a direct image alignment algorithm
+Collection of algorithms for visual slam
