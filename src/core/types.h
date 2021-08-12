@@ -7,7 +7,7 @@
 
 #include <Eigen/Dense>
 
-typedef Eigen::MatrixXi Image;
+typedef Eigen::Matrix<std::uint8_t ,Eigen::Dynamic,Eigen::Dynamic> Image;
 typedef std::uint64_t Timestamp;
 
 #endif //DIRECT_IMAGE_ALIGNMENT_TYPES_H

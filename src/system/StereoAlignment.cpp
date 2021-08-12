@@ -15,7 +15,7 @@ namespace pd { namespace  vision{
 
         Sophus::SE3d relativePose;
         auto curFrame = std::make_shared<Frame>(img,_camera,_config.levelMax );
-
+        Log::logFrame(curFrame,4,"System");
         if ( _firstFrame )
         {
             VLOG(5) << "First frame.";
@@ -32,7 +32,6 @@ namespace pd { namespace  vision{
         }
         _featureExtractor->extractFeatures(_frameRef);
 
-        VLOG(5) << "Extracted: ["<< _frameRef->features().size() << "] features.";
 
         int nPoints = 0;
         for(const auto& ft : _frameRef->features())
@@ -48,7 +47,6 @@ namespace pd { namespace  vision{
             }
         }
         VLOG(5) << "Found: ["<< nPoints << "] 3d points.";
-
         return relativePose;
     }
 

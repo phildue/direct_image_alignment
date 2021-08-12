@@ -12,7 +12,7 @@ namespace pd{
     namespace vision{
 
         std::uint64_t Frame::_idCtr = 0U;
-        Frame::Frame(const Eigen::MatrixXi &grayImage, Camera::ConstShPtr camera, uint32_t levels,
+        Frame::Frame(const Image& grayImage, Camera::ConstShPtr camera, uint32_t levels,
                      const Sophus::SE3d &pose)
         : _camera(std::move(camera))
         , _pose(pose)
@@ -37,7 +37,7 @@ namespace pd{
             }
 
         }
-        const Eigen::MatrixXi& Frame::grayImage(int level) const {
+        const Image& Frame::grayImage(int level) const {
             if ( level >= levels()  )
             {
                 throw pd::Exception("Frame has only [" + std::to_string(levels()) + "] level.");
@@ -45,7 +45,7 @@ namespace pd{
             return _grayImagePyramid[level];
         }
 
-        Eigen::MatrixXi& Frame::grayImage(int level) {
+        Image& Frame::grayImage(int level) {
             if ( level >= levels()  )
             {
                 throw pd::Exception("Frame has only [" + std::to_string(levels()) + "] level.");
@@ -53,7 +53,7 @@ namespace pd{
             return _grayImagePyramid[level];
         }
 
-        const Eigen::MatrixXi& Frame::gradientImage(int level) const {
+        const Image& Frame::gradientImage(int level) const {
             if ( level >= levels()  )
             {
                 throw pd::Exception("Frame has only [" + std::to_string(levels()) + "] level.");
@@ -61,7 +61,7 @@ namespace pd{
             return _gradientImagePyramid[level];
         }
 
-        Eigen::MatrixXi& Frame::gradientImage(int level) {
+        Image& Frame::gradientImage(int level) {
             if ( level >= levels()  )
             {
                 throw pd::Exception("Frame has only [" + std::to_string(levels()) + "] level.");

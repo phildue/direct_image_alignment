@@ -15,7 +15,7 @@ namespace pd{ namespace vision
         for (int level = _levels -1 ; level >= 0; --level)
         {
             VLOG(4) << "Extracting features for frame [" << frame->_id << "] at level [" << level <<"]";
-            const auto img = frame->gradientImage(level);
+            const auto& img = frame->gradientImage(level);
 
             for (int i = 0; i < frame->height(); i++)
             {
@@ -23,7 +23,7 @@ namespace pd{ namespace vision
                 {
                     if ( img(i,j) >= _threshold )
                     {
-                        Eigen::Vector2d pos(i,j);
+                        Eigen::Vector2d pos(j + 0.5 ,i + 0.5);
                         keyPoints.push_back(KeyPoint{pos,img(i,j)});
                     }
                 }
@@ -55,5 +55,10 @@ namespace pd{ namespace vision
         {
             frame->addFeature(std::make_shared<Feature2D>(keyPoints[i].position,frame));
         }
+
+        VLOG(3) << "Extracted: ["<< frame->features().size() << "] features.";
+
+        Log::logFeatures(frame, 3, 4, "Features");
+
     }
 }}

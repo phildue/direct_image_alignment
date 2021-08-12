@@ -28,8 +28,9 @@ namespace pd{ namespace vision{
         const double _cx,_cy,_f;
         Eigen::MatrixXd _patchRef;
         Eigen::Vector3d  _p3d;
-        ceres::Grid2D<double> _img;
-        ceres::BiCubicInterpolator<ceres::Grid2D<double>> _interpolator;
+        ceres::Grid2D<std::uint8_t> _img;
+        ceres::BiCubicInterpolator<ceres::Grid2D<std::uint8_t >> _interpolator;
+
     public:
         PhotometricError(Feature2D::ShConstPtr ftRef,
                          Frame::ShConstPtr frameTarget,
@@ -44,7 +45,7 @@ namespace pd{ namespace vision{
                          , _f(ftRef->frame()->camera()->focalLength())
                 , _cx(ftRef->frame()->camera()->principalPoint().x())
                 , _cy(ftRef->frame()->camera()->principalPoint().y())
-                , _img((double*)_frameTarget->grayImage().data(),0,_frameTarget->height(),0,_frameTarget->width())
+                , _img((std::uint8_t*)_frameTarget->grayImage().data(),0,_frameTarget->height(),0,_frameTarget->width())
                 , _interpolator(_img)
         {
             if(!ftRef->point())
@@ -71,6 +72,8 @@ namespace pd{ namespace vision{
                                                                   (pImg.x() - _patchSizeHalf + j) * _scale);
                 }
             }
+
+            VLOG(4) << " W = \n" << _patchRef;
         }
 
         template <typename T>
@@ -89,15 +92,14 @@ namespace pd{ namespace vision{
 
             int idxPixel(0);
 
-            for (int i = 0; i < _patchSizeHalf; i ++)
+            for (int i = 0; i < _patchSize; i ++)
             {
-                for (int j = 0; j < _patchSizeHalf; j ++)
+                for (int j = 0; j < _patchSize; j ++)
                 {
                     T imgX = (pProj.x() + ((double)i -(double)_patchSizeHalf))*_scale;
                     T imgY = (pProj.y() + ((double)j -(double)_patchSizeHalf))*_scale;
                     T f;
                     _interpolator.Evaluate(imgX, imgY, &f);
-
                     residuals(idxPixel++,0) = f - (T)_patchRef(i,j);
                 }
             }
@@ -117,9 +119,6 @@ namespace pd{ namespace vision{
         for (int level = _levelMax-1; level >= _levelMin; --level)
         {
 
-            //const Eigen::Matrix<double,6,1> v6d = pose.log();
-            //double poseArray[6] = {v6d(0),v6d(1),v6d(2),v6d(3),v6d(4),v6d(5)};
-
             VLOG(4) << "IA init: " << " Level: " << level  << " #Features: " << referenceFrame->features().size();
             ceres::Problem problem;
             for ( int idxF = 0; idxF < referenceFrame->features().size(); idxF++)
@@ -130,7 +129,7 @@ namespace pd{ namespace vision{
                     if ( referenceFrame->isVisible(f->position(),_patchSize, level))
                     {
                     //    auto cost = new PhotometricLoss(f,targetFrame,_patchSize,level);
-                        auto cost = new ceres::AutoDiffCostFunction<PhotometricError,Sophus::SE3d::DoF,
+                        auto cost = new ceres::AutoDiffCostFunction<PhotometricError,49,
                                 Sophus::SE3d::num_parameters>(new PhotometricError(f,targetFrame,_patchSize,level));
                         problem.AddParameterBlock(pose.data(),Sophus::SE3d::num_parameters,new LocalParameterizationSE3());
                         problem.AddResidualBlock(cost,new ceres::HuberLoss(10.0),pose.data());
@@ -147,7 +146,6 @@ namespace pd{ namespace vision{
             VLOG(4) << "Setup IA with #Parameters: " << problem.NumParameters() << ", #Residuals: " << problem.NumResiduals();
             ceres::Solve(options, &problem, &summary);
 
-            //TODO: set output pose again
             if (VLOG_IS_ON(4))
             {
                 VLOG(4) << summary.FullReport();
@@ -156,6 +154,8 @@ namespace pd{ namespace vision{
                 VLOG(3) << summary.BriefReport();
 
             }
+
+            Log::logReprojection(referenceFrame,targetFrame,_patchSize/2,4);
 
         }
 

@@ -4,7 +4,7 @@
 #include "algorithm.h"
 namespace pd{ namespace vision{ namespace algorithm{
 
-    int bilinearInterpolation(const Eigen::MatrixXi& mat, double x, double y)
+    std::uint8_t bilinearInterpolation(const Image& mat, double x, double y)
     {
         /*We want to interpolate P
          * http://supercomputingblog.com/graphics/coding-bilinear-interpolation/
@@ -68,8 +68,8 @@ namespace pd{ namespace vision{ namespace algorithm{
         return std::sqrt( sum / (patch1.rows() * patch1.cols()));
     }
 
-    Eigen::MatrixXi resize(const Eigen::MatrixXi &mat, double scale) {
-        return Eigen::MatrixXi();
+    Image resize(const Image& mat, double scale) {
+        return Image();
     }
 
     Image gradient(const Image &image) {
@@ -77,12 +77,12 @@ namespace pd{ namespace vision{ namespace algorithm{
         const auto ix = gradX(image);
         const auto iy = gradY(image);
         const auto grad = ix.array().pow(2) + iy.array().pow(2);
-        return grad.array().sqrt();
+        return grad.array().sqrt().cast<std::uint8_t>();
     }
 
-    Image gradX(const Image& image)
+    Eigen::MatrixXi gradX(const Image& image)
     {
-        Image ix = image.rightCols(image.cols()-1) - image.leftCols(image.cols()-1);
+        Eigen::MatrixXi ix = image.cast<int>().rightCols(image.cols()-1) - image.cast<int>().leftCols(image.cols()-1);
         ix.conservativeResize(Eigen::NoChange,image.cols());
         for (int i = 0; i < ix.rows() ; ++i) {
             ix.row(i).tail(1).setConstant(0);
@@ -90,9 +90,9 @@ namespace pd{ namespace vision{ namespace algorithm{
         return ix;
     }
 
-    Image gradY(const Image& image)
+    Eigen::MatrixXi gradY(const Image& image)
     {
-        Image iy = image.bottomRows(image.rows()-1) - image.topRows(image.rows()-1);
+        Eigen::MatrixXi iy = image.cast<int>().bottomRows(image.rows()-1) - image.cast<int>().topRows(image.rows()-1);
         iy.conservativeResize(image.rows(),Eigen::NoChange);
         for (int i = 0; i < iy.cols() ; ++i) {
             iy.col(i).tail(1).setConstant(0);

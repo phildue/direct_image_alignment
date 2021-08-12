@@ -17,7 +17,7 @@ TEST(ImageAlignmentTest,Align)
     ImageAlignment imageAlignment(0,0,7);
 
     auto camera =std::make_shared<Camera>(1,25,25);
-    Eigen::Matrix<int,50,50> imgRef,imgTarget;
+    Image imgRef,imgTarget;
     auto frameRef = std::make_shared<Frame>(imgRef,camera);
     auto p3d = std::make_shared<Point3D>(Eigen::Vector3d(10,10,20.0), nullptr);
     auto pImage = frameRef->camera2image(p3d->position());

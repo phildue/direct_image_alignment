@@ -17,7 +17,7 @@ TEST(StereoAlignmentTest,Align)
     StereoAlignment::Config config{};
     StereoAlignment stereoAlignment(config);
 
-    Eigen::Matrix<int,50,50> img1,img2;
+    Eigen::Matrix<std::uint8_t, 50, 50 >img1,img2;
     Eigen::Matrix<double,50,50> depth1,depth2;
     stereoAlignment.align(img1,depth1,0);
     stereoAlignment.align(img2,depth2,1);

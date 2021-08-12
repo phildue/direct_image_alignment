@@ -12,7 +12,7 @@
 
 #include "Feature2D.h"
 #include "Camera.h"
-
+#include "core/types.h"
 namespace pd{
     namespace vision {
 
@@ -21,16 +21,16 @@ namespace pd{
             using ShPtr = std::shared_ptr<Frame>;
             using ShConstPtr = std::shared_ptr<Frame>;
 
-            explicit  Frame(const Eigen::MatrixXi& grayImage, Camera::ConstShPtr camera,uint32_t levels = 1, const Sophus::SE3d& pose = Sophus::SE3d());
+            explicit  Frame(const Image& grayImage, Camera::ConstShPtr camera,uint32_t levels = 1, const Sophus::SE3d& pose = Sophus::SE3d());
             void addFeature(Feature2D::ShPtr ft);
             void removeFeatures();
             void removeFeature(std::shared_ptr< Feature2D> f);
 
-            const Eigen::MatrixXi& grayImage(int level = 0) const;
-            Eigen::MatrixXi& grayImage(int level = 0);
+            const Image& grayImage(int level = 0) const;
+            Image& grayImage(int level = 0);
 
-            const Eigen::MatrixXi& gradientImage(int level = 0) const;
-            Eigen::MatrixXi& gradientImage(int level = 0);
+            const Image& gradientImage(int level = 0) const;
+            Image& gradientImage(int level = 0);
 
             Eigen::Vector2d world2image(const Eigen::Vector3d &pWorld) const;
             Eigen::Vector3d image2world(const Eigen::Vector2d &pImage, double depth = 1.0) const;
@@ -49,8 +49,8 @@ namespace pd{
             const std::uint64_t _id;
         private:
             std::vector<Feature2D::ShPtr> _features;
-            std::vector<Eigen::MatrixXi> _grayImagePyramid;
-            std::vector<Eigen::MatrixXi> _gradientImagePyramid;
+            std::vector<Image> _grayImagePyramid;
+            std::vector<Image> _gradientImagePyramid;
             Camera::ConstShPtr _camera;
             Sophus::SE3d _pose,_poseInv;
             static std::uint64_t _idCtr;

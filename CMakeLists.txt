@@ -3,6 +3,9 @@ project(vslam VERSION 1.0.0)
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/tools
 		${CMAKE_BINARY_DIR}/)
+
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_BINARY_DIR})
+
 include(Macros)
 
 set(sources
@@ -54,6 +57,12 @@ if (TARGET Eigen3::Eigen)
 	target_link_libraries(${PROJECT_NAME} Eigen3::Eigen)
 else()
 	target_link_libraries(${PROJECT_NAME} CONAN_PKG::Eigen3)
+endif()
+
+if (DEFINED OpenCV_LIBRARIES)
+	target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBRARIES})
+else()
+	target_link_libraries(${PROJECT_NAME} CONAN_PKG::opencv)
 endif()
 
 target_link_libraries(${PROJECT_NAME} CONAN_PKG::sophus)
