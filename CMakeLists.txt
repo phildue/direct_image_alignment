@@ -12,7 +12,9 @@ set(sources
         src/core/Camera.cpp
 		src/core/algorithm.cpp
 		src/utils/Log.cpp
+		src/utils/utils.cpp
 		src/system/StereoAlignment.cpp
+		src/image_alignment/PhotometricLoss.cpp
 		src/image_alignment/ImageAlignment.cpp
 		src/feature_extraction/FeatureExtraction.cpp
 		)
@@ -25,6 +27,9 @@ set(headers
 		src/core/algorithm.h
 		src/utils/Exceptions.h
 		src/utils/Log.h
+		src/utils/utils.h
+		src/image_alignment/PhotometricLoss.h
+		src/image_alignment/LocalParameterizationSE3.h
 		src/image_alignment/ImageAlignment.h
 		src/feature_extraction/FeatureExtraction.h
 		src/system/StereoAlignment.h

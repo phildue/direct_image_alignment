@@ -59,7 +59,6 @@ namespace pd { namespace  vision{
     , _firstFrame(true)
     , _camera(std::make_shared<Camera>(config.fx,config.cx,config.cy))
     {
-        Log::init(5);
         VLOG(5) << "Stereoaligner constructed";
     }
 }}

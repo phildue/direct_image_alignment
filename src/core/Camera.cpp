@@ -11,7 +11,7 @@ namespace pd{
             {
                 return {std::numeric_limits<double>::quiet_NaN(),std::numeric_limits<double>::signaling_NaN()};
             }
-            auto pProj = _K * pWorld;
+            Eigen::Vector3d pProj = _K * pWorld;
             return {pProj.x()/pProj.z(), pProj.y()/pProj.z()};
         }
 

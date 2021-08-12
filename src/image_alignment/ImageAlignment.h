@@ -4,8 +4,7 @@
 
 #include "core/Frame.h"
 #include <sophus/se3.hpp>
-namespace pd{
-namespace vision{
+namespace pd{namespace vision{
 class ImageAlignment
 {
 public:

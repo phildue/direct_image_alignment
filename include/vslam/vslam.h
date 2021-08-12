@@ -2,6 +2,7 @@
 #define DIRECT_IMAGE_ALIGNMENT_H__
 
 #include "utils/Exceptions.h"
+#include "utils/Log.h"
 #include "core/Point3D.h"
 #include "core/Feature2D.h"
 #include "core/Camera.h"

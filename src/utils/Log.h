@@ -2,8 +2,8 @@
 // Created by phil on 07.08.21.
 //
 
-#ifndef DIRECT_IMAGE_ALIGNMENT_LOG_H
-#define DIRECT_IMAGE_ALIGNMENT_LOG_H
+#ifndef VSLAM_LOG_H
+#define VSLAM_LOG_H
 
 #include <glog/logging.h>
 
@@ -13,4 +13,4 @@ public:
 };
 
 
-#endif //DIRECT_IMAGE_ALIGNMENT_LOG_H
+#endif //VSLAM_LOG_H
