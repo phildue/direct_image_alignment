@@ -2,14 +2,14 @@
 // Created by phil on 07.08.21.
 //
 #include "feature_extraction/feature_extraction.h"
-#include "StereoAlignment.h"
+#include "StereoTracking.h"
 #include "core/Point3D.h"
 #include "core/Feature2D.h"
 #include "core/Frame.h"
 #include "utils/Log.h"
 namespace pd { namespace  vision{
 
-    Sophus::SE3d StereoAlignment::align(const Image &img, const Eigen::MatrixXd &depthMap, Timestamp t) {
+    Sophus::SE3d StereoTracking::align(const Image &img, const Eigen::MatrixXd &depthMap, Timestamp t) {
 
         VLOG(5) << "Align";
 
@@ -25,7 +25,7 @@ namespace pd { namespace  vision{
         }else {
             VLOG(5) << "New frame..";
 
-            _imageAlignment->align(_frameRef,curFrame);
+            _tracker->track(_frameRef,curFrame);
 
             _frameRef = curFrame;
 
@@ -50,13 +50,13 @@ namespace pd { namespace  vision{
         return relativePose;
     }
 
-    StereoAlignment::StereoAlignment(const StereoAlignment::Config &config)
+    StereoTracking::StereoTracking(const StereoTracking::Config &config)
     : _config(config)
     , _featureExtractor(std::make_shared<FeatureExtractionOpenCv>(config.desiredFeatures))
-    , _imageAlignment(std::make_shared<ImageAlignment<7>>(config.levelMax,config.levelMin))
+    , _tracker(std::make_shared<Tracker3d>())
     , _firstFrame(true)
     , _camera(std::make_shared<Camera>(config.fx,config.cx,config.cy))
     {
-        VLOG(5) << "Stereoaligner constructed";
+        VLOG(5) << "Stereotracking constructed";
     }
 }}

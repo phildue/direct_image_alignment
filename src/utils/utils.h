@@ -7,6 +7,9 @@
 
 #include <string>
 #include <Eigen/Dense>
+
+#include "Exceptions.h"
+#include "Log.h"
 #include "core/Feature2D.h"
 namespace pd{ namespace vision { namespace utils{
     void throw_if_nan(const Eigen::MatrixXd& mat,const std::string& msg, std::shared_ptr<const Feature2D> ft);

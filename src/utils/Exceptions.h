@@ -4,6 +4,9 @@
 
 #ifndef DIRECT_IMAGE_ALIGNMENT_EXCEPTIONS_H
 #define DIRECT_IMAGE_ALIGNMENT_EXCEPTIONS_H
+
+#include <string>
+#include <stdexcept>
 namespace pd{
 
     class Exception : public std::runtime_error

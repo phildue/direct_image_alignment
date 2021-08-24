@@ -1,6 +1,7 @@
 //
 // Created by phil on 02.07.21.
 //
+#include "utils/Exceptions.h"
 #include "algorithm.h"
 namespace pd{ namespace vision{ namespace algorithm{
 
@@ -46,7 +47,7 @@ namespace pd{ namespace vision{ namespace algorithm{
 
         }
 
-        return static_cast<int>(P);
+        return static_cast<std::uint8_t >(P);
     }
 
 
@@ -54,7 +55,7 @@ namespace pd{ namespace vision{ namespace algorithm{
     {
         if (patch1.rows() != patch2.rows() || patch1.cols() != patch2.cols())
         {
-            throw std::runtime_error("rmse:: Patches have unequal dimensions!");
+            throw pd::Exception("rmse:: Patches have unequal dimensions!");
         }
 
         double sum = 0.0;
@@ -68,8 +69,39 @@ namespace pd{ namespace vision{ namespace algorithm{
         return std::sqrt( sum / (patch1.rows() * patch1.cols()));
     }
 
+    double sad(const Eigen::MatrixXi& patch1, const Eigen::MatrixXi& patch2)
+    {
+
+        if (patch1.rows() != patch2.rows() || patch1.cols() != patch2.cols())
+        {
+            throw pd::Exception("sad:: Patches have unequal dimensions!");
+        }
+
+        double sum = 0.0;
+        for (int i = 0; i < patch1.rows(); i++)
+        {
+            for(int j = 0; j < patch2.cols(); j++)
+            {
+                sum += std::abs(patch1(i,j) - patch2(i,j));
+            }
+        }
+        return sum;
+
+
+    }
+
+
     Image resize(const Image& mat, double scale) {
-        return Image();
+        const double scaleInv = 1.0/scale;
+        Image res( static_cast<int>(mat.rows()*scale), static_cast<int>(mat.cols()*scale));
+        for (int i = 0; i < res.rows(); i++)
+        {
+            for (int j = 0; j < res.cols(); j++)
+            {
+                res(i,j) = bilinearInterpolation(mat,(j+0.5)*scaleInv,(i+0.5)*scaleInv);
+            }
+        }
+        return res;
     }
 
     Image gradient(const Image &image) {

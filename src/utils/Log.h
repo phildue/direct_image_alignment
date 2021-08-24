@@ -8,6 +8,7 @@
 #include <memory>
 
 #include <glog/logging.h>
+#include <opencv2/core/mat.hpp>
 
 namespace pd{ namespace vision{
     class Frame;
@@ -16,13 +17,15 @@ namespace pd{ namespace vision{
     static void init(int loglevel = 3, int showLevel = 3, int blockLevel = 3);
 
     static void logFrame(std::shared_ptr<const Frame> frame, int level = 0, const std::string& name = "Log");
-    static void logFeatures(std::shared_ptr<const Frame> frame, int radius = 3, int level = 0,
+    static void logFeatures(std::shared_ptr<const Frame> frame, int radius = 3, int level = 0, bool gradient = true,
                             const std::string &name = "Log");
 
     static void logFeaturesWithPoints(std::shared_ptr<const Frame> frame, int radius = 3, int level = 0,
                             const std::string &name = "Log");
     static void logReprojection(std::shared_ptr<const Frame> frame0,std::shared_ptr<const Frame> frame1, int radius = 3, int level = 0,
                                       const std::string &name = "Log");
+
+    static void logMat(const cv::Mat &mat, int level, const std::string &name);
     private:
     static int _showLevel;
     static int _blockLevel;

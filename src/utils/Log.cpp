@@ -18,16 +18,22 @@ namespace pd{ namespace vision {
         void Log::init(int loglevel, int showLevel, int blockLevel) {
             FLAGS_logtostderr = true;
             FLAGS_v = loglevel;
+            FLAGS_colorlogtostderr = true;
             _showLevel = showLevel;
             _blockLevel = blockLevel;
         }
 
 
-        void Log::logFeatures(std::shared_ptr<const Frame> frame, int radius, int level, const std::string &name) {
+        void Log::logFeatures(std::shared_ptr<const Frame> frame, int radius, int level,bool gradient, const std::string &name) {
             if (level <= FLAGS_v)
             {
                 cv::Mat mat;
-                cv::eigen2cv(frame->gradientImage(),mat);
+                if ( gradient )
+                {
+                    cv::eigen2cv(frame->gradientImage(),mat);
+                }else{
+                    cv::eigen2cv(frame->grayImage(),mat);
+                }
 
                 if (mat.cols == 0 || mat.rows == 0)
                 {
@@ -40,10 +46,8 @@ namespace pd{ namespace vision {
                             cv::Point(ft->position().x() + radius,ft->position().y() + radius),cv::Scalar(255,255,255));
                 }
 
-                if (level <= _showLevel) {
-                    cv::imshow(name, mat);
-                    cv::waitKey(level <= _blockLevel ? 0 : 10);
-                }
+                logMat(mat, level, name);
+
             }
         }
 
@@ -70,11 +74,8 @@ namespace pd{ namespace vision {
                     }
 
                 }
+                logMat(mat, level, name);
 
-                if (level <= _showLevel) {
-                    cv::imshow(name, mat);
-                    cv::waitKey(level <= _blockLevel ? 0 : 10);
-                }
             }
         }
 
@@ -83,14 +84,7 @@ namespace pd{ namespace vision {
             {
                 cv::Mat mat;
                 cv::eigen2cv(frame->grayImage(),mat);
-                if (mat.cols == 0 || mat.rows == 0)
-                {
-                    throw pd::Exception("Image is empty!");
-                }
-                if (level <= _showLevel) {
-                    cv::imshow(name, mat);
-                    cv::waitKey(level <= _blockLevel ? 0 : 10);
-                }
+                logMat(mat, level, name);
             }
 
         }
@@ -121,11 +115,21 @@ namespace pd{ namespace vision {
 
                 }
 
-                if (level <= _showLevel) {
-                    cv::imshow(name, mat);
-                    cv::waitKey(level <= _blockLevel ? 0 : 10);
-                }
+                logMat(mat, level, name);
             }
         }
+
+        void Log::logMat(const cv::Mat &mat, int level, const std::string &name)
+        {
+            if (mat.cols == 0 || mat.rows == 0)
+            {
+                throw pd::Exception("Image is empty!");
+            }
+            if (level <= _showLevel) {
+                cv::imshow(name, mat);
+                cv::waitKey(level <= _blockLevel ? -1 : 10);
+            }
+        }
+
     }}
 

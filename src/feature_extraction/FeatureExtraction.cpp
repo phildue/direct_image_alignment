@@ -2,8 +2,12 @@
 // Created by phil on 07.08.21.
 //
 
+#include <core/algorithm.h>
+
+
 #include "utils/Log.h"
 #include "FeatureExtraction.h"
+#include "core/Frame.h"
 namespace pd{ namespace vision
 {
 
@@ -24,7 +28,7 @@ namespace pd{ namespace vision
                     if ( img(i,j) >= _threshold )
                     {
                         Eigen::Vector2d pos(j + 0.5 ,i + 0.5);
-                        keyPoints.push_back(KeyPoint{pos,img(i,j)});
+                        keyPoints.push_back(KeyPoint{pos,std::make_shared<GradientDescriptor>(img(i,j))});
                     }
                 }
             }
@@ -40,25 +44,33 @@ namespace pd{ namespace vision
     {
     }
 
-    FeatureExtraction::FeatureExtraction(int nDesiredFeatures, std::shared_ptr<KeyPointExtractor> kpExtractor )
+        FeatureExtractionImpl::FeatureExtractionImpl(int nDesiredFeatures, std::shared_ptr<KeyPointExtractor> kpExtractor )
     : _nDesiredFeatures( nDesiredFeatures )
     , _kpExtractor( kpExtractor )
     {
 
     }
 
-    void FeatureExtraction::extractFeatures(Frame::ShPtr frame) const
+    void FeatureExtractionImpl::extractFeatures(Frame::ShPtr frame) const
     {
         std::vector<KeyPoint> keyPoints = _kpExtractor->extract(frame);
-        std::partial_sort(keyPoints.begin(), keyPoints.begin() + _nDesiredFeatures, keyPoints.end(), [](auto kp1, auto kp2){ return kp1.value < kp2.value;});
-        for ( int i = 0; i < _nDesiredFeatures && i < keyPoints.size(); i++ )
+
+        if ( !keyPoints.empty() )
         {
-            frame->addFeature(std::make_shared<Feature2D>(keyPoints[i].position,frame));
+            std::partial_sort(keyPoints.begin(), keyPoints.begin() + _nDesiredFeatures, keyPoints.end(), [](auto kp1, auto kp2){
+                return (kp2.descriptor->mat().norm() > kp2.descriptor->mat().norm());});
+            for ( int i = 0; i < _nDesiredFeatures && i < keyPoints.size(); i++ )
+            {
+                frame->addFeature(std::make_shared<Feature2D>(keyPoints[i].position,keyPoints[i].descriptor,frame));
+            }
+
         }
+        VLOG(3) << "Extracted: ["<< keyPoints.size() << "] features.";
 
-        VLOG(3) << "Extracted: ["<< frame->features().size() << "] features.";
+        Log::logFeatures(frame, 3, 4,true, "Features");
 
-        Log::logFeatures(frame, 3, 4, "Features");
 
     }
-}}
+
+
+    }}

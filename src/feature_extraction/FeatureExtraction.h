@@ -8,14 +8,23 @@
 #include <vector>
 #include "core/Frame.h"
 #include "core/types.h"
+#include "Descriptor.h"
 namespace pd { namespace vision{
 
     class KeyPointExtractor;
     class FeatureExtraction
     {
     public:
-        explicit FeatureExtraction(int desiredFeatures, std::shared_ptr<KeyPointExtractor> kpExtractor);
-        void extractFeatures(Frame::ShPtr frame) const;
+        virtual void extractFeatures(Frame::ShPtr frame) const = 0;
+
+    protected:
+    };
+
+    class FeatureExtractionImpl : public FeatureExtraction
+    {
+    public:
+        explicit FeatureExtractionImpl(int desiredFeatures, std::shared_ptr<KeyPointExtractor> kpExtractor);
+        void extractFeatures(Frame::ShPtr frame) const override ;
 
     protected:
         int _nDesiredFeatures;
@@ -26,7 +35,7 @@ namespace pd { namespace vision{
     struct KeyPoint
     {
         Eigen::Vector2d position;
-        int value;
+        std::shared_ptr<Descriptor> descriptor;
     };
     class KeyPointExtractor {
     public:
@@ -43,6 +52,8 @@ namespace pd { namespace vision{
         int _threshold;
         int _levels;
     };
+
+
 } }
 
 

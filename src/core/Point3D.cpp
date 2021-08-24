@@ -21,6 +21,7 @@ namespace pd{
 
         void Point3D::addFeature(std::shared_ptr<Feature2D> ft) {
             _features.push_back(ft);
+            
         }
 
         void Point3D::removeFeatures() {

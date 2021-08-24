@@ -32,6 +32,7 @@ namespace pd{
             const Image& gradientImage(int level = 0) const;
             Image& gradientImage(int level = 0);
 
+            Eigen::Vector3d world2frame(const Eigen::Vector3d &pWorld) const;
             Eigen::Vector2d world2image(const Eigen::Vector3d &pWorld) const;
             Eigen::Vector3d image2world(const Eigen::Vector2d &pImage, double depth = 1.0) const;
             Eigen::Vector2d camera2image(const Eigen::Vector3d &pCamera) const;
@@ -39,8 +40,8 @@ namespace pd{
             Camera::ConstShPtr camera() const { return _camera;};
             const std::vector<Feature2D::ShConstPtr>& features() const { return _features;}
             uint32_t nObservedPoints() const;
-            Sophus::SE3d& pose() { return _pose;}
             const Sophus::SE3d& pose() const { return _pose;}
+            void setPose(const Sophus::SE3d& pose);
             uint32_t width(uint32_t level = 0) const;
             uint32_t height(uint32_t level = 0) const;
             bool isVisible(const Eigen::Vector2d& pImage, double border, uint32_t level = 0) const;

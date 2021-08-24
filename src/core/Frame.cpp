@@ -30,8 +30,8 @@ namespace pd{
             _gradientImagePyramid[0] = algorithm::gradient(_grayImagePyramid[0]);
             for ( uint32_t i = 1 ; i < levels; i++)
             {
-                const auto imageAtLevel = algorithm::resize(grayImage,1.0 / (1U << i));
-                const auto gradientAtLevel = algorithm::gradient(imageAtLevel);
+                const Image imageAtLevel = algorithm::resize(grayImage,1.0 / (1U << i));
+                const Image gradientAtLevel = algorithm::gradient(imageAtLevel);
                 _grayImagePyramid[i] = imageAtLevel;
                 _gradientImagePyramid[i] = gradientAtLevel;
             }
@@ -71,8 +71,14 @@ namespace pd{
 
         Eigen::Vector2d Frame::world2image(const Eigen::Vector3d &pWorld) const
         {
-            return camera2image(_pose * pWorld);
+            return camera2image(world2frame(pWorld));
         }
+
+        Eigen::Vector3d Frame::world2frame(const Eigen::Vector3d &pWorld) const
+        {
+            return _pose * pWorld;
+        }
+
         Eigen::Vector3d Frame::image2world(const Eigen::Vector2d &pImage, double depth) const
         {
             return _poseInv * image2camera(pImage,depth);
@@ -90,8 +96,8 @@ namespace pd{
         bool Frame::isVisible(const Eigen::Vector2d &pImage, double border, uint32_t level) const {
             const auto borderScaled = border * (1U << level);
 
-            const auto withinX = ( 0 < std::floor(pImage.x()) + borderScaled && std::ceil(pImage.x()) + borderScaled < width() );
-            const auto withinY = ( 0 < std::floor(pImage.y()) + borderScaled && std::ceil(pImage.y()) + borderScaled < height() );
+            const auto withinX = ( 0 < std::floor(pImage.x()) - borderScaled && std::ceil(pImage.x()) + borderScaled < width() );
+            const auto withinY = ( 0 < std::floor(pImage.y()) - borderScaled && std::ceil(pImage.y()) + borderScaled < height() );
 
             return withinX && withinY;
 
@@ -152,6 +158,11 @@ namespace pd{
         Frame::~Frame()
         {
             removeFeatures();
+        }
+
+        void Frame::setPose(const Sophus::SE3d &pose) {
+            _pose = pose;
+            _poseInv = pose.inverse();
         }
 
     }
