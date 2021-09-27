@@ -4,6 +4,7 @@
 
 #include <gtest/gtest.h>
 #include <unsupported/Eigen/CXX11/Tensor>
+#include "feature_extraction/FeatureExtractionOpenCv.h"
 #include "image_alignment/ImageAlignment.h"
 #include "core/Point3D.h"
 #include "core/Feature2D.h"
@@ -281,24 +282,29 @@ TEST_F(ImageAlignmentTest,DenseAnalyticalDiffNoise)
 
 TEST_F(ImageAlignmentTest,SparseAnalyticalDiffNoise)
 {
+    Log::init(4,0,0);
     SE3d motion;
-    motion.translation().x() = 20;
-    createImages(9,9,motion,10);
-    for (int i = 0; i < 9; i+=3)
+    loadRefImage(fs::path(TEST_RESOURCE"/sim.png"),120,160);
+
+    auto depthMat = utils::loadDepth(TEST_RESOURCE"/sim.exr",120,160);
+    const int patchSize = 3;
+
+    createTargetImage(motion,depthMat);
+    auto motionGt = motion;
+    motion.translation().x() += 0.1;
+    frameTarget->setPose(motion);
+
+    FeatureExtractionOpenCv featureExtraction(100);
+    featureExtraction.extractFeatures(frameRef);
+    for(const auto& ft : frameRef->features())
     {
-        for (int j = 0; j < 9; j+=3)
+        EXPECT_NE(ft, nullptr);
+        if (frameRef->isVisible(ft->position(),patchSize))
         {
-            if (frameRef->isVisible({i,j},2))
-            {
-                setupPoint({i,j},10);
-            }
+            setupPoint(ft->position(),depthMat(ft->position().y(),ft->position().x()));
         }
     }
-    ImageAlignment<3> imageAlignment(0,0);
-
-    SE3d motionGt = motion;
-    motion.translation().x() += 15;
-    frameTarget->setPose(motion);
+    ImageAlignment<patchSize> imageAlignment(0,0);
 
     imageAlignment.align(frameRef,frameTarget);
 

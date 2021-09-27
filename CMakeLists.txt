@@ -17,9 +17,7 @@ set(sources
 		src/solver/LeastSquaresSolver.cpp
 		src/utils/Log.cpp
 		src/utils/utils.cpp
-		src/system/StereoAlignment.cpp
-		src/system/StereoTracking.cpp
-#		src/feature_tracking/Tracker3d.cpp
+		src/system/RgbdAlignment.cpp
 		src/feature_extraction/FeatureExtraction.cpp
 		src/feature_extraction/FeatureExtractionOpenCv.cpp
 		)
@@ -43,9 +41,7 @@ set(headers
 		src/feature_extraction/FeatureExtraction.h
 		src/feature_extraction/FeatureExtractionOpenCv.h
 		src/feature_extraction/feature_extraction.h
-#		src/feature_tracking/Tracker3d.h
-		src/system/StereoAlignment.h
-		src/system/StereoTracking.h
+		src/system/RgbdAlignment.h
 		include/vslam/vslam.h
 		)
 

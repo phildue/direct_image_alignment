@@ -96,8 +96,8 @@ namespace pd{
         bool Frame::isVisible(const Eigen::Vector2d &pImage, double border, uint32_t level) const {
             const auto borderScaled = border * (1U << level);
 
-            const auto withinX = ( 0 < std::floor(pImage.x()) - borderScaled && std::ceil(pImage.x()) + borderScaled < width() );
-            const auto withinY = ( 0 < std::floor(pImage.y()) - borderScaled && std::ceil(pImage.y()) + borderScaled < height() );
+            const auto withinX = ( borderScaled < std::floor(pImage.x()) && std::ceil(pImage.x()) < width() - borderScaled );
+            const auto withinY = ( borderScaled < std::floor(pImage.y()) && std::ceil(pImage.y()) < height() - borderScaled );
 
             return withinX && withinY;
 

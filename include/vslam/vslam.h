@@ -11,6 +11,6 @@
 #include "core/algorithm.h"
 #include "image_alignment/ImageAlignment.h"
 #include "feature_extraction/FeatureExtraction.h"
-#include "system/StereoAlignment.h"
+#include "system/RgbdAlignment.h"
 #include "core/types.h"
 #endif

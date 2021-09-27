@@ -7,4 +7,5 @@
 
 #include "FeatureExtraction.h"
 #include "FeatureExtractionOpenCv.h"
+
 #endif //VSLAM_FEATURE_EXTRACTION_H

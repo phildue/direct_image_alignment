@@ -3,7 +3,7 @@
 //
 
 #include <gtest/gtest.h>
-#include "system/StereoAlignment.h"
+#include "system/RgbdAlignment.h"
 #include "core/Point3D.h"
 #include "core/Feature2D.h"
 #include "utils/Log.h"
@@ -14,8 +14,8 @@ using namespace pd::vision;
 TEST(StereoAlignmentTest,Align)
 {
     Log::init(4);
-    StereoAlignment::Config config{};
-    StereoAlignment stereoAlignment(config);
+    RgbdAlignment::Config config{};
+    RgbdAlignment stereoAlignment(config);
 
     Eigen::Matrix<std::uint8_t, 50, 50 >img1,img2;
     Eigen::Matrix<double,50,50> depth1,depth2;
