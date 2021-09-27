@@ -11,7 +11,7 @@ class RecipeConan(ConanFile):
     topics = ("C++", "Computer Vision", "Visual Odometry")
     settings = "os", "compiler", "build_type", "arch"
     options = {"shared": [True, False], "fPIC": [True, False], "build_tests":[True, False]}
-    default_options = {"shared": False, "fPIC": True, "build_tests": False}
+    default_options = {"shared": False, "fPIC": True, "build_tests": True}
     generators = "cmake_paths","cmake"
     def requirements(self):
         if self.options.build_tests:

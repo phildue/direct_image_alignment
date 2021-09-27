@@ -13,6 +13,7 @@
 #include "core/Feature2D.h"
 #include "utils/Exceptions.h"
 #include "utils/utils.h"
+#include "SE3Parameterization.h"
 
 namespace pd{ namespace vision{
 
@@ -78,8 +79,8 @@ namespace pd{ namespace vision{
             {
                 for (int c = 0; c < _patchSize; c++) {
                     _patchRef(r, c) = algorithm::bilinearInterpolation(mat,
-                                                                   (_ftRef->position().x() - _patchSizeHalf + c + 0.5) * _scale,
-                                                                   (_ftRef->position().y() - _patchSizeHalf + r + 0.5) * _scale);
+                                                                   (_ftRef->position().x() - _patchSizeHalf + c) * _scale,
+                                                                   (_ftRef->position().y() - _patchSizeHalf + r) * _scale);
                 }
             }
         }
@@ -107,7 +108,7 @@ namespace pd{ namespace vision{
                     T imgY = (pProj.y() + ((double)c -(double)_patchSizeHalf))*_scale;
                     T f;
                     _interpolator.Evaluate(imgX, imgY, &f);
-                    residuals(idxPixel++,0) = ceres::abs(f - (T)_patchRef(r,c));
+                    residuals(idxPixel++,0) = f - (T)_patchRef(r,c);
                 }
             }
 
@@ -139,7 +140,7 @@ namespace pd{ namespace vision{
                     {
                         auto cost = new ceres::AutoDiffCostFunction<PhotometricError<patchSize>,patchSize*patchSize,
                                 Sophus::SE3d::num_parameters>(new PhotometricError<patchSize>(f,targetFrame,level));
-                        problem.AddParameterBlock(pose.data(),Sophus::SE3d::num_parameters,new SE3qtParam());
+                        problem.AddParameterBlock(pose.data(),Sophus::SE3d::num_parameters,new SE3atParam());
                         problem.AddResidualBlock(cost, nullptr,pose.data());
 
                     }
@@ -156,10 +157,10 @@ namespace pd{ namespace vision{
             Log::logReprojection(referenceFrame,targetFrame,patchSize/2,4);
             if (VLOG_IS_ON(4))
             {
-                VLOG(4) << summary.FullReport();
+//                VLOG(4) << summary.FullReport();
 
             }else{
-                VLOG(3) << summary.BriefReport();
+  //              VLOG(3) << summary.BriefReport();
 
             }
         }

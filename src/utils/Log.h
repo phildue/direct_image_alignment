@@ -9,7 +9,7 @@
 
 #include <glog/logging.h>
 #include <opencv2/core/mat.hpp>
-
+#include "core/types.h"
 namespace pd{ namespace vision{
     class Frame;
     class Log {
@@ -24,6 +24,8 @@ namespace pd{ namespace vision{
                             const std::string &name = "Log");
     static void logReprojection(std::shared_ptr<const Frame> frame0,std::shared_ptr<const Frame> frame1, int radius = 3, int level = 0,
                                       const std::string &name = "Log");
+
+    static void logMat(const Image& mat, int level, const std::string &name );
 
     static void logMat(const cv::Mat &mat, int level, const std::string &name);
     private:

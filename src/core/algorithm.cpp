@@ -133,5 +133,9 @@ namespace pd{ namespace vision{ namespace algorithm{
 
     }
 
+    Sophus::SE3d computeRelativeTransform(const Sophus::SE3d& t0, const Sophus::SE3d& t1)
+    {
+        return t1 * t0.inverse();
+    }
 
 }}}

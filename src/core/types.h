@@ -10,5 +10,7 @@
 typedef Eigen::Matrix<std::uint8_t ,Eigen::Dynamic,Eigen::Dynamic> Image;
 typedef std::uint64_t Timestamp;
 typedef Sophus::SE3d SE3d;
-
+namespace Eigen{
+    typedef Eigen::Matrix<double,6,1> Vector6d;
+}
 #endif //DIRECT_IMAGE_ALIGNMENT_TYPES_H

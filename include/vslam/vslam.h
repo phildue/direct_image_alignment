@@ -3,6 +3,7 @@
 
 #include "utils/Exceptions.h"
 #include "utils/Log.h"
+#include "utils/utils.h"
 #include "core/Point3D.h"
 #include "core/Feature2D.h"
 #include "core/Camera.h"

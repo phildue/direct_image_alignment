@@ -22,7 +22,7 @@ namespace pd{
             return _Kinv * Eigen::Vector3d({pImage.x(),pImage.y(),1});
         }
 
-        Eigen::Matrix<double, 2, 6> Camera::J_xyz2uv(const Eigen::Vector3d &pCamera) const {
+        Eigen::Matrix<double, 2, 6> Camera::J_xyz2uv(const Eigen::Vector3d &pCamera, double scale) const {
             Eigen::Matrix<double, 2, 6> jacobian;
             const double& x = pCamera.x();
             const double& y = pCamera.y();
@@ -42,7 +42,7 @@ namespace pd{
             jacobian(1,3) = 1.0 + y*jacobian(1,2);      // 1.0 + y^2/z^2
             jacobian(1,4) = -jacobian(0,3);             // -x*y/z^2
             jacobian(1,5) = -x*z_inv;            // x/z
-            return jacobian;
+            return jacobian * focalLength() / scale;
         }
 
         Camera::Camera(double f, double cx, double cy) {
@@ -52,9 +52,5 @@ namespace pd{
             _Kinv = _K.inverse();
         }
 
-        std::pair<double, double> Camera::camera2image(double x, double y, double z) const {
-            double u = focalLength()*x/z + _K(0,2);
-            double v = focalLength()*y/z + _K(1,2);
-            return {u,v};
-        }
+
     }}

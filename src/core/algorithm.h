@@ -22,5 +22,8 @@ namespace pd{ namespace vision{ namespace algorithm{
     Eigen::MatrixXi gradX(const Image& image);
     Eigen::MatrixXi gradY(const Image& image);
 
+    /// Computes T01 from T0 and T1
+    Sophus::SE3d computeRelativeTransform(const Sophus::SE3d& t0, const Sophus::SE3d& t1);
+
 }}}
 #endif //DIRECT_IMAGE_ALIGNMENT_ALGORITHM_H

@@ -119,6 +119,18 @@ namespace pd{ namespace vision {
             }
         }
 
+        void Log::logMat(const Image& matEigen, int level, const std::string &name )
+        {
+            if (level <= FLAGS_v)
+            {
+                cv::Mat mat;
+                cv::eigen2cv(matEigen,mat);
+
+                logMat(mat, level, name);
+            }
+        }
+
+
         void Log::logMat(const cv::Mat &mat, int level, const std::string &name)
         {
             if (mat.cols == 0 || mat.rows == 0)

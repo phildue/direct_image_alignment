@@ -57,12 +57,11 @@ public:
     virtual bool Plus(const double * T_raw, const double * delta_raw,
                       double * T_plus_delta_raw) const {
 
-        const Eigen::Map<const Eigen::Matrix<double,6,1>> v(T_raw);
-        const auto T =  Sophus::SE3d::exp(v);
+        const Eigen::Map<const Eigen::Matrix<double,6,1>> T(T_raw);
         const Eigen::Map<const Eigen::Matrix<double,6,1> > delta(delta_raw);
         Eigen::Map<Eigen::Matrix<double,6,1>> T_plus_delta(T_plus_delta_raw);
-        T_plus_delta = (Sophus::SE3d::exp(delta)*T).log();
-        VLOG(5) << "Update: \n" << v.transpose() << " + \n" << delta.transpose() << "\n =" << T_plus_delta.transpose();
+        T_plus_delta = (Sophus::SE3d::exp(T) * Sophus::SE3d::exp(delta)).log();
+        VLOG(4) << "Update: \n" << T.transpose() << " + \n" << delta.transpose() << "\n =" << T_plus_delta.transpose();
         return true;
     }
 

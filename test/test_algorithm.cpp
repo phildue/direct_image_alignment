@@ -16,8 +16,8 @@ TEST(MathTest,BilinearInterpolation)
     m << 128,128,128,
     255,255,255,
     255,255,255;
-    const int r = algorithm::bilinearInterpolation(m,0,0.5);
-    EXPECT_EQ(r,(256+128)/2);
+    const int r = algorithm::bilinearInterpolation(m,0.5,0.5);
+    EXPECT_EQ(r,(255+128)/2);
 }
 
 

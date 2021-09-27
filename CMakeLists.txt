@@ -14,11 +14,12 @@ set(sources
 		src/core/Point3D.cpp
         src/core/Camera.cpp
 		src/core/algorithm.cpp
+		src/solver/LeastSquaresSolver.cpp
 		src/utils/Log.cpp
 		src/utils/utils.cpp
 		src/system/StereoAlignment.cpp
 		src/system/StereoTracking.cpp
-		src/feature_tracking/Tracker3d.cpp
+#		src/feature_tracking/Tracker3d.cpp
 		src/feature_extraction/FeatureExtraction.cpp
 		src/feature_extraction/FeatureExtractionOpenCv.cpp
 		)
@@ -29,6 +30,7 @@ set(headers
 		src/core/Point3D.h
         src/core/Camera.h
 		src/core/algorithm.h
+		src/solver/LeastSquaresSolver.h
 		src/feature_extraction/Descriptor.h
 		src/utils/Exceptions.h
 		src/utils/Log.h
@@ -36,11 +38,12 @@ set(headers
 		src/image_alignment/SE3Parameterization.h
 		src/image_alignment/ImageAlignment.hpp
 		src/image_alignment/ImageAlignmentAutoDiff.hpp
+		src/image_alignment/ImageAlignmentCeres.hpp
 		src/image_alignment/ImageAlignment.h
 		src/feature_extraction/FeatureExtraction.h
 		src/feature_extraction/FeatureExtractionOpenCv.h
 		src/feature_extraction/feature_extraction.h
-		src/feature_tracking/Tracker3d.h
+#		src/feature_tracking/Tracker3d.h
 		src/system/StereoAlignment.h
 		src/system/StereoTracking.h
 		include/vslam/vslam.h
@@ -48,9 +51,11 @@ set(headers
 
 pd_setup_lib(${PROJECT_NAME} ${PROJECT_VERSION} "${sources}" "${headers}" pd)
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
-
 # Dependencies
 
+if (UNIX)
+	target_link_libraries(${PROJECT_NAME} stdc++fs)
+endif()
 
 include(conanbuildinfo)
 conan_basic_setup(TARGETS)

@@ -13,7 +13,7 @@ class CameraTest : public Test
 public:
     Eigen::MatrixX3d _points3D;
     const int _nPoints = 8;
-    const double precision = std::numeric_limits<double>::epsilon();
+    const double precision = std::numeric_limits<double>::epsilon()*100;
 
     CameraTest()
     {
@@ -60,12 +60,12 @@ TEST_F(CameraTest,ForwardBackwardProjection)
         EXPECT_NEAR(pImage.x(),(f * p3d.x() + cx * p3d.z()) / p3d.z(),precision) << "Projection failed for point: [" << i << "] -> " << p3d;
         EXPECT_NEAR(pImage.y(),(f * p3d.y() + cy * p3d.z()) / p3d.z(),precision) << "Projection failed for point: [" << i << "] -> " << p3d;
 
-        auto pRay = camera->image2ray(pImage);
+        Eigen::Vector3d pRay = camera->image2ray(pImage);
 
-        EXPECT_NEAR(pRay.x(),(f * p3d.x()/f + cx * p3d.z()) / p3d.z(),precision) << "Projection failed for point: [" << i << "] -> " << p3d;
-        EXPECT_NEAR(pRay.y(),(f * p3d.y() + cy * p3d.z()) / p3d.z(),precision) << "Projection failed for point: [" << i << "] -> " << p3d;
+        EXPECT_NEAR(pRay.x(), (pImage.x()-cx)/f, precision) << "Projection failed for point: [" << i << "] -> " << p3d;
+        EXPECT_NEAR(pRay.y(), (pImage.y()-cy)/f, precision) << "Projection failed for point: [" << i << "] -> " << p3d;
 
-        auto p3dBack = camera->image2camera(pImage,p3d.z());
+        Eigen::Vector3d p3dBack = camera->image2camera(pImage,p3d.z());
 
         EXPECT_NEAR(p3d.x(),p3d.x(),precision) << "Back-projection failed for point: [" << i << "] -> " << pImage << " | " << p3d;
         EXPECT_NEAR(p3d.y(),p3d.y(),precision) << "Back-projection failed for point: [" << i << "] -> " << pImage << " | " << p3d;
@@ -108,12 +108,12 @@ TEST_F(CameraTest,JacobianXYZ2UV)
         const auto& p3d = _points3D.row(i);
         const auto J = camera->J_xyz2uv(p3d);
         //Why - here??
-        EXPECT_NEAR(J(0,0),-1.0/p3d.z(),eps) << "Should be du/dx of u = f*x/z + cx";
+        EXPECT_NEAR(J(0,0),-f/p3d.z(),eps) << "Should be du/dx of u = f*x/z + cx";
         EXPECT_NEAR(J(0,1),-0,eps) << "Should be du/dy of u = f*x/z + cx";
-        EXPECT_NEAR(J(0,2),p3d.x()/(std::pow(p3d.z(),2)),eps) << "Should be du/dz of u = f*x/z + cx";
+        EXPECT_NEAR(J(0,2),f * p3d.x()/(std::pow(p3d.z(),2)),eps) << "Should be du/dz of u = f*x/z + cx";
         EXPECT_NEAR(J(1,0),0,eps) << "Should be dv/dx of v = f*y/z + cy";
-        EXPECT_NEAR(J(1,1),-1.0/p3d.z(),eps) << "Should be du/dy of v = f*y/z + cy";
-        EXPECT_NEAR(J(1,2),p3d.y()/(std::pow(p3d.z(),2)),eps) << "Should be u of v = f*y/z + cy";
+        EXPECT_NEAR(J(1,1),-f/p3d.z(),eps) << "Should be du/dy of v = f*y/z + cy";
+        EXPECT_NEAR(J(1,2),f*p3d.y()/(std::pow(p3d.z(),2)),eps) << "Should be u of v = f*y/z + cy";
 
 
     }

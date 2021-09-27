@@ -17,12 +17,11 @@ namespace pd{
 
             Camera(double f, double cx, double cy);
 
-            std::pair<double,double> camera2image(double x, double y, double z ) const;
             Eigen::Vector2d camera2image(const Eigen::Vector3d &pCamera) const;
             Eigen::Vector3d image2camera(const Eigen::Vector2d &pImage, double depth = 1.0) const;
             Eigen::Vector3d image2ray(const Eigen::Vector2d &pImage) const;
 
-            Eigen::Matrix<double,2,6> J_xyz2uv(const Eigen::Vector3d &pCamera) const;
+            Eigen::Matrix<double,2,6> J_xyz2uv(const Eigen::Vector3d &pCamera, double scale = 1) const;
             const double& focalLength() const {return _K(0,0);}
             Eigen::Vector2d principalPoint() const { return {_K(0,2),_K(1,2)};}
             const Eigen::Matrix3d& K() const {return _K;}
