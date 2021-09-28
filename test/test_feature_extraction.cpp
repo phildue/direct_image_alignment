@@ -3,6 +3,7 @@
 //
 
 #include <gtest/gtest.h>
+#include <feature_extraction/FeatureExtractionOpenCv.h>
 #include "feature_extraction/FeatureExtraction.h"
 #include "core/Camera.h"
 #include "core/Frame.h"
@@ -44,4 +45,21 @@ TEST(FeatureExtractionTest, KeyPointExtraction)
     auto keyPointExtr = std::make_shared<KeyPointExtractorGradientMagnitude>(1, 128);
     auto kps = keyPointExtr->extract(frameRef);
     EXPECT_GT(kps.size(),0);
+}
+
+TEST(FeatureExtractionTest, KeyPointExtractionOpenCv)
+{
+    auto camera =std::make_shared<Camera>(1,25,25);
+    Eigen::Matrix<std::uint8_t,50,50 >img ;
+    img.setRandom();
+
+    auto frameRef = std::make_shared<Frame>(img,camera);
+    FeatureExtractionOpenCv featureExtraction(30);
+    featureExtraction.extractFeatures(frameRef);
+    EXPECT_EQ(frameRef->features().size(),30);
+
+    for(const auto& ft : frameRef->features())
+    {
+        EXPECT_NE(ft,nullptr);
+    }
 }

@@ -181,21 +181,26 @@ class CostTotal
     std::vector<std::shared_ptr<CostFeature<patchSize>>> _costFeatures;
     Eigen::MatrixXd _jacobian;
 public:
-    CostTotal(Frame::ShConstPtr referenceFrame, Frame::ShConstPtr targetFrame, int level)
+    CostTotal(Frame::ShConstPtr referenceFrame, Frame::ShConstPtr targetFrame, int level, int nVisiblePoints)
     {
+
+        if (nVisiblePoints <= Sophus::SE3d::DoF)
+        {
+            throw pd::Exception(std::to_string(nVisiblePoints) + " points are not enough. Need at least: " + std::to_string(Sophus::SE3d::DoF));
+        }
         Sophus::SE3d T = algorithm::computeRelativeTransform(referenceFrame->pose(), targetFrame->pose());
 
-        _costFeatures.resize(referenceFrame->nObservedPoints());
-        _jacobian.conservativeResize(referenceFrame->nObservedPoints()*patchSize*patchSize,6);
+        _costFeatures.resize(nVisiblePoints);
+        _jacobian.conservativeResize(nVisiblePoints*patchSize*patchSize,Sophus::SE3d::DoF);
 
-        for ( int idxF = 0; idxF < referenceFrame->features().size(); idxF++)
+        int idxF = 0;
+        for ( const auto& f : referenceFrame->features() )
         {
-            const Feature2D::ShConstPtr f = referenceFrame->features()[idxF];
-            if ( f->point() )
+            if ( f->point() && f->frame()->isVisible(f->position(), std::max(patchSize, 2), level))
             {
                 auto costFeature = std::make_shared<CostFeature<patchSize>> (idxF * (patchSize*patchSize), f, targetFrame, level);
                 costFeature->computeJacobian(_jacobian);
-                _costFeatures[idxF] = costFeature;
+                _costFeatures[idxF++] = costFeature;
             }
         }
 
@@ -229,12 +234,21 @@ public:
             Eigen::MatrixXd posev6d = T.log();
             VLOG(4) << "IA init: " << " Level: " << level  << " #Features: " << referenceFrame->features().size();
 
-            auto cost = std::make_shared<CostTotal<patchSize>>(referenceFrame,targetFrame,level);
+            int nVisiblePoints = 0;
+            for ( const auto& f : referenceFrame->features() )
+            {
+                if ( f->point() && f->frame()->isVisible(f->position(), std::max(patchSize, 2), level))
+                {
+                    nVisiblePoints++;
+                }
+            }
+
+            auto cost = std::make_shared<CostTotal<patchSize>>(referenceFrame,targetFrame,level,nVisiblePoints);
             auto lls = std::make_shared<LeastSquaresSolver>(
                     [&](const Eigen::MatrixXd& x, Eigen::MatrixXd& residual, Eigen::MatrixXd& weights) { return cost->computeResidual(x,residual,weights);},
                     [&](const Eigen::MatrixXd& x, Eigen::MatrixXd& jacobian) { return cost->computeJacobian(x,jacobian);},
                     [&](const Eigen::MatrixXd& dx, Eigen::MatrixXd& x) { x = (Sophus::SE3d::exp(x) * Sophus::SE3d::exp(-dx)).log(); return true;},
-                    referenceFrame->nObservedPoints() * patchSize * patchSize,
+                    nVisiblePoints * patchSize * patchSize,
                     Sophus::SE3d::DoF,
                     0.0001,
                     0.0001,

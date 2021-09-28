@@ -11,7 +11,7 @@
 #include "sophus/so3.hpp"
 namespace pd{ namespace vision{
 
-class RgbdAlignment {
+class StereoAlignment {
 
 public:
     struct Config
@@ -27,7 +27,7 @@ public:
         double fy;
     };
 
-    explicit RgbdAlignment(const Config& config);
+    explicit StereoAlignment(const Config& config);
     Sophus::SE3d align(const Image& img, const Eigen::MatrixXd& depthMap, Timestamp t);
 
 protected:

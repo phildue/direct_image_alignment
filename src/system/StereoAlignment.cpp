@@ -2,14 +2,14 @@
 // Created by phil on 07.08.21.
 //
 #include "feature_extraction/feature_extraction.h"
-#include "RgbdAlignment.h"
+#include "StereoAlignment.h"
 #include "core/Point3D.h"
 #include "core/Feature2D.h"
 #include "core/Frame.h"
 #include "utils/Log.h"
 namespace pd { namespace  vision{
 
-    Sophus::SE3d RgbdAlignment::align(const Image &img, const Eigen::MatrixXd &depthMap, Timestamp t) {
+    Sophus::SE3d StereoAlignment::align(const Image &img, const Eigen::MatrixXd &depthMap, Timestamp t) {
 
         VLOG(5) << "Align";
 
@@ -50,7 +50,7 @@ namespace pd { namespace  vision{
         return relativePose;
     }
 
-    RgbdAlignment::RgbdAlignment(const RgbdAlignment::Config &config)
+    StereoAlignment::StereoAlignment(const StereoAlignment::Config &config)
     : _config(config)
     , _featureExtractor(std::make_shared<FeatureExtractionOpenCv>(config.desiredFeatures))
     , _imageAlignment(std::make_shared<ImageAlignment<7>>(config.levelMax,config.levelMin))

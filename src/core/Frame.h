@@ -39,6 +39,7 @@ namespace pd{
             Eigen::Vector3d image2camera(const Eigen::Vector2d &pImage, double depth = 1.0) const;
             Camera::ConstShPtr camera() const { return _camera;};
             const std::vector<Feature2D::ShConstPtr>& features() const { return _features;}
+            const std::vector<Feature2D::ShPtr>& features() { return _features;}
             uint32_t nObservedPoints() const;
             const Sophus::SE3d& pose() const { return _pose;}
             void setPose(const Sophus::SE3d& pose);

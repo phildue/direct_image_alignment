@@ -260,9 +260,9 @@ TEST_F(ImageAlignmentTest,DenseAnalyticalDiffNoise)
     motion.translation().x() += 0.1;
     frameTarget->setPose(motion);
 
-    for (int i = 0; i < imgRef.rows(); i++)
+    for (int i = 0; i < imgRef.rows(); i+=1)
     {
-        for (int j = 0; j < imgRef.cols(); j++)
+        for (int j = 0; j < imgRef.cols(); j+=1)
         {
             if (frameRef->isVisible({j,i},2))
             {
@@ -282,26 +282,33 @@ TEST_F(ImageAlignmentTest,DenseAnalyticalDiffNoise)
 
 TEST_F(ImageAlignmentTest,SparseAnalyticalDiffNoise)
 {
-    Log::init(4,0,0);
+    Log::init(4,4,4);
     SE3d motion;
     loadRefImage(fs::path(TEST_RESOURCE"/sim.png"),120,160);
 
     auto depthMat = utils::loadDepth(TEST_RESOURCE"/sim.exr",120,160);
-    const int patchSize = 3;
+    const int patchSize = 1;
 
     createTargetImage(motion,depthMat);
     auto motionGt = motion;
     motion.translation().x() += 0.1;
     frameTarget->setPose(motion);
 
-    FeatureExtractionOpenCv featureExtraction(100);
+    FeatureExtractionOpenCv featureExtraction(300);
     featureExtraction.extractFeatures(frameRef);
-    for(const auto& ft : frameRef->features())
+    EXPECT_EQ(frameRef->features().size(),300);
+    for(auto ft : frameRef->features())
     {
-        EXPECT_NE(ft, nullptr);
-        if (frameRef->isVisible(ft->position(),patchSize))
+        ASSERT_NE(ft, nullptr);
+        if (frameRef->isVisible(ft->position(),std::max(patchSize,2)))
         {
-            setupPoint(ft->position(),depthMat(ft->position().y(),ft->position().x()));
+            double depth = depthMat(ft->position().y(),ft->position().x());
+            if ( !std::isnan(depth) && depth > 0)
+            {
+                auto p3d = frameRef->image2world(ft->position(),depth);
+                ft->point() = std::make_shared<Point3D>(p3d,ft);
+
+            }
         }
     }
     ImageAlignment<patchSize> imageAlignment(0,0);

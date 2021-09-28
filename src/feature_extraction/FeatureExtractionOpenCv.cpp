@@ -26,6 +26,7 @@ namespace pd{ namespace vision{
             cv::Mat img;
             cv::eigen2cv(frame->grayImage(0),img);
             fast->detect(img, keypoints_fast);
+            VLOG(3) << "Found: ["<< keypoints_fast.size() << "] keypoints.";
 
             std::partial_sort(keypoints_fast.begin(), keypoints_fast.begin() + _nDesiredFeatures, keypoints_fast.end(), [](auto kp1, auto kp2){
                 return (kp1.response > kp2.response);});
@@ -37,7 +38,7 @@ namespace pd{ namespace vision{
                 frame->addFeature(std::make_shared<Feature2D>(Eigen::Vector2d(kp.pt.x,kp.pt.y),descr,frame, nullptr,kp.octave));
             }
 
-            VLOG(3) << "Extracted: ["<< frame->features().size() << "] features.";
+            VLOG(3) << "Created: ["<< frame->features().size() << "] features.";
 
             Log::logFeatures(frame, 3, 4,false, "Features");
 
