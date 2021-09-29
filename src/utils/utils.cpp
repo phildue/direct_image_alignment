@@ -22,6 +22,16 @@ namespace pd{ namespace vision {
             }
         }
 
+        void utils::throw_if_nan(const Eigen::MatrixXd &mat, const std::string &msg)
+        {
+            if (std::isnan(mat.norm()))
+            {
+                std::stringstream ss;
+                ss << mat;
+                throw pd::Exception(msg + " contains nan: \n" + ss.str());
+            }
+        }
+
         Image utils::loadImage(const fs::path& path, int height, int width, bool grayscale)
         {
             auto mat = cv::imread(path.string(), grayscale ? cv::IMREAD_GRAYSCALE : cv::IMREAD_COLOR);

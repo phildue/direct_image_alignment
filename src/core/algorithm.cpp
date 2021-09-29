@@ -5,7 +5,8 @@
 #include "algorithm.h"
 namespace pd{ namespace vision{ namespace algorithm{
 
-    std::uint8_t bilinearInterpolation(const Image& mat, double x, double y)
+    template< class T>
+    T bilinearInterpolation(const Eigen::Matrix<T,Eigen::Dynamic,Eigen::Dynamic>& mat, double x, double y)
     {
         /*We want to interpolate P
          * http://supercomputingblog.com/graphics/coding-bilinear-interpolation/
@@ -47,7 +48,18 @@ namespace pd{ namespace vision{ namespace algorithm{
 
         }
 
-        return static_cast<std::uint8_t >(P);
+        return static_cast<T >(P);
+    }
+
+    std::uint8_t bilinearInterpolation(const Image& mat, double x, double y)
+    {
+        return bilinearInterpolation<std::uint8_t>(mat,x,y);
+    }
+
+    double bilinearInterpolation(const Eigen::MatrixXd& mat, double x, double y)
+    {
+        return bilinearInterpolation<double>(mat,x,y);
+
     }
 
 
@@ -89,19 +101,26 @@ namespace pd{ namespace vision{ namespace algorithm{
 
 
     }
-
-
-    Image resize(const Image& mat, double scale) {
+    template< class T>
+    Eigen::Matrix<T, Eigen::Dynamic,Eigen::Dynamic> resize(const Eigen::Matrix<T, Eigen::Dynamic,Eigen::Dynamic>& mat, double scale) {
         const double scaleInv = 1.0/scale;
-        Image res( static_cast<int>(mat.rows()*scale), static_cast<int>(mat.cols()*scale));
+         Eigen::Matrix<T, Eigen::Dynamic,Eigen::Dynamic> res( static_cast<int>(mat.rows()*scale), static_cast<int>(mat.cols()*scale));
         for (int i = 0; i < res.rows(); i++)
         {
             for (int j = 0; j < res.cols(); j++)
             {
-                res(i,j) = bilinearInterpolation(mat,(j+0.5)*scaleInv,(i+0.5)*scaleInv);
+                res(i,j) = bilinearInterpolation<T>(mat,(j+0.5)*scaleInv,(i+0.5)*scaleInv);
             }
         }
         return res;
+    }
+
+    Image resize(const Image& mat, double scale) {
+        resize<std::uint8_t >(mat,scale);
+    }
+
+    Eigen::MatrixXd resize(const Eigen::MatrixXd& mat, double scale) {
+        resize<double >(mat,scale);
     }
 
     Image gradient(const Image &image) {

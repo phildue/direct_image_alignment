@@ -11,9 +11,11 @@
 namespace pd{ namespace vision{ namespace algorithm{
 
     std::uint8_t bilinearInterpolation(const Image& mat, double x, double y);
+    std::uint8_t bilinearInterpolation(const Image& mat, double x, double y);
     double rmse(const Eigen::MatrixXi& patch1, const Eigen::MatrixXi& patch2);
     double sad(const Eigen::MatrixXi& patch1, const Eigen::MatrixXi& patch2);
     Image resize(const Image& mat,double scale);
+    Eigen::MatrixXd resize(const Eigen::MatrixXd& mat,double scale);
 
     /// Computes pixel wise gradient magnitude:  sqrt( (dI/dx)^2 + (dI/dy)^2
     /// \param image grayscale image

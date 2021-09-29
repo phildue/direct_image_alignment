@@ -12,9 +12,12 @@ endif()
 pd_add_test(camera vslam)
 pd_add_test(frame vslam)
 pd_add_test(image_alignment vslam)
+pd_add_test(image_alignment_dense vslam)
+
 pd_add_test(algorithm vslam)
 pd_add_test(feature_extraction vslam)
 pd_add_test(stereo_alignment vslam)
 
 target_compile_definitions(image_alignmentTest PUBLIC TEST_RESOURCE="${CMAKE_CURRENT_LIST_DIR}/resource")
 
+target_compile_definitions(image_alignment_denseTest PUBLIC TEST_RESOURCE="${CMAKE_CURRENT_LIST_DIR}/resource")

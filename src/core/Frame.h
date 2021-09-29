@@ -58,6 +58,21 @@ namespace pd{
             static std::uint64_t _idCtr;
 
         };
+
+    class FrameRGBD : public Frame
+    {
+    public:
+        using ShPtr = std::shared_ptr<FrameRGBD>;
+        using ShConstPtr = std::shared_ptr<FrameRGBD>;
+
+        FrameRGBD(const Eigen::MatrixXd& depthMap, const Image& grayImage, Camera::ConstShPtr camera,uint32_t levels = 1, const Sophus::SE3d& pose = Sophus::SE3d());
+        const Eigen::MatrixXd& depthMap(int level = 0) const;
+        Eigen::MatrixXd& depthMap(int level = 0);
+
+    private:
+        std::vector<Eigen::MatrixXd> _depthImagePyramid;
+
+    };
     }}
 
 #endif //MYLIBRARY_FRAME_H

@@ -165,5 +165,37 @@ namespace pd{
             _poseInv = pose.inverse();
         }
 
+        FrameRGBD::FrameRGBD(const Eigen::MatrixXd& depthMap, const Image& grayImage, Camera::ConstShPtr camera,uint32_t levels, const Sophus::SE3d& pose)
+        :Frame(grayImage,camera,levels,pose)
+        {
+            //TODO we could think of a sort of lazy evaluation here and only compute the respective image when needed
+            _depthImagePyramid.resize(levels);
+            _depthImagePyramid[0] = depthMap;
+            for ( uint32_t i = 1 ; i < levels; i++)
+            {
+                const Eigen::MatrixXd dmAtLevel = algorithm::resize(depthMap,1.0 / (1U << i));
+                _depthImagePyramid[i] = dmAtLevel;
+            }
+
+        }
+        const Eigen::MatrixXd& FrameRGBD::depthMap(int level) const
+        {
+            if ( level >= levels()  )
+            {
+                throw pd::Exception("Frame has only [" + std::to_string(levels()) + "] level.");
+            }
+            return _depthImagePyramid[level];
+
+        }
+        Eigen::MatrixXd& FrameRGBD::depthMap(int level)
+        {
+            if ( level >= levels()  )
+            {
+                throw pd::Exception("Frame has only [" + std::to_string(levels()) + "] level.");
+            }
+            return _depthImagePyramid[level];
+
+        }
+
     }
 }

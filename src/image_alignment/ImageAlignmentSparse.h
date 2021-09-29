@@ -2,9 +2,6 @@
 #define DIRECT_IMAGE_IMAGE_ALIGNMENT_H__
 
 
-#include <sophus/se3.hpp>
-#include <ceres/ceres.h>
-
 #include "core/Frame.h"
 
 namespace pd{namespace vision{

@@ -175,12 +175,12 @@ public:
 
     }
 };
-class CostTotal
+class OptimizerHandle
 {
     std::vector<std::shared_ptr<CostFeature>> _costFeatures;
     Eigen::MatrixXd _jacobian;
 public:
-    CostTotal(int patchSize, Frame::ShConstPtr referenceFrame, Frame::ShConstPtr targetFrame, int level, int nVisiblePoints)
+    OptimizerHandle(int patchSize, Frame::ShConstPtr referenceFrame, Frame::ShConstPtr targetFrame, int level, int nVisiblePoints)
     {
 
         if (nVisiblePoints <= Sophus::SE3d::DoF)
@@ -241,7 +241,7 @@ public:
                 }
             }
 
-            auto cost = std::make_shared<CostTotal>(_patchSize,referenceFrame,targetFrame,level,nVisiblePoints);
+            auto cost = std::make_shared<OptimizerHandle>(_patchSize,referenceFrame,targetFrame,level,nVisiblePoints);
             auto lls = std::make_shared<LeastSquaresSolver>(
                     [&](const Eigen::MatrixXd& x, Eigen::MatrixXd& residual, Eigen::MatrixXd& weights) { return cost->computeResidual(x,residual,weights);},
                     [&](const Eigen::MatrixXd& x, Eigen::MatrixXd& jacobian) { return cost->computeJacobian(x,jacobian);},
