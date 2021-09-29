@@ -6,7 +6,7 @@
 #include <ceres/rotation.h>
 
 #include "utils/Log.h"
-#include "ImageAlignment.h"
+#include "ImageAlignmentSparse.h"
 #include "core/Camera.h"
 #include "core/algorithm.h"
 #include "core/Point3D.h"
@@ -18,10 +18,10 @@
 namespace pd{ namespace vision{
 
         template<int patchSize>
-        class ImageAlignmentAutoDiff : public ImageAlignment<patchSize>
+        class ImageAlignmentSparseCeresAutoDiff : public ImageAlignmentSparse
         {
         public:
-            ImageAlignmentAutoDiff(uint32_t levelMax, uint32_t levelMin):ImageAlignment<patchSize>(levelMax,levelMin){}
+            ImageAlignmentSparseCeresAutoDiff(uint32_t levelMax, uint32_t levelMin):ImageAlignmentSparse(patchSize,levelMax,levelMin){}
             void align(Frame::ShConstPtr referenceFrame, Frame::ShConstPtr targetFrame) const override;
         };
 
@@ -123,7 +123,7 @@ namespace pd{ namespace vision{
 
 
     template<int patchSize>
-    void ImageAlignmentAutoDiff<patchSize>::align(Frame::ShConstPtr referenceFrame, Frame::ShConstPtr targetFrame) const{
+    void ImageAlignmentSparseCeresAutoDiff<patchSize>::align(Frame::ShConstPtr referenceFrame, Frame::ShConstPtr targetFrame) const{
 
         for (int level = this->_levelMax; level >= this->_levelMin; --level)
         {

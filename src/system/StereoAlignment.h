@@ -6,7 +6,7 @@
 #define VSLAM_STEREO_ALIGNMENT_H
 
 #include "feature_extraction/FeatureExtraction.h"
-#include "image_alignment/ImageAlignment.h"
+#include "image_alignment/ImageAlignmentSparse.h"
 #include "core/types.h"
 #include "sophus/so3.hpp"
 namespace pd{ namespace vision{
@@ -33,7 +33,7 @@ public:
 protected:
     const Config _config;
     const std::shared_ptr<const FeatureExtraction> _featureExtractor;
-    const std::shared_ptr<const ImageAlignment<7>> _imageAlignment;
+    const std::shared_ptr<const ImageAlignmentSparse> _imageAlignment;
     const std::shared_ptr<const Camera> _camera;
     bool _firstFrame;
     Frame::ShPtr _frameRef;

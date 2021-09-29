@@ -9,22 +9,18 @@
 
 namespace pd{namespace vision{
 
-    template<int patchSize>
-    class ImageAlignment
+    class ImageAlignmentSparse
     {
     public:
-        explicit ImageAlignment(uint32_t levelMax, uint32_t levelMin);
+        explicit ImageAlignmentSparse(uint32_t patchSize, uint32_t levelMax, uint32_t levelMin);
         virtual void align(Frame::ShConstPtr referenceFrame, Frame::ShConstPtr targetFrame) const;
 
     protected:
-        const int _levelMax,_levelMin;
+        const int _levelMax,_levelMin,_patchSize;
     };
 
 
 
 }}
 
-#include "ImageAlignment.hpp"
-#include "ImageAlignmentAutoDiff.hpp"
-#include "ImageAlignmentCeres.hpp"
 #endif //IMAGE_ALIGNMENT_H__

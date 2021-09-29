@@ -13,15 +13,15 @@
 #include "utils/utils.h"
 
 #include "SE3Parameterization.h"
-#include "ImageAlignment.h"
+#include "ImageAlignmentSparse.h"
 
 namespace pd{ namespace vision{
 
         template<int patchSize>
-        class ImageAlignmentCeres : public ImageAlignment<patchSize>
+        class ImageAlignmentSparseCeres : public ImageAlignmentSparse
         {
         public:
-            ImageAlignmentCeres(uint32_t levelMax, uint32_t levelMin):ImageAlignment<patchSize>(levelMax,levelMin){}
+            ImageAlignmentSparseCeres(uint32_t levelMax, uint32_t levelMin):ImageAlignmentSparse(patchSize,levelMax,levelMin){}
             void align(Frame::ShConstPtr referenceFrame, Frame::ShConstPtr targetFrame) const override;
 
             struct Cost : ceres::SizedCostFunction<patchSize*patchSize,Sophus::SE3d::DoF>{
@@ -44,7 +44,7 @@ namespace pd{ namespace vision{
         };
 
         template <int patchSize>
-        ImageAlignmentCeres<patchSize>::Cost::Cost (Feature2D::ShConstPtr ftRef,
+        ImageAlignmentSparseCeres<patchSize>::Cost::Cost (Feature2D::ShConstPtr ftRef,
                                                     Frame::ShConstPtr frameTarget,
                                                     uint32_t level)
                 : _ftRef(ftRef)
@@ -119,7 +119,7 @@ namespace pd{ namespace vision{
         }
 
         template <int patchSize>
-        bool ImageAlignmentCeres<patchSize>::Cost::Evaluate(double const* const* pose_raw,double* residuals,double** jacobians_raw) const {
+        bool ImageAlignmentSparseCeres<patchSize>::Cost::Evaluate(double const* const* pose_raw,double* residuals,double** jacobians_raw) const {
 
             const Eigen::Map<const Sophus::SE3d> pose(*pose_raw);
             const Eigen::Vector3d pCamera = pose * _p3d;
@@ -183,7 +183,7 @@ namespace pd{ namespace vision{
         }
 
     template<int patchSize>
-    void ImageAlignmentCeres<patchSize>::align(Frame::ShConstPtr referenceFrame, Frame::ShConstPtr targetFrame) const
+    void ImageAlignmentSparseCeres<patchSize>::align(Frame::ShConstPtr referenceFrame, Frame::ShConstPtr targetFrame) const
     {
         for (int level = this->_levelMax; level >= this->_levelMin; --level)
         {
@@ -201,7 +201,7 @@ namespace pd{ namespace vision{
                 {
                     if ( referenceFrame->isVisible(f->position(),patchSize, level))
                     {
-                        auto cost = new ImageAlignmentCeres<patchSize>::Cost(f,targetFrame,level);
+                        auto cost = new ImageAlignmentSparseCeres<patchSize>::Cost(f,targetFrame,level);
                         problem.AddResidualBlock(cost, nullptr,T.data());
 
                     }

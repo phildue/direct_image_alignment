@@ -53,7 +53,7 @@ namespace pd { namespace  vision{
     StereoAlignment::StereoAlignment(const StereoAlignment::Config &config)
     : _config(config)
     , _featureExtractor(std::make_shared<FeatureExtractionOpenCv>(config.desiredFeatures))
-    , _imageAlignment(std::make_shared<ImageAlignment<7>>(config.levelMax,config.levelMin))
+    , _imageAlignment(std::make_shared<ImageAlignmentSparse>(config.patchSize,config.levelMax,config.levelMin))
     , _firstFrame(true)
     , _camera(std::make_shared<Camera>(config.fx,config.cx,config.cy))
     {

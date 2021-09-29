@@ -5,11 +5,14 @@
 #include <gtest/gtest.h>
 #include <unsupported/Eigen/CXX11/Tensor>
 #include "feature_extraction/FeatureExtractionOpenCv.h"
-#include "image_alignment/ImageAlignment.h"
+#include "image_alignment/ImageAlignmentSparse.h"
 #include "core/Point3D.h"
 #include "core/Feature2D.h"
 #include "core/Frame.h"
 #include "utils/Log.h"
+#include "image_alignment/ImageAlignmentSparseCeresAutoDiff.hpp"
+#include "image_alignment/ImageAlignmentSparseCeres.hpp"
+
 using namespace testing;
 using namespace pd;
 using namespace pd::vision;
@@ -115,7 +118,7 @@ TEST_F(ImageAlignmentTest,ResidualZero)
     frameTarget->setPose(motion);
 
     auto p = setupPoint({3,3},10);
-    auto error = std::make_shared< ImageAlignmentCeres<2>::Cost>(frameRef->features()[0],frameTarget,0);
+    auto error = std::make_shared< ImageAlignmentSparseCeres<2>::Cost>(frameRef->features()[0],frameTarget,0);
 
     auto parameters = frameTarget->pose().log().data();
     Eigen::Matrix<double,4,1> residuals;
@@ -134,7 +137,7 @@ TEST_F(ImageAlignmentTest, DISABLED_ResidualNotZero)
     frameTarget->setPose(motion);
 
     auto p = setupPoint({3,3},10);
-    auto error = std::make_shared< ImageAlignmentCeres<2>::Cost>(frameRef->features()[0],frameTarget,0);
+    auto error = std::make_shared< ImageAlignmentSparseCeres<2>::Cost>(frameRef->features()[0],frameTarget,0);
 
     auto parameters = frameTarget->pose().log().data();
     Eigen::Matrix<double,4,1> residuals;
@@ -177,7 +180,7 @@ TEST_F(ImageAlignmentTest,DenseResidual)
             if (frameRef->isVisible({j,i},2))
             {
                 auto p = setupPoint({j,i},depthMat(i,j));
-                auto error = std::make_shared< ImageAlignmentCeres<1>::Cost>(p->features()[0],frameTarget,0);
+                auto error = std::make_shared< ImageAlignmentSparseCeres<1>::Cost>(p->features()[0],frameTarget,0);
 
                 auto parameters = frameTarget->pose().log().data();
                 Eigen::Matrix<double,1,1> residuals;
@@ -237,7 +240,7 @@ TEST_F(ImageAlignmentTest,AnalyticalDiffGt)
     motion.translation().x() = 20;
     createImages(9,9,motion,10);
     auto p = setupPoint({3,3},10);
-    ImageAlignment<2> imageAlignment(0,0);
+    ImageAlignmentSparse imageAlignment(2,0,0);
 
     frameTarget->setPose(motion);
     imageAlignment.align(frameRef,frameTarget);
@@ -270,7 +273,7 @@ TEST_F(ImageAlignmentTest,DenseAnalyticalDiffNoise)
             }
         }
     }
-    ImageAlignment<1> imageAlignment(0,0);
+    ImageAlignmentSparse imageAlignment(1,0,0);
 
 
     imageAlignment.align(frameRef,frameTarget);
@@ -311,7 +314,7 @@ TEST_F(ImageAlignmentTest,SparseAnalyticalDiffNoise)
             }
         }
     }
-    ImageAlignment<patchSize> imageAlignment(0,0);
+    ImageAlignmentSparse imageAlignment(patchSize,0,0);
 
     imageAlignment.align(frameRef,frameTarget);
 
@@ -343,7 +346,7 @@ TEST_F(ImageAlignmentTest,DISABLED_DenseAutoDiffNoiseSim)
             }
         }
     }
-    ImageAlignmentAutoDiff<1> imageAlignment(0,0);
+    ImageAlignmentSparseCeresAutoDiff<1> imageAlignment(0,0);
 
 
     imageAlignment.align(frameRef,frameTarget);
@@ -360,7 +363,7 @@ TEST_F(ImageAlignmentTest,DISABLED_AlignAutoDiffGt)
     motion.translation().x() = 20;
     createImages(9,9,motion,10);
     auto p = setupPoint({3,3},10);
-    ImageAlignmentAutoDiff<2> imageAlignment(0,0);
+    ImageAlignmentSparseCeresAutoDiff<2> imageAlignment(0,0);
 
     frameTarget->setPose(motion);
     imageAlignment.align(frameRef,frameTarget);
@@ -376,7 +379,7 @@ TEST_F(ImageAlignmentTest,DISABLED_AutoDiffNoise)
     motion.translation().x() = 20;
     createImages(9,9,motion,10);
     auto p = setupPoint({3,3},10);
-    ImageAlignmentAutoDiff<2> imageAlignment(0,0);
+    ImageAlignmentSparseCeresAutoDiff<2> imageAlignment(0,0);
 
     motion.translation().x() += 0.1;
     frameTarget->setPose(motion);
@@ -403,7 +406,7 @@ TEST_F(ImageAlignmentTest,DISABLED_DenseAutoDiffNoise)
             }
         }
     }
-    ImageAlignmentAutoDiff<1> imageAlignment(0,0);
+    ImageAlignmentSparseCeresAutoDiff<1> imageAlignment(0,0);
 
     motion.translation().x() += 15;
     frameTarget->setPose(motion);

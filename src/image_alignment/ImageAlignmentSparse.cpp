@@ -13,13 +13,12 @@
 #include "utils/utils.h"
 
 #include "solver/LeastSquaresSolver.h"
-#include "ImageAlignment.h"
+#include "ImageAlignmentSparse.h"
 
 namespace pd{ namespace vision{
 
 
 
-template <int patchSize>
 class CostFeature
 {
 private:
@@ -36,6 +35,7 @@ private:
     const int _idx;
 public:
     CostFeature (int idx,
+                 int patchSize,
                  Feature2D::ShConstPtr ftRef,
                  Frame::ShConstPtr frameTarget,
                  uint32_t level)
@@ -118,7 +118,7 @@ public:
 
     bool computeJacobian(Eigen::MatrixXd &jacobian)
     {
-        for (int i = 0; i < (patchSize*patchSize); i++)
+        for (int i = 0; i < (_patchArea); i++)
         {
             jacobian.row(_idx + i) = _jacobian.row(i);
 
@@ -175,13 +175,12 @@ public:
 
     }
 };
-template<int patchSize>
 class CostTotal
 {
-    std::vector<std::shared_ptr<CostFeature<patchSize>>> _costFeatures;
+    std::vector<std::shared_ptr<CostFeature>> _costFeatures;
     Eigen::MatrixXd _jacobian;
 public:
-    CostTotal(Frame::ShConstPtr referenceFrame, Frame::ShConstPtr targetFrame, int level, int nVisiblePoints)
+    CostTotal(int patchSize, Frame::ShConstPtr referenceFrame, Frame::ShConstPtr targetFrame, int level, int nVisiblePoints)
     {
 
         if (nVisiblePoints <= Sophus::SE3d::DoF)
@@ -198,7 +197,7 @@ public:
         {
             if ( f->point() && f->frame()->isVisible(f->position(), std::max(patchSize, 2), level))
             {
-                auto costFeature = std::make_shared<CostFeature<patchSize>> (idxF * (patchSize*patchSize), f, targetFrame, level);
+                auto costFeature = std::make_shared<CostFeature> (idxF * (patchSize*patchSize), patchSize, f, targetFrame, level);
                 costFeature->computeJacobian(_jacobian);
                 _costFeatures[idxF++] = costFeature;
             }
@@ -225,8 +224,7 @@ public:
 }
 };
 
-    template<int patchSize>
-    void ImageAlignment<patchSize>::align(Frame::ShConstPtr referenceFrame, Frame::ShConstPtr targetFrame) const
+    void ImageAlignmentSparse::align(Frame::ShConstPtr referenceFrame, Frame::ShConstPtr targetFrame) const
     {
         for (int level = _levelMax; level >= _levelMin; --level)
         {
@@ -237,18 +235,18 @@ public:
             int nVisiblePoints = 0;
             for ( const auto& f : referenceFrame->features() )
             {
-                if ( f->point() && f->frame()->isVisible(f->position(), std::max(patchSize, 2), level))
+                if ( f->point() && f->frame()->isVisible(f->position(), std::max(_patchSize, 2), level))
                 {
                     nVisiblePoints++;
                 }
             }
 
-            auto cost = std::make_shared<CostTotal<patchSize>>(referenceFrame,targetFrame,level,nVisiblePoints);
+            auto cost = std::make_shared<CostTotal>(_patchSize,referenceFrame,targetFrame,level,nVisiblePoints);
             auto lls = std::make_shared<LeastSquaresSolver>(
                     [&](const Eigen::MatrixXd& x, Eigen::MatrixXd& residual, Eigen::MatrixXd& weights) { return cost->computeResidual(x,residual,weights);},
                     [&](const Eigen::MatrixXd& x, Eigen::MatrixXd& jacobian) { return cost->computeJacobian(x,jacobian);},
                     [&](const Eigen::MatrixXd& dx, Eigen::MatrixXd& x) { x = (Sophus::SE3d::exp(x) * Sophus::SE3d::exp(-dx)).log(); return true;},
-                    nVisiblePoints * patchSize * patchSize,
+                    nVisiblePoints * _patchSize * _patchSize,
                     Sophus::SE3d::DoF,
                     0.0001,
                     0.0001,
@@ -259,7 +257,7 @@ public:
 
             targetFrame->setPose(Sophus::SE3d::exp(posev6d)*referenceFrame->pose());
 
-            Log::logReprojection(referenceFrame,targetFrame,patchSize/2,4);
+            Log::logReprojection(referenceFrame,targetFrame,_patchSize/2,4);
 
             if (VLOG_IS_ON(4))
             {
@@ -274,10 +272,10 @@ public:
     }
 
 
-    template<int patchSize>
-    ImageAlignment<patchSize>::ImageAlignment(uint32_t levelMax, uint32_t levelMin)
+    ImageAlignmentSparse::ImageAlignmentSparse(uint32_t patchSize, uint32_t levelMax, uint32_t levelMin)
     : _levelMax(levelMax)
     , _levelMin(levelMin)
+    , _patchSize(patchSize)
     {}
 
     }

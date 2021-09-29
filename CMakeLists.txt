@@ -15,6 +15,7 @@ set(sources
         src/core/Camera.cpp
 		src/core/algorithm.cpp
 		src/solver/LeastSquaresSolver.cpp
+		src/image_alignment/ImageAlignmentSparse.cpp
 		src/utils/Log.cpp
 		src/utils/utils.cpp
         src/system/StereoAlignment.cpp
@@ -34,10 +35,9 @@ set(headers
 		src/utils/Log.h
 		src/utils/utils.h
 		src/image_alignment/SE3Parameterization.h
-		src/image_alignment/ImageAlignment.hpp
-		src/image_alignment/ImageAlignmentAutoDiff.hpp
-		src/image_alignment/ImageAlignmentCeres.hpp
-		src/image_alignment/ImageAlignment.h
+		src/image_alignment/ImageAlignmentSparseCeresAutoDiff.hpp
+		src/image_alignment/ImageAlignmentSparseCeres.hpp
+		src/image_alignment/ImageAlignmentSparse.h
 		src/feature_extraction/FeatureExtraction.h
 		src/feature_extraction/FeatureExtractionOpenCv.h
 		src/feature_extraction/feature_extraction.h
