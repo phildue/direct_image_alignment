@@ -16,7 +16,7 @@ TEST(MathTest,BilinearInterpolation)
     m << 128,128,128,
     255,255,255,
     255,255,255;
-    const int r = algorithm::bilinearInterpolation(m,0.5,0.5);
+    const std::uint8_t r = algorithm::bilinearInterpolation<std::uint8_t >(m,0.5,0.5);
     EXPECT_EQ(r,(255+128)/2);
 }
 
@@ -56,7 +56,7 @@ TEST(AlgorithmTest, Resize)
             255,128,255,255,
             255,255,255,255;
 
-    const Image mRes = algorithm::resize(m,0.5);
+    const Image mRes = algorithm::resize<std::uint8_t >(m,0.5);
     EXPECT_EQ(mRes(0,0),128U);
     EXPECT_EQ(mRes(1,1),255U);
 

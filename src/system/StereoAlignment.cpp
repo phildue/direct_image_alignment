@@ -1,6 +1,7 @@
 //
 // Created by phil on 07.08.21.
 //
+#include <vslam/vslam.h>
 #include "feature_extraction/feature_extraction.h"
 #include "StereoAlignment.h"
 #include "core/Point3D.h"
@@ -13,50 +14,42 @@ namespace pd { namespace  vision{
 
         VLOG(5) << "Align";
 
-        Sophus::SE3d relativePose;
-        auto curFrame = std::make_shared<Frame>(img,_camera,_config.levelMax + 1 );
+        Sophus::SE3d egoMotion;
+        auto curFrame = std::make_shared<FrameRGBD>(depthMap, img,_camera,_config.levelMax + 1 );
         Log::logFrame(curFrame,4,"System");
-        if ( _firstFrame )
+        if ( _fNo == 0 )
         {
             VLOG(5) << "First frame.";
-            _firstFrame = false;
             _frameRef = curFrame;
 
         }else {
-            VLOG(5) << "New frame..";
 
+            VLOG(5) << "New frame..";
+            if ( _fNo > 2)
+            {
+                curFrame->setPose(_motionPredictor->predict(t));
+            }
             _imageAlignment->align(_frameRef,curFrame);
 
+            egoMotion = algorithm::computeRelativeTransform(_frameRef->pose(),curFrame->pose());
+
             _frameRef = curFrame;
+            _motionPredictor->update(_frameRef->pose(),t);
+
 
         }
-        _featureExtractor->extractFeatures(_frameRef);
-
-
-        int nPoints = 0;
-        for(const auto& ft : _frameRef->features())
-        {
-            int i = ft->position().x();
-            int j = ft->position().y();
-            const double& d = depthMap(i,j);
-            if ( d > 0 )
-            {
-                const auto p3d = _frameRef->image2world(ft->position(), d);
-                ft->point() = std::make_shared<Point3D>(p3d,ft);
-                nPoints ++;
-            }
-        }
-        VLOG(5) << "Found: ["<< nPoints << "] 3d points.";
-        return relativePose;
+        _fNo++;
+        return curFrame->pose();
     }
 
     StereoAlignment::StereoAlignment(const StereoAlignment::Config &config)
     : _config(config)
     , _featureExtractor(std::make_shared<FeatureExtractionOpenCv>(config.desiredFeatures))
-    , _imageAlignment(std::make_shared<ImageAlignmentSparse>(config.patchSize,config.levelMax,config.levelMin))
-    , _firstFrame(true)
+    , _imageAlignment(std::make_shared<ImageAlignmentDense>(config.levelMax,config.levelMin))
+    , _fNo(0)
     , _camera(std::make_shared<Camera>(config.fx,config.cx,config.cy))
+    , _motionPredictor(std::make_shared<MotionPrediction>())
     {
-        VLOG(5) << "Stereoaligner constructed";
+        VLOG(3) << "Stereoaligner constructed with camera: " << config.fx << " , " << config.cx << " , " << config.cy;
     }
 }}

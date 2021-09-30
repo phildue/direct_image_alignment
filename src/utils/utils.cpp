@@ -14,7 +14,8 @@
 namespace pd{ namespace vision {
         void utils::throw_if_nan(const Eigen::MatrixXd &mat, const std::string &msg, std::shared_ptr<const Feature2D> ft)
         {
-            if (std::isnan(mat.norm()))
+            auto result = mat.norm();
+            if (std::isnan(result) || std::isinf(result))
             {
                 std::stringstream ss;
                 ss << mat;
@@ -24,7 +25,8 @@ namespace pd{ namespace vision {
 
         void utils::throw_if_nan(const Eigen::MatrixXd &mat, const std::string &msg)
         {
-            if (std::isnan(mat.norm()))
+            auto result = mat.norm();
+            if (std::isnan(mat.norm()) || std::isinf(result))
             {
                 std::stringstream ss;
                 ss << mat;

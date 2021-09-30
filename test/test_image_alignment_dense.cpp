@@ -69,7 +69,7 @@ public:
 
 };
 
-TEST_F(ImageAlignmentDenseTest,DenseAnalyticalDiffNoise)
+TEST_F(ImageAlignmentDenseTest,Align)
 {
     Log::init(4,0,0);
     SE3d motion;
@@ -84,6 +84,29 @@ TEST_F(ImageAlignmentDenseTest,DenseAnalyticalDiffNoise)
     ImageAlignmentDense imageAlignment(0,0);
 
 
+    imageAlignment.align(frameRef,frameTarget);
+
+    auto diffT = frameTarget->pose().inverse() * motion;
+
+    EXPECT_NEAR(frameTarget->pose().translation().x(),motionGt.translation().x(),maxErr) << "Translation error should be smaller.";
+}
+
+TEST_F(ImageAlignmentDenseTest,Align2Times)
+{
+    Log::init(4,0,0);
+    SE3d motion;
+    loadRefImage(fs::path(TEST_RESOURCE"/sim.png"),fs::path(TEST_RESOURCE"/sim.png"),120,160);
+
+    createTargetImage(motion,frameRef->depthMap(0));
+
+    auto motionGt = motion;
+    motion.translation().x() += 0.1;
+    frameTarget->setPose(motion);
+
+    ImageAlignmentDense imageAlignment(0,0);
+
+
+    imageAlignment.align(frameRef,frameTarget);
     imageAlignment.align(frameRef,frameTarget);
 
     auto diffT = frameTarget->pose().inverse() * motion;

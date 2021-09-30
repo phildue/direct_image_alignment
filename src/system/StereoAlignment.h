@@ -5,10 +5,12 @@
 #ifndef VSLAM_STEREO_ALIGNMENT_H
 #define VSLAM_STEREO_ALIGNMENT_H
 
+#include "motion_prediction/MotionPrediction.h"
 #include "feature_extraction/FeatureExtraction.h"
-#include "image_alignment/ImageAlignmentSparse.h"
+#include "image_alignment/ImageAlignmentDense.h"
 #include "core/types.h"
 #include "sophus/so3.hpp"
+
 namespace pd{ namespace vision{
 
 class StereoAlignment {
@@ -33,10 +35,11 @@ public:
 protected:
     const Config _config;
     const std::shared_ptr<const FeatureExtraction> _featureExtractor;
-    const std::shared_ptr<const ImageAlignmentSparse> _imageAlignment;
+    const std::shared_ptr<const ImageAlignmentDense> _imageAlignment;
     const std::shared_ptr<const Camera> _camera;
-    bool _firstFrame;
-    Frame::ShPtr _frameRef;
+    const std::shared_ptr<MotionPrediction> _motionPredictor;
+    int _fNo;
+    FrameRGBD::ShPtr _frameRef;
 };
 
     }}

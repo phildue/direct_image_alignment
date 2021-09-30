@@ -59,7 +59,7 @@ public:
             {
                 const double depth = referenceFrame->depthMap(_level)(v,u);
 
-                if ( std::isnan(depth))
+                if ( std::isnan(depth) || depth <= 0.1 || std::isinf(depth))
                 {
                     _valid(idxPixel) = 0;
 
@@ -70,9 +70,12 @@ public:
                     _pointsImageRef.col(idxPixel) = Eigen::Matrix<int,2,1>(u,v);
                     _pointsCamRef.col(idxPixel) = referenceFrame->image2camera({u,v},depth);
 
+
+                    utils::throw_if_nan(_pointsCamRef.col(idxPixel), "3D Point");
+
                     const auto J_xyz2uv = referenceFrame->camera()->J_xyz2uv(_pointsCamRef.col(idxPixel), _scale);
 
-                    VLOG(5) << "J_xyz2uv =\n " << J_xyz2uv;
+                    VLOG(5) << "scale: " << _scale << "p3d:" << _pointsCamRef.col(idxPixel).transpose() << "J_xyz2uv =\n " << J_xyz2uv;
 
                     utils::throw_if_nan(J_xyz2uv, "Point Jac.");
 
@@ -135,6 +138,7 @@ public:
                 weights(idxPoint) = 0;
             }
         }
+        return true;
     }
 
     bool computeJacobian(const Eigen::MatrixXd& x, Eigen::MatrixXd& jacobian)
@@ -150,7 +154,7 @@ public:
         {
             Sophus::SE3d T = algorithm::computeRelativeTransform(referenceFrame->pose(), targetFrame->pose());
             Eigen::MatrixXd posev6d = T.log();
-            VLOG(4) << "IA init: " << " Level: " << level  << " #Features: " << referenceFrame->features().size();
+            VLOG(4) << "IA init: " << " Level: " << level;
 
             const int nPixels = (referenceFrame->width(level)-2)*(referenceFrame->height(level)-2);
 
@@ -170,17 +174,7 @@ public:
 
             targetFrame->setPose(Sophus::SE3d::exp(posev6d)*referenceFrame->pose());
 
-            Log::logReprojection(referenceFrame,targetFrame,1,4);
-
-            if (VLOG_IS_ON(4))
-            {
-            //    VLOG(4) << summary.FullReport();
-
-            }else{
-            //    VLOG(3) << summary.BriefReport();
-
             }
-        }
 
     }
 

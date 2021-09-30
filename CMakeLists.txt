@@ -22,6 +22,7 @@ set(sources
         src/system/StereoAlignment.cpp
 		src/feature_extraction/FeatureExtraction.cpp
 		src/feature_extraction/FeatureExtractionOpenCv.cpp
+		src/motion_prediction/MotionPrediction.cpp
 		)
 
 set(headers
@@ -44,6 +45,7 @@ set(headers
 		src/feature_extraction/FeatureExtractionOpenCv.h
 		src/feature_extraction/feature_extraction.h
         src/system/StereoAlignment.h
+		src/motion_prediction/MotionPrediction.h
 		include/vslam/vslam.h
 		)
 
