@@ -5,7 +5,7 @@ add_library(${name}
     ${sources}
     ${headers}
     )
-
+set_property(TARGET ${name} PROPERTY POSITION_INDEPENDENT_CODE ON)
 # Configure alias so there is no difference whether we link from source/from already built
 add_library(${namespace}::${name} ALIAS ${name})
 
@@ -43,6 +43,12 @@ install(DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/include/
     DESTINATION include/
     FILES_MATCHING # install only matched files
     PATTERN "*.h" # select header files
+    )
+
+install(DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/cfg/
+    DESTINATION cfg/
+    FILES_MATCHING # install only matched files
+    PATTERN "*" # select all files
     )
 
 include(CMakePackageConfigHelpers)

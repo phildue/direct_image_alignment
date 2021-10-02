@@ -10,15 +10,22 @@
 #include "core/Frame.h"
 #include "Exceptions.h"
 #include "core/Point3D.h"
+#include "easylogging++.h"
+
+INITIALIZE_EASYLOGGINGPP
 namespace pd{ namespace vision {
 
         int Log::_showLevel = 3;
         int Log::_blockLevel = 3;
 
         void Log::init(int loglevel, int showLevel, int blockLevel) {
-            FLAGS_logtostderr = true;
-            FLAGS_v = loglevel;
-            FLAGS_colorlogtostderr = true;
+            // Load configuration from file
+            el::Configurations conf(CFG_DIR"/log.conf");
+            // Reconfigure single logger
+            el::Loggers::reconfigureLogger("default", conf);
+            // Actually reconfigure all loggers instead
+            el::Loggers::reconfigureAllLoggers(conf);
+            // Now all the loggers will use configuration from file
             _showLevel = showLevel;
             _blockLevel = blockLevel;
         }

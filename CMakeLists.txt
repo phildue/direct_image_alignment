@@ -23,6 +23,7 @@ set(sources
 		src/feature_extraction/FeatureExtraction.cpp
 		src/feature_extraction/FeatureExtractionOpenCv.cpp
 		src/motion_prediction/MotionPrediction.cpp
+		${CMAKE_BINARY_DIR}/include/easylogging++.cc
 		)
 
 set(headers
@@ -51,6 +52,10 @@ set(headers
 
 pd_setup_lib(${PROJECT_NAME} ${PROJECT_VERSION} "${sources}" "${headers}" pd)
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
+target_compile_definitions(${PROJECT_NAME} PUBLIC 
+$<BUILD_INTERFACE:CFG_DIR="${CMAKE_CURRENT_LIST_DIR}/cfg">
+$<INSTALL_INTERFACE:CFG_DIR="cfg">)
+
 # Dependencies
 
 if (UNIX)
@@ -79,6 +84,7 @@ endif()
 
 target_link_libraries(${PROJECT_NAME} CONAN_PKG::sophus)
 target_link_libraries(${PROJECT_NAME} CONAN_PKG::glog)
+target_link_libraries(${PROJECT_NAME} CONAN_PKG::easyloggingpp)
 
 
 # Add tests

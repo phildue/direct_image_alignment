@@ -19,7 +19,7 @@ class RecipeConan(ConanFile):
         self.requires("eigen/3.3.7@conan/stable")
         self.requires("sophus/1.0.0")
         self.requires("opencv/4.5.2")
-
+        self.requires("easyloggingpp/9.94.1")
      #   self.requires("ceres-solver/2.0.0") Broken
         self.requires("glog/0.5.0")
 
@@ -32,6 +32,9 @@ class RecipeConan(ConanFile):
     def config_options(self):
         if self.settings.os == "Windows":
             del self.options.fPIC
+
+    def imports(self):
+       self.copy("*.cc")
 
 
     def export_sources(self):
