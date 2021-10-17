@@ -13,7 +13,6 @@ using namespace pd::vision;
 
 TEST(StereoAlignmentTest,Align)
 {
-    Log::init(4);
     StereoAlignment::Config config{};
     StereoAlignment stereoAlignment(config);
 

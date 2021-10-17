@@ -19,7 +19,7 @@ namespace pd{
         class Frame {
         public:
             using ShPtr = std::shared_ptr<Frame>;
-            using ShConstPtr = std::shared_ptr<Frame>;
+            using ShConstPtr = std::shared_ptr<const Frame>;
 
             explicit  Frame(const Image& grayImage, Camera::ConstShPtr camera,uint32_t levels = 1, const Sophus::SE3d& pose = Sophus::SE3d());
             void addFeature(Feature2D::ShPtr ft);

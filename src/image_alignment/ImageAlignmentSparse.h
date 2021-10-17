@@ -10,7 +10,7 @@ namespace pd{namespace vision{
     {
     public:
         explicit ImageAlignmentSparse(uint32_t patchSize, uint32_t levelMax, uint32_t levelMin);
-        virtual void align(Frame::ShConstPtr referenceFrame, Frame::ShConstPtr targetFrame) const;
+        virtual void align(Frame::ShConstPtr referenceFrame, Frame::ShPtr targetFrame) const;
 
     protected:
         const int _levelMax,_levelMin,_patchSize;

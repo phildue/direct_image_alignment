@@ -16,7 +16,7 @@ class RecipeConan(ConanFile):
     def requirements(self):
         if self.options.build_tests:
            self.requires("gtest/cci.20210126")
-        self.requires("eigen/3.3.7@conan/stable")
+        self.requires("eigen/3.4.0")
         self.requires("sophus/1.0.0")
         self.requires("opencv/4.5.2")
         self.requires("easyloggingpp/9.94.1")

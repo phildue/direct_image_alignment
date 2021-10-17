@@ -6,6 +6,7 @@
 
 
 #include "utils/Log.h"
+#include "utils/visuals.h"
 #include "FeatureExtraction.h"
 #include "core/Frame.h"
 namespace pd{ namespace vision
@@ -67,7 +68,7 @@ namespace pd{ namespace vision
         }
         VLOG(3) << "Extracted: ["<< keyPoints.size() << "] features.";
 
-        Log::logFeatures(frame, 3, 4,true, "Features");
+        Log::getImageLog("Features")->append(&vis::drawFeatures,std::shared_ptr<const Frame>( frame), 3,true);
 
 
     }

@@ -11,6 +11,7 @@
 #include "core/Frame.h"
 #include "core/Feature2D.h"
 #include "utils/utils.h"
+#include "utils/visuals.h"
 
 namespace pd{ namespace vision{
 
@@ -40,7 +41,7 @@ namespace pd{ namespace vision{
 
             VLOG(3) << "Created: ["<< frame->features().size() << "] features.";
 
-            Log::logFeatures(frame, 3, 4,false, "Features");
+            Log::getImageLog("Features")->append(&vis::drawFeatures, std::shared_ptr<const Frame>(frame), 3, false);
 
         }
 }}

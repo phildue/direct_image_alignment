@@ -154,7 +154,7 @@ namespace pd{ namespace vision{
             VLOG(4) << "Setup IA with #Parameters: " << problem.NumParameters() << ", #Residuals: " << problem.NumResiduals();
             ceres::Solve(options, &problem, &summary);
             targetFrame->setPose(pose);
-            Log::logReprojection(referenceFrame,targetFrame,patchSize/2,4);
+            Log::get("ImageAlignment")->log(&vis::drawReprojection,std::shared_ptr<const Frame>(referenceFrame),targetFrame,patchSize/2,4);
             if (VLOG_IS_ON(4))
             {
 //                VLOG(4) << summary.FullReport();

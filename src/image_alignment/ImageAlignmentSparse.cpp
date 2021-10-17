@@ -11,6 +11,7 @@
 #include "core/Feature2D.h"
 
 #include "utils/utils.h"
+#include "utils/visuals.h"
 
 #include "solver/LeastSquaresSolver.h"
 #include "ImageAlignmentSparse.h"
@@ -224,7 +225,7 @@ public:
 }
 };
 
-    void ImageAlignmentSparse::align(Frame::ShConstPtr referenceFrame, Frame::ShConstPtr targetFrame) const
+    void ImageAlignmentSparse::align(Frame::ShConstPtr referenceFrame, Frame::ShPtr targetFrame) const
     {
         for (int level = _levelMax; level >= _levelMin; --level)
         {
@@ -257,7 +258,7 @@ public:
 
             targetFrame->setPose(Sophus::SE3d::exp(posev6d)*referenceFrame->pose());
 
-            Log::logReprojection(referenceFrame,targetFrame,_patchSize/2,4);
+            Log::getImageLog("image_alignment")->append(&vis::drawReprojection,std::shared_ptr<const Frame>(referenceFrame),std::shared_ptr<const Frame>(targetFrame),(int)(_patchSize/2));
 
             if (VLOG_IS_ON(4))
             {

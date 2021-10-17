@@ -7,18 +7,6 @@ namespace pd{ namespace vision{ namespace algorithm{
 
 
 
-    std::uint8_t bilinearInterpolation(const Image& mat, double x, double y)
-    {
-        return bilinearInterpolation<std::uint8_t>(mat,x,y);
-    }
-
-    double bilinearInterpolation(const Eigen::MatrixXd& mat, double x, double y)
-    {
-        return bilinearInterpolation<double>(mat,x,y);
-
-    }
-
-
     double rmse(const Eigen::MatrixXi& patch1, const Eigen::MatrixXi& patch2)
     {
         if (patch1.rows() != patch2.rows() || patch1.cols() != patch2.cols())
@@ -99,6 +87,33 @@ namespace pd{ namespace vision{ namespace algorithm{
     Sophus::SE3d computeRelativeTransform(const Sophus::SE3d& t0, const Sophus::SE3d& t1)
     {
         return t1 * t0.inverse();
+    }
+    Eigen::MatrixXd normalize(const Eigen::MatrixXd& mat)
+    {   
+        return normalize(mat, mat.minCoeff(),mat.maxCoeff());
+    }
+    Eigen::MatrixXd normalize(const Eigen::MatrixXd& mat,double min, double max)
+    {   Eigen::MatrixXd matImage = mat;
+        matImage.array() -= min;
+        matImage /= (max - min);
+        return matImage;
+    }
+
+    double median(const Eigen::VectorXd& d)
+    {
+        std::vector<double> r (d.rows());
+        for ( int i = 0; i < d.rows(); i++)
+        {
+            r[i]=d(i);
+        }
+        std::sort( r.begin(), r.end() );
+        const int n = r.size();
+        if (n % 2 == 0)
+        {
+            return (r[n/2-1] + r[n/2+1])/2;
+        }else{
+            return r[n/2];
+        }
     }
 
 }}}

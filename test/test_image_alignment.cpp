@@ -285,7 +285,6 @@ TEST_F(ImageAlignmentTest,DenseAnalyticalDiffNoise)
 
 TEST_F(ImageAlignmentTest,SparseAnalyticalDiffNoise)
 {
-    Log::init(4,4,4);
     SE3d motion;
     loadRefImage(fs::path(TEST_RESOURCE"/sim.png"),120,160);
 
@@ -321,7 +320,8 @@ TEST_F(ImageAlignmentTest,SparseAnalyticalDiffNoise)
     auto diffT = frameTarget->pose().inverse() * motion;
 
     EXPECT_NEAR(frameTarget->pose().translation().x(),motionGt.translation().x(),maxErr) << "Translation error should be smaller.";
-}
+    EXPECT_NEAR(frameTarget->pose().translation().y(),motionGt.translation().y(),maxErr) << "Translation error should be smaller.";
+    EXPECT_NEAR(frameTarget->pose().translation().z(),motionGt.translation().z(),maxErr) << "Translation error should be smaller.";}
 
 TEST_F(ImageAlignmentTest,DISABLED_DenseAutoDiffNoiseSim)
 {

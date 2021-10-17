@@ -66,3 +66,14 @@ TEST(AlgorithmTest, Resize)
 
 
 }
+TEST(AlgorithmTest,Normalize)
+{
+    Eigen::Matrix<double ,3,3>m;
+    m << 128,128,128,
+    255,255,255,
+    255,255,255;
+    const auto r = algorithm::normalize(m);
+    EXPECT_NEAR(r.maxCoeff(),1.0,0.0001);
+    EXPECT_NEAR(r.minCoeff(),0.0,0.0001);
+
+}

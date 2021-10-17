@@ -18,7 +18,9 @@ pd_add_test(algorithm vslam)
 pd_add_test(feature_extraction vslam)
 pd_add_test(stereo_alignment vslam)
 pd_add_test(motion_prediction vslam)
+pd_add_test(solver vslam)
 
 target_compile_definitions(image_alignmentTest PUBLIC TEST_RESOURCE="${CMAKE_CURRENT_LIST_DIR}/resource")
 
 target_compile_definitions(image_alignment_denseTest PUBLIC TEST_RESOURCE="${CMAKE_CURRENT_LIST_DIR}/resource")
+target_compile_definitions(solverTest PUBLIC TEST_RESOURCE="${CMAKE_CURRENT_LIST_DIR}/resource")

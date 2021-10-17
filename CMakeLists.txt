@@ -17,6 +17,7 @@ set(sources
 		src/solver/LeastSquaresSolver.cpp
 		src/image_alignment/ImageAlignmentSparse.cpp
 		src/image_alignment/ImageAlignmentDense.cpp
+		src/utils/visuals.cpp
 		src/utils/Log.cpp
 		src/utils/utils.cpp
         src/system/StereoAlignment.cpp
@@ -35,6 +36,7 @@ set(headers
 		src/solver/LeastSquaresSolver.h
 		src/feature_extraction/Descriptor.h
 		src/utils/Exceptions.h
+		src/utils/visuals.h
 		src/utils/Log.h
 		src/utils/utils.h
 		src/image_alignment/SE3Parameterization.h
@@ -56,6 +58,10 @@ target_compile_definitions(${PROJECT_NAME} PUBLIC
 $<BUILD_INTERFACE:CFG_DIR="${CMAKE_CURRENT_LIST_DIR}/cfg">
 $<INSTALL_INTERFACE:CFG_DIR="cfg">)
 
+target_compile_definitions(${PROJECT_NAME} PUBLIC 
+$<BUILD_INTERFACE:LOG_DIR="${CMAKE_BINARY_DIR}/log">
+$<INSTALL_INTERFACE:CFG_DIR="/tmp/vslam/log">)
+
 # Dependencies
 
 if (UNIX)
@@ -70,11 +76,8 @@ find_package(Ceres REQUIRED)
 target_link_libraries(${PROJECT_NAME} Ceres::ceres)
 #target_link_libraries(${PROJECT_NAME} CONAN_PKG::ceres-solver)
 
-if (TARGET Eigen3::Eigen)
-	target_link_libraries(${PROJECT_NAME} Eigen3::Eigen)
-else()
-	target_link_libraries(${PROJECT_NAME} CONAN_PKG::Eigen3)
-endif()
+
+	target_link_libraries(${PROJECT_NAME} CONAN_PKG::eigen)
 
 if (DEFINED OpenCV_LIBRARIES)
 	target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBRARIES})
