@@ -5,9 +5,9 @@
 
 namespace pd{namespace vision{
 
-    LeastSquaresSolver::LeastSquaresSolver(std::function<bool(const Eigen::MatrixXd&, Eigen::MatrixXd&,Eigen::MatrixXd&)> computeResidual,
-            std::function<bool(const Eigen::MatrixXd&, Eigen::MatrixXd&)> computeJacobian,
-            std::function<bool(const Eigen::MatrixXd&, Eigen::MatrixXd&)> updateX,
+    LeastSquaresSolver::LeastSquaresSolver(std::function<bool(const Eigen::VectorXd&, Eigen::VectorXd&,Eigen::VectorXd&)> computeResidual,
+            std::function<bool(const Eigen::VectorXd&, Eigen::MatrixXd&)> computeJacobian,
+            std::function<bool(const Eigen::VectorXd&, Eigen::VectorXd&)> updateX,
             int nObservations,
             int nParameters,
             double lambda0,
@@ -25,109 +25,115 @@ namespace pd{namespace vision{
     {
         Log::get("solver");
     }
-    void LeastSquaresSolver::solve(Eigen::MatrixXd& x)
+    void LeastSquaresSolver::solve(Eigen::VectorXd& x)
     {
         Eigen::VectorXd chiSquared(_maxIterations);
         chiSquared.setZero();
+        Eigen::VectorXd chi2Predicted(_maxIterations);
+        chi2Predicted.setZero();
+       
         Eigen::VectorXd lambda(_maxIterations);
         lambda.setConstant(_lambda0);
         Eigen::VectorXd stepSize(_maxIterations);
         stepSize.setZero();
-        solve(x,chiSquared,lambda,stepSize);
+        solve(x,chiSquared,chi2Predicted,lambda,stepSize);
     }
 
-    double LeastSquaresSolver::computeChi2(const Eigen::MatrixXd& residuals, const Eigen::MatrixXd& weights)
-    {
-        double chiSquaredError     = 0.0;
+    
 
-        for ( int64_t i( 0 ); i < weights.size(); i++ )
-        {
-                chiSquaredError += residuals( i ) * residuals( i ) * weights( i );
-        }
-        return chiSquaredError;
-    }
+        void LeastSquaresSolver::solve(Eigen::VectorXd &x, Eigen::VectorXd &chi2,Eigen::VectorXd &dchi2pred, Eigen::VectorXd &lambda, Eigen::VectorXd& stepSize) {
+             SOLVER( INFO ) << "Solving Problem for " << _nParameters << " parameters. With " << _nObservations << " observations.";
 
-        void LeastSquaresSolver::solve(Eigen::MatrixXd &x, Eigen::VectorXd &chi2, Eigen::VectorXd &lambda, Eigen::VectorXd& stepSize) {
-            Eigen::MatrixXd W(_nObservations, 1);
-            W.setIdentity();
-            Eigen::MatrixXd dx(_nParameters, 1);
-            dx.setZero();
-            Eigen::MatrixXd J(_nObservations, _nParameters);
-            J.setZero();
-            Eigen::MatrixXd residuals(_nObservations, 1);
-            residuals.setConstant(std::numeric_limits <double >::max());
-            _computeResidual(x,residuals,W);
-            SOLVER( INFO ) << "Solving Problem for " << _nParameters << " parameters. With " << _nObservations << " observations.";
-
-            chi2(0) = computeChi2(residuals,W);
-            computeWeights(residuals,W);
-            SOLVER( INFO ) << "0 > Residuals: " << residuals.norm() << " Chi2: " << chi2(0) << " Total Weight: " << W.sum();
+            auto xprev = x;
+     
+            Eigen::VectorXd W = Eigen::VectorXd::Zero(_nObservations);
+            Eigen::MatrixXd J = Eigen::MatrixXd::Zero(_nObservations, _nParameters);
+            Eigen::VectorXd r = Eigen::VectorXd::Zero(_nObservations);
             
-            _computeJacobian(x,J);
-
-            lambda(0) = (J.transpose()*W.asDiagonal()*J).norm();
-            for(int i = 1; i < _maxIterations; i++)
-            {
-                // We want to solve dx = (JWJ + lambda * I)^(-1)*JWr
+            // We want to solve dx = (JWJ)^(-1)*JWr
                 // This can be solved with cholesky decomposition (Ax = b)
                 // Where A = (JWJ + lambda * I), x = dx, b = JWr
-                _computeJacobian(x,J);
 
+            _computeResidual(x,r,W);
+            computeWeights(r,W);
+            chi2(0) = (r.transpose() * W.asDiagonal() * r);
+            _computeJacobian(x,J);
+            Eigen::MatrixXd H  = (J.transpose() * W.asDiagonal() * J);
+            double chi2Last;
+            for(int i = 0; i < _maxIterations -1; i++)
+            {
                 // For GN / LM we drop the second part of the Hessian
-                Eigen::MatrixXd H  = (J.transpose() * W.asDiagonal() * J);
-             
                 // Lagrange multiplier steers magnitude and direction of the step
                 // For lambda ~ 0 the update will be Gauss-Newton
                 // For large lambda the update will be gradient
-                H += lambda(i-1)*Eigen::MatrixXd::Identity(J.cols(),J.cols());
-                
-                SOLVER(DEBUG) << i << " > H.:\n" << H;
+                if ( i == 0)
+                {
+                    lambda(i) = H.norm();
+                }
 
-                
-                const Eigen::MatrixXd gradient = J.transpose() * W.asDiagonal() * residuals;
+                H.noalias() += lambda(i)*Eigen::MatrixXd::Identity(J.cols(),J.cols());
+               
+                SOLVER(DEBUG) << i << " > H.:\n" << H;
+            
+                const Eigen::VectorXd gradient = J.transpose() * W.asDiagonal() * r;
 
                 SOLVER(DEBUG) << i << " > Grad.:\n" << gradient.transpose() ;
 
-                const Eigen::MatrixXd dx = H.ldlt().solve( gradient );
+                const Eigen::VectorXd dx = H.ldlt().solve( gradient );
 
                 SOLVER(DEBUG) << i <<" > x:\n" << x.transpose() ;
                 SOLVER(DEBUG) << i <<" > dx:\n" << dx.transpose() ;
-
-                Eigen::MatrixXd xi = x;
-                _updateX(dx,xi);
-                W.setZero();
-                _computeResidual(xi,residuals,W);
-                computeWeights(residuals,W);
-                
-                chi2(i) = computeChi2(residuals,W);
-                SOLVER(DEBUG) << i << " > chi2: " << chi2(i);
-
+                _updateX(dx,x);
                 stepSize(i) = dx.norm();
-                
-                if ( chi2(i) < chi2(i-1) )
-                {
-                    lambda(i) = std::max< double >( lambda(i-1) / 9.0, double( 1e-7 ) );
-                    x = xi;
-                }else{
-                    lambda(i) = std::min< double >( lambda(i-1) * 11.0, double( 1e7 ) );
-                }
-                SOLVER( INFO ) << "Iteration: " << i << " chi2: " << chi2(i) << " lambda: " << lambda(i) << " stepSize: " << stepSize(i) << " Total Weight: " << W.sum();
-                
-                 if ( stepSize(i) < _minStepSize )
+
+                if ( stepSize(i) < _minStepSize )
                 {
                     SOLVER( INFO ) << i << " > " << stepSize(i) << "/" << _minStepSize << " CONVERGED. ";
                     break;
                 }
 
-                if (!std::isfinite(stepSize(i)) || !std::isfinite(lambda(i)))
+                if (!std::isfinite(stepSize(i)))
                 {
                     throw pd::Exception(std::to_string(i) + "> NaN during optimization.");
                 }
 
+                //Rho expresses the ratio between the actual reduction and the predicted reduction
+                // (assuming the linerization was corect)
+                const double dChi2 = i > 0 ? chi2Last-chi2(i) : 0;
+                dchi2pred(i+1) = 0.5*dx.transpose() * (lambda(i)*dx + gradient);
+                const double rho =   i > 0 ? dChi2/dchi2pred(i) : 0.5;
+                 
+                if ( rho > 0.75 )
+                {
+                    lambda(i+1) = std::max< double >( lambda(i) / _Ldown, double( 1e-7 ) );
+                }else if (rho < 0.25){
+                    lambda(i+1) = std::min< double >( lambda(i) * _Lup, double( 1e7 ) );
+                }else{
+                    lambda(i+1) = lambda(i);
+                }
+                if(rho > 0)
+                {
+                    xprev = x;
+                    _computeResidual(x,r,W);
+                    computeWeights(r,W);
+                    chi2(i) = (r.transpose() * W.asDiagonal() * r);
+                    _computeJacobian(x,J);
+                    Eigen::MatrixXd H  = (J.transpose() * W.asDiagonal() * J);
+                    chi2Last = chi2(i);
+
+                }else{
+                    x = xprev;
+                }
+
+                 SOLVER( INFO ) << "Iteration: " << i << 
+                " chi2: " << chi2(i) << " dChi2: " << dChi2 << 
+                " stepSize: " << stepSize(i) << " Total Weight: " << W.sum() <<
+                " lambda: " << lambda(i) << " rho: " << rho;
+
             }
         }
 
-        void LeastSquaresSolver::computeWeights(const Eigen::MatrixXd& residuals, Eigen::MatrixXd& weights)
+        void LeastSquaresSolver::computeWeights(const Eigen::VectorXd& residuals, Eigen::VectorXd& weights)
         {
             // first order derivative of Tukey’s biweight loss function.
             // alternatively we could here assign weights based on the expected distribution of errors (e.g. t distribution)
@@ -150,9 +156,9 @@ namespace pd{namespace vision{
               
         }
 
-    GaussNewton::GaussNewton(std::function<bool(const Eigen::MatrixXd&, Eigen::MatrixXd&,Eigen::MatrixXd&)> computeResidual,
-            std::function<bool(const Eigen::MatrixXd&, Eigen::MatrixXd&)> computeJacobian,
-            std::function<bool(const Eigen::MatrixXd&, Eigen::MatrixXd&)> updateX,
+    GaussNewton::GaussNewton(std::function<bool(const Eigen::VectorXd&, Eigen::VectorXd&,Eigen::VectorXd&)> computeResidual,
+            std::function<bool(const Eigen::VectorXd&, Eigen::MatrixXd&)> computeJacobian,
+            std::function<bool(const Eigen::VectorXd&, Eigen::VectorXd&)> updateX,
             int nObservations,
             int nParameters,
             double alpha,
@@ -170,7 +176,7 @@ namespace pd{namespace vision{
     {
         Log::get("solver");
     }
-    void GaussNewton::solve(Eigen::MatrixXd& x) const
+    void GaussNewton::solve(Eigen::VectorXd& x) const
     {
         Eigen::VectorXd chiSquared(_maxIterations);
         chiSquared.setZero();
@@ -179,27 +185,18 @@ namespace pd{namespace vision{
         solve(x,chiSquared,stepSize);
     }
 
-    double GaussNewton::computeChi2(const Eigen::MatrixXd& residuals, const Eigen::MatrixXd& weights) const
-    {
-        double chiSquaredError     = 0.0;
+   
 
-        for ( int64_t i( 0 ); i < weights.size(); i++ )
-        {
-                chiSquaredError += residuals( i ) * residuals( i ) * weights( i );
-        }
-        return chiSquaredError;
-    }
-
-        void GaussNewton::solve(Eigen::MatrixXd &x, Eigen::VectorXd &chi2, Eigen::VectorXd& stepSize) const {
+        void GaussNewton::solve(Eigen::VectorXd &x, Eigen::VectorXd &chi2, Eigen::VectorXd& stepSize) const {
           
             SOLVER( INFO ) << "Solving Problem for " << _nParameters << " parameters. With " << _nObservations << " observations.";
             
             int iLast = 0;
             for(int i = 0; i < _maxIterations; i++)
             {
-                Eigen::MatrixXd W = Eigen::MatrixXd::Zero(_nObservations, 1);
+                Eigen::VectorXd W = Eigen::VectorXd::Zero(_nObservations);
                 Eigen::MatrixXd J = Eigen::MatrixXd::Zero(_nObservations, _nParameters);
-                Eigen::MatrixXd residuals = Eigen::MatrixXd::Zero(_nObservations, 1);
+                Eigen::VectorXd residuals = Eigen::VectorXd::Zero(_nObservations);
 
                 // We want to solve dx = (JWJ)^(-1)*JWr
                 // This can be solved with cholesky decomposition (Ax = b)
@@ -207,7 +204,7 @@ namespace pd{namespace vision{
 
                 _computeResidual(x,residuals,W);
                 computeWeights(residuals,W);
-                chi2(i) = computeChi2(residuals,W);
+                chi2(i) = (residuals.transpose() * W.asDiagonal() * residuals);
 
                 _computeJacobian(x,J);
                 // For GN / LM we drop the second part of the Hessian
@@ -215,11 +212,11 @@ namespace pd{namespace vision{
             
                 SOLVER(DEBUG) << i << " > H.:\n" << H;
             
-                const Eigen::MatrixXd gradient = J.transpose() * W.asDiagonal() * residuals;
+                const Eigen::VectorXd gradient = J.transpose() * W.asDiagonal() * residuals;
 
                 SOLVER(DEBUG) << i << " > Grad.:\n" << gradient.transpose() ;
 
-                const Eigen::MatrixXd dx = _alpha * H.ldlt().solve( gradient );
+                const Eigen::VectorXd dx = _alpha * H.ldlt().solve( gradient );
 
                 SOLVER(DEBUG) << i <<" > x:\n" << x.transpose() ;
                 SOLVER(DEBUG) << i <<" > dx:\n" << dx.transpose() ;
@@ -245,7 +242,7 @@ namespace pd{namespace vision{
             }
         }
 
-        void GaussNewton::computeWeights(const Eigen::MatrixXd& residuals, Eigen::MatrixXd& weights) const
+        void GaussNewton::computeWeights(const Eigen::VectorXd& residuals, Eigen::VectorXd& weights) const
         {
                         
         }

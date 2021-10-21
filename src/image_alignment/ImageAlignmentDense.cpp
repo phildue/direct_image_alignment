@@ -111,7 +111,7 @@ public:
 
     }
 
-    bool computeResidual(const Eigen::MatrixXd& x, Eigen::MatrixXd& residual, Eigen::MatrixXd& weights) const
+    bool computeResidual(const Eigen::VectorXd& x, Eigen::VectorXd& residual, Eigen::VectorXd& weights) const
     {
 
         const Sophus::SE3d pose = Sophus::SE3d::exp(x);
@@ -157,7 +157,7 @@ public:
         return true;
     }
 
-    bool computeJacobian(const Eigen::MatrixXd& x, Eigen::MatrixXd& jacobian)
+    bool computeJacobian(const Eigen::VectorXd& x, Eigen::MatrixXd& jacobian)
     {
         jacobian = _jacobian;
         return true;
@@ -172,16 +172,16 @@ public:
         for (int level = _levelMax; level >= _levelMin; --level)
         {
             Sophus::SE3d T = algorithm::computeRelativeTransform(referenceFrame->pose(), targetFrame->pose());
-            Eigen::MatrixXd posev6d = T.log();
+            Eigen::VectorXd posev6d = T.log();
             IMAGE_ALIGNMENT( INFO )<< "Starting Level: " << level << " Init: " << posev6d.transpose();
 
             const int nPixels = countValidPoints(referenceFrame,level);
 
             auto cost = std::make_shared<OptimizerHandle>(referenceFrame,targetFrame,level,_stepSizeX,_stepSizeY,nPixels);
             auto lls = std::make_shared<LeastSquaresSolver>(
-                    [&](const Eigen::MatrixXd& x, Eigen::MatrixXd& residual, Eigen::MatrixXd& weights) { return cost->computeResidual(x,residual,weights);},
-                    [&](const Eigen::MatrixXd& x, Eigen::MatrixXd& jacobian) { return cost->computeJacobian(x,jacobian);},
-                    [&](const Eigen::MatrixXd& dx, Eigen::MatrixXd& x) { x = (Sophus::SE3d::exp(x) * Sophus::SE3d::exp(-dx)).log(); return true;},
+                    [&](const Eigen::VectorXd& x, Eigen::VectorXd& residual, Eigen::VectorXd& weights) { return cost->computeResidual(x,residual,weights);},
+                    [&](const Eigen::VectorXd& x, Eigen::MatrixXd& jacobian) { return cost->computeJacobian(x,jacobian);},
+                    [&](const Eigen::VectorXd& dx, Eigen::VectorXd& x) { x = (Sophus::SE3d::exp(x) * Sophus::SE3d::exp(-dx)).log(); return true;},
                     nPixels,
                     Sophus::SE3d::DoF,
                     1e-2,

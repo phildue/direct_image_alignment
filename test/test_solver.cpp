@@ -31,7 +31,7 @@ class Cost{
     //
     // r = T(x) - I(W(x,p))
     //
-    bool computeResidual(const Eigen::MatrixXd& x, Eigen::MatrixXd& r, Eigen::MatrixXd& w) const
+    bool computeResidual(const Eigen::VectorXd& x, Eigen::VectorXd& r, Eigen::VectorXd& w) const
     {
          Eigen::MatrixXd A(3,3);
         A.setIdentity();
@@ -79,7 +79,7 @@ class Cost{
     //
     // J = Ixy*dW/dp
     //
-    bool computeJacobian(const Eigen::MatrixXd& x, Eigen::MatrixXd& j) const
+    bool computeJacobian(const Eigen::VectorXd& x, Eigen::MatrixXd& j) const
     {
         //f
         // Wx = (1 + a00)*x + a01*y + b0
@@ -130,7 +130,7 @@ class Cost{
 
         return true;
     }
-    bool updateX(const Eigen::MatrixXd& dx, Eigen::MatrixXd& x) const
+    bool updateX(const Eigen::VectorXd& dx, Eigen::VectorXd& x) const
     {
         x.noalias() += dx;
 
@@ -138,7 +138,7 @@ class Cost{
     }
 };
 
-TEST(SolverTest,Solve)
+TEST(SolverTest,SolveGaussNewton)
 {
     const Image img0 = utils::loadImage(TEST_RESOURCE"/stuff.png",50,50,true);
     Eigen::Matrix<double, 3,3> A;
@@ -156,13 +156,13 @@ TEST(SolverTest,Solve)
 
     auto cost = std::make_shared<Cost>(img1,img0);
     auto lls = std::make_shared<GaussNewton>(
-                [&](const Eigen::MatrixXd& x, Eigen::MatrixXd& residual, Eigen::MatrixXd& weights) { return cost->computeResidual(x,residual,weights);},
-                [&](const Eigen::MatrixXd& x, Eigen::MatrixXd& jacobian) { return cost->computeJacobian(x,jacobian);},
-                [&](const Eigen::MatrixXd& dx, Eigen::MatrixXd& x) { return cost->updateX(dx,x);},
+                [&](const Eigen::VectorXd& x, Eigen::VectorXd& residual, Eigen::VectorXd& weights) { return cost->computeResidual(x,residual,weights);},
+                [&](const Eigen::VectorXd& x, Eigen::MatrixXd& jacobian) { return cost->computeJacobian(x,jacobian);},
+                [&](const Eigen::VectorXd& dx, Eigen::VectorXd& x) { return cost->updateX(dx,x);},
                 (img1.cols())*(img1.rows()),
                 2,
                 0.1,
-                1e-3,
+                1e-1,
                 100);
    
     /*Eigen::MatrixXd x(6,1);
@@ -172,7 +172,7 @@ TEST(SolverTest,Solve)
     x(3,0) = A(1,0);
     x(4,0) = A(1,1);
     x(5,0) = A(1,2);*/
-    Eigen::MatrixXd x(2,1);
+    Eigen::VectorXd x(2);
     x(0,0) = A(0,2);
     x(1,0) = A(1,2)+4;
     lls->solve(x);
@@ -192,3 +192,56 @@ TEST(SolverTest,Solve)
     EXPECT_NEAR((Ares - A).norm(),0,0.5);
 }
 
+TEST(SolverTest,SolveLM)
+{
+    const Image img0 = utils::loadImage(TEST_RESOURCE"/stuff.png",50,50,true);
+    Eigen::Matrix<double, 3,3> A;
+    A << 1, 0,  2,
+         0, 1, -1,
+         0, 0,  1;
+
+    Image img1 = img0;
+    algorithm::warpAffine(img0,A,img1);
+    auto mat0 = vis::drawMat(img0);
+    auto mat1 = vis::drawMat(img1);
+
+    Log::getImageLog("I")->append(mat0);
+    Log::getImageLog("T")->append(mat1);
+
+    auto cost = std::make_shared<Cost>(img1,img0);
+    auto lls = std::make_shared<LeastSquaresSolver>(
+                [&](const Eigen::VectorXd& x, Eigen::VectorXd& residual, Eigen::VectorXd& weights) { return cost->computeResidual(x,residual,weights);},
+                [&](const Eigen::VectorXd& x, Eigen::MatrixXd& jacobian) { return cost->computeJacobian(x,jacobian);},
+                [&](const Eigen::VectorXd& dx, Eigen::VectorXd& x) { return cost->updateX(dx,x);},
+                (img1.cols())*(img1.rows()),
+                2,
+                0.1,
+                1e-3,
+                100);
+   
+    /*Eigen::MatrixXd x(6,1);
+    x(0,0) = A(0,0);
+    x(1,0) = A(0,1);
+    x(2,0) = A(0,2) + 2;
+    x(3,0) = A(1,0);
+    x(4,0) = A(1,1);
+    x(5,0) = A(1,2);*/
+    Eigen::VectorXd x(2,1);
+    x(0,0) = A(0,2)+3;
+    x(1,0) = A(1,2)+4;
+    lls->solve(x);
+
+    
+    Eigen::MatrixXd Ares(3,3);
+    Ares.setIdentity();
+    /*Ares(0,0) = x(0,0);
+    Ares(0,1) = x(1,0);
+    Ares(0,2) = x(2,0);
+    Ares(1,0) = x(3,0);
+    Ares(1,1) = x(4,0);
+    Ares(1,2) = x(5,0);*/
+    Ares(0,2) = x(0,0);
+    Ares(1,2) = x(1,0);
+    std::cout << Ares << std::endl;
+    EXPECT_NEAR((Ares - A).norm(),0,0.5);
+}

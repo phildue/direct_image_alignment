@@ -12,9 +12,9 @@ namespace pd{namespace vision{
     class LeastSquaresSolver{
 
         public:
-        LeastSquaresSolver(std::function<bool(const Eigen::MatrixXd&, Eigen::MatrixXd&, Eigen::MatrixXd& )> computeResidual,
-                std::function<bool(const Eigen::MatrixXd&, Eigen::MatrixXd&)> computeJacobian,
-                std::function<bool(const Eigen::MatrixXd&, Eigen::MatrixXd&)> updateX,
+        LeastSquaresSolver(std::function<bool(const Eigen::VectorXd&, Eigen::VectorXd&, Eigen::VectorXd& )> computeResidual,
+                std::function<bool(const Eigen::VectorXd&, Eigen::MatrixXd&)> computeJacobian,
+                std::function<bool(const Eigen::VectorXd&, Eigen::VectorXd&)> updateX,
                 int nObservations,
                 int nParameters,
                 double lambda0,
@@ -22,25 +22,26 @@ namespace pd{namespace vision{
                 int maxIterations
                 );
 
-        void solve(Eigen::MatrixXd& x);
-        void solve(Eigen::MatrixXd& x, Eigen::VectorXd& chi2, Eigen::VectorXd& lambda, Eigen::VectorXd& stepSize);
+        void solve(Eigen::VectorXd& x);
+        void solve(Eigen::VectorXd& x, Eigen::VectorXd& chi2,Eigen::VectorXd &chi2pred, Eigen::VectorXd& lambda, Eigen::VectorXd& stepSize);
 
-        double computeChi2(const Eigen::MatrixXd& x,const Eigen::MatrixXd& weights);
+        double computeChi2(const Eigen::VectorXd& x,const Eigen::VectorXd& weights);
         private:
-        std::function<bool(const Eigen::MatrixXd& x, Eigen::MatrixXd& residual, Eigen::MatrixXd& weights)> _computeResidual;
-        std::function<bool(const Eigen::MatrixXd& x, Eigen::MatrixXd& jacobian)> _computeJacobian;
-        std::function<bool(const Eigen::MatrixXd& dx, Eigen::MatrixXd& x)> _updateX;
-        void computeWeights(const Eigen::MatrixXd& residuals, Eigen::MatrixXd& weights);
+        std::function<bool(const Eigen::VectorXd& x, Eigen::VectorXd& residual, Eigen::VectorXd& weights)> _computeResidual;
+        std::function<bool(const Eigen::VectorXd& x, Eigen::MatrixXd& jacobian)> _computeJacobian;
+        std::function<bool(const Eigen::VectorXd& dx, Eigen::VectorXd& x)> _updateX;
+        void computeWeights(const Eigen::VectorXd& residuals, Eigen::VectorXd& weights);
         const double _lambda0, _minStepSize;
         const int _maxIterations, _nObservations, _nParameters;
+        const double _Lup = 5,_Ldown = 4; ///<Scalar to multiply lambda in case linearization was good/bad
     };
 
     class GaussNewton{
 
         public:
-        GaussNewton(std::function<bool(const Eigen::MatrixXd&, Eigen::MatrixXd&, Eigen::MatrixXd& )> computeResidual,
-                std::function<bool(const Eigen::MatrixXd&, Eigen::MatrixXd&)> computeJacobian,
-                std::function<bool(const Eigen::MatrixXd&, Eigen::MatrixXd&)> updateX,
+        GaussNewton(std::function<bool(const Eigen::VectorXd&, Eigen::VectorXd&, Eigen::VectorXd& )> computeResidual,
+                std::function<bool(const Eigen::VectorXd&, Eigen::MatrixXd&)> computeJacobian,
+                std::function<bool(const Eigen::VectorXd&, Eigen::VectorXd&)> updateX,
                 int nObservations,
                 int nParameters,
                 double alpha,
@@ -48,15 +49,15 @@ namespace pd{namespace vision{
                 int maxIterations
                 );
 
-        void solve(Eigen::MatrixXd& x) const;
-        void solve(Eigen::MatrixXd& x, Eigen::VectorXd& chi2, Eigen::VectorXd& stepSize) const;
+        void solve(Eigen::VectorXd& x) const;
+        void solve(Eigen::VectorXd& x, Eigen::VectorXd& chi2, Eigen::VectorXd& stepSize) const;
 
-        double computeChi2(const Eigen::MatrixXd& x,const Eigen::MatrixXd& weights) const;
+        double computeChi2(const Eigen::VectorXd& x,const Eigen::VectorXd& weights) const;
         private:
-        std::function<bool(const Eigen::MatrixXd& x, Eigen::MatrixXd& residual, Eigen::MatrixXd& weights)> _computeResidual;
-        std::function<bool(const Eigen::MatrixXd& x, Eigen::MatrixXd& jacobian)> _computeJacobian;
-        std::function<bool(const Eigen::MatrixXd& dx, Eigen::MatrixXd& x)> _updateX;
-        void computeWeights(const Eigen::MatrixXd& residuals, Eigen::MatrixXd& weights) const;
+        std::function<bool(const Eigen::VectorXd& x, Eigen::VectorXd& residual, Eigen::VectorXd& weights)> _computeResidual;
+        std::function<bool(const Eigen::VectorXd& x, Eigen::MatrixXd& jacobian)> _computeJacobian;
+        std::function<bool(const Eigen::VectorXd& dx, Eigen::VectorXd& x)> _updateX;
+        void computeWeights(const Eigen::VectorXd& residuals, Eigen::VectorXd& weights) const;
         const double _minStepSize, _alpha;
         const int _maxIterations, _nObservations, _nParameters;
     };
