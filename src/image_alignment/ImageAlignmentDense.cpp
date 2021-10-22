@@ -13,7 +13,7 @@
 
 #include "utils/utils.h"
 
-#include "solver/LeastSquaresSolver.h"
+#include "solver/LevenbergMarquardt.h"
 #include "ImageAlignmentDense.h"
 #include "utils/visuals.h"
 

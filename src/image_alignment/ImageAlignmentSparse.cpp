@@ -13,7 +13,7 @@
 #include "utils/utils.h"
 #include "utils/visuals.h"
 
-#include "solver/LeastSquaresSolver.h"
+#include "solver/LevenbergMarquardt.h"
 #include "ImageAlignmentSparse.h"
 
 namespace pd{ namespace vision{

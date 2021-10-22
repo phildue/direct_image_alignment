@@ -9,7 +9,9 @@
 #include "utils/visuals.h"
 #include "core/algorithm.h"
 #include "core/types.h"
-#include "solver/LeastSquaresSolver.h"
+#include "solver/LevenbergMarquardt.h"
+#include "solver/GaussNewton.h"
+
 using namespace testing;
 using namespace pd;
 using namespace pd::vision;
