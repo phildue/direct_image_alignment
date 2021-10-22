@@ -26,7 +26,7 @@ class OptimizerHandle
     const int _stepSizeX, _stepSizeY;
     const std::uint32_t _level;
     const double _scale;
-    Eigen::MatrixXd _jacobian;
+    Eigen::Matrix<double, Eigen::Dynamic,6> _jacobian;
     Eigen::Matrix<double, 3, Eigen::Dynamic> _pointsCamRef;
     const Frame::ShConstPtr _frameTarget;
     const FrameRGBD::ShConstPtr _frameRef;
@@ -48,7 +48,7 @@ public:
         << " Steps: " << _stepSizeX << " x " << _stepSizeY
         << " #Pixels: " << nPixels; 
 
-        _jacobian.conservativeResize(nPixels,Sophus::SE3d::DoF);
+        _jacobian.conservativeResize(nPixels,Eigen::NoChange);
         _jacobian.setZero();
         _pointsCamRef.conservativeResize(Eigen::NoChange,nPixels);
         _pointsCamRef.setZero();
@@ -73,7 +73,7 @@ public:
 
                     utils::throw_if_nan(_pointsCamRef.col(idxPixel), "3D Point");
 
-                    const auto J_xyz2uv = referenceFrame->camera()->J_xyz2uv(_pointsCamRef.col(idxPixel), _scale);
+                    const Eigen::Matrix<double, 2, 6> J_xyz2uv = referenceFrame->camera()->J_xyz2uv(_pointsCamRef.col(idxPixel), _scale);
 
                     IMAGE_ALIGNMENT( DEBUG ) << "scale: " << _scale << "p3d:" << _pointsCamRef.col(idxPixel).transpose() 
                     << " \nJ_xyz2uv =\n " << J_xyz2uv;
@@ -111,7 +111,7 @@ public:
 
     }
 
-    bool computeResidual(const Eigen::VectorXd& x, Eigen::VectorXd& residual, Eigen::VectorXd& weights) const
+    bool computeResidual(const Eigen::Vector6d& x, Eigen::VectorXd& residual, Eigen::VectorXd& weights) const
     {
 
         const Sophus::SE3d pose = Sophus::SE3d::exp(x);
@@ -157,7 +157,7 @@ public:
         return true;
     }
 
-    bool computeJacobian(const Eigen::VectorXd& x, Eigen::MatrixXd& jacobian)
+    bool computeJacobian(const Eigen::Vector6d& x, Eigen::Matrix<double,Eigen::Dynamic,6>& jacobian)
     {
         jacobian = _jacobian;
         return true;
@@ -172,18 +172,17 @@ public:
         for (int level = _levelMax; level >= _levelMin; --level)
         {
             Sophus::SE3d T = algorithm::computeRelativeTransform(referenceFrame->pose(), targetFrame->pose());
-            Eigen::VectorXd posev6d = T.log();
+            Eigen::Vector6d posev6d = T.log();
             IMAGE_ALIGNMENT( INFO )<< "Starting Level: " << level << " Init: " << posev6d.transpose();
 
             const int nPixels = countValidPoints(referenceFrame,level);
 
             auto cost = std::make_shared<OptimizerHandle>(referenceFrame,targetFrame,level,_stepSizeX,_stepSizeY,nPixels);
-            auto lls = std::make_shared<LevenbergMarquardt>(
-                    [&](const Eigen::VectorXd& x, Eigen::VectorXd& residual, Eigen::VectorXd& weights) { return cost->computeResidual(x,residual,weights);},
-                    [&](const Eigen::VectorXd& x, Eigen::MatrixXd& jacobian) { return cost->computeJacobian(x,jacobian);},
-                    [&](const Eigen::VectorXd& dx, Eigen::VectorXd& x) { x = (Sophus::SE3d::exp(x) * Sophus::SE3d::exp(-dx)).log(); return true;},
+            auto lls = std::make_shared<LevenbergMarquardt<Sophus::SE3d::DoF>>(
+                    [&](const Eigen::Vector6d& x, Eigen::VectorXd& residual, Eigen::VectorXd& weights) { return cost->computeResidual(x,residual,weights);},
+                    [&](const Eigen::Vector6d& x, Eigen::Matrix<double, Eigen::Dynamic,6>& jacobian) { return cost->computeJacobian(x,jacobian);},
+                    [&](const Eigen::Vector6d& dx, Eigen::Vector6d& x) { x = (Sophus::SE3d::exp(x) * Sophus::SE3d::exp(-dx)).log(); return true;},
                     nPixels,
-                    Sophus::SE3d::DoF,
                     1e-2,
                     1e-16,
                     30

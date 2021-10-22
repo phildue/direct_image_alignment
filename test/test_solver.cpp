@@ -33,7 +33,7 @@ class Cost{
     //
     // r = T(x) - I(W(x,p))
     //
-    bool computeResidual(const Eigen::VectorXd& x, Eigen::VectorXd& r, Eigen::VectorXd& w) const
+    bool computeResidual(const Eigen::Vector2d& x, Eigen::VectorXd& r, Eigen::VectorXd& w) const
     {
          Eigen::MatrixXd A(3,3);
         A.setIdentity();
@@ -81,7 +81,7 @@ class Cost{
     //
     // J = Ixy*dW/dp
     //
-    bool computeJacobian(const Eigen::VectorXd& x, Eigen::MatrixXd& j) const
+    bool computeJacobian(const Eigen::Vector2d& x, Eigen::Matrix<double,Eigen::Dynamic,2>& j) const
     {
         //f
         // Wx = (1 + a00)*x + a01*y + b0
@@ -132,7 +132,7 @@ class Cost{
 
         return true;
     }
-    bool updateX(const Eigen::VectorXd& dx, Eigen::VectorXd& x) const
+    bool updateX(const Eigen::Vector2d& dx, Eigen::Vector2d& x) const
     {
         x.noalias() += dx;
 
@@ -157,12 +157,11 @@ TEST(SolverTest,SolveGaussNewton)
     Log::getImageLog("T")->append(mat1);
 
     auto cost = std::make_shared<Cost>(img1,img0);
-    auto lls = std::make_shared<GaussNewton>(
-                [&](const Eigen::VectorXd& x, Eigen::VectorXd& residual, Eigen::VectorXd& weights) { return cost->computeResidual(x,residual,weights);},
-                [&](const Eigen::VectorXd& x, Eigen::MatrixXd& jacobian) { return cost->computeJacobian(x,jacobian);},
-                [&](const Eigen::VectorXd& dx, Eigen::VectorXd& x) { return cost->updateX(dx,x);},
+    auto lls = std::make_shared<GaussNewton<2>>(
+                [&](const Eigen::Vector2d& x, Eigen::VectorXd& residual, Eigen::VectorXd& weights) { return cost->computeResidual(x,residual,weights);},
+                [&](const Eigen::Vector2d& x, Eigen::Matrix<double,Eigen::Dynamic,2>& jacobian) { return cost->computeJacobian(x,jacobian);},
+                [&](const Eigen::Vector2d& dx,Eigen::Vector2d& x) { return cost->updateX(dx,x);},
                 (img1.cols())*(img1.rows()),
-                2,
                 0.1,
                 1e-3,
                 50);
@@ -174,7 +173,7 @@ TEST(SolverTest,SolveGaussNewton)
     x(3,0) = A(1,0);
     x(4,0) = A(1,1);
     x(5,0) = A(1,2);*/
-    Eigen::VectorXd x(2);
+    Eigen::Vector2d x(2);
     x(0,0) = A(0,2);
     x(1,0) = A(1,2)+4;
     lls->solve(x);
@@ -211,12 +210,11 @@ TEST(SolverTest,SolveLM)
     Log::getImageLog("T")->append(mat1);
 
     auto cost = std::make_shared<Cost>(img1,img0);
-    auto lls = std::make_shared<LevenbergMarquardt>(
-                [&](const Eigen::VectorXd& x, Eigen::VectorXd& residual, Eigen::VectorXd& weights) { return cost->computeResidual(x,residual,weights);},
-                [&](const Eigen::VectorXd& x, Eigen::MatrixXd& jacobian) { return cost->computeJacobian(x,jacobian);},
-                [&](const Eigen::VectorXd& dx, Eigen::VectorXd& x) { return cost->updateX(dx,x);},
+    auto lls = std::make_shared<LevenbergMarquardt<2>>(
+                [&](const Eigen::Vector2d& x, Eigen::VectorXd& residual, Eigen::VectorXd& weights) { return cost->computeResidual(x,residual,weights);},
+                [&](const Eigen::Vector2d& x, Eigen::Matrix<double,Eigen::Dynamic,2>& jacobian) { return cost->computeJacobian(x,jacobian);},
+                [&](const Eigen::Vector2d& dx, Eigen::Vector2d& x) { return cost->updateX(dx,x);},
                 (img1.cols())*(img1.rows()),
-                2,
                 50,
                 1e-3,
                 1e-3);
@@ -228,7 +226,7 @@ TEST(SolverTest,SolveLM)
     x(3,0) = A(1,0);
     x(4,0) = A(1,1);
     x(5,0) = A(1,2);*/
-    Eigen::VectorXd x(2,1);
+    Eigen::Vector2d x(2,1);
     x(0,0) = A(0,2)+3;
     x(1,0) = A(1,2)+4;
     lls->solve(x);

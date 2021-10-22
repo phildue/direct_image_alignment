@@ -23,7 +23,7 @@ namespace pd{ namespace vision{
 class CostFeature
 {
 private:
-    Eigen::MatrixXd _jacobian;
+    Eigen::Matrix<double,Eigen::Dynamic,6> _jacobian;
     Eigen::MatrixXd _patchRef;
     const Eigen::Vector3d _p3d;
     const Feature2D::ShConstPtr _ftRef;
@@ -117,7 +117,7 @@ public:
                 << " \n J = " << _jacobian;
     }
 
-    bool computeJacobian(Eigen::MatrixXd &jacobian)
+    bool computeJacobian(Eigen::Matrix<double,Eigen::Dynamic,6> &jacobian)
     {
         for (int i = 0; i < (_patchArea); i++)
         {
@@ -179,7 +179,7 @@ public:
 class CostTotal
 {
     std::vector<std::shared_ptr<CostFeature>> _costFeatures;
-    Eigen::MatrixXd _jacobian;
+    Eigen::Matrix<double, Eigen::Dynamic,6> _jacobian;
 public:
     CostTotal(int patchSize, Frame::ShConstPtr referenceFrame, Frame::ShConstPtr targetFrame, int level, int nVisiblePoints)
     {
@@ -206,7 +206,7 @@ public:
 
     }
 
-    bool computeResidual(const Eigen::VectorXd& x, Eigen::VectorXd& residual, Eigen::VectorXd& weights) const {
+    bool computeResidual(const Eigen::Vector6d& x, Eigen::VectorXd& residual, Eigen::VectorXd& weights) const {
 
     const Sophus::SE3d pose = Sophus::SE3d::exp(x);
 
@@ -218,7 +218,7 @@ public:
     return true;
 
 }
-    bool computeJacobian(const Eigen::VectorXd& x, Eigen::MatrixXd& jacobian)
+    bool computeJacobian(const Eigen::Vector6d& x, Eigen::Matrix<double,Eigen::Dynamic,6>& jacobian)
 {
     jacobian = _jacobian;
     return true;
@@ -230,7 +230,7 @@ public:
         for (int level = _levelMax; level >= _levelMin; --level)
         {
             Sophus::SE3d T = algorithm::computeRelativeTransform(referenceFrame->pose(), targetFrame->pose());
-            Eigen::VectorXd posev6d = T.log();
+            Eigen::Vector6d posev6d = T.log();
             VLOG(4) << "IA init: " << " Level: " << level  << " #Features: " << referenceFrame->features().size();
 
             int nVisiblePoints = 0;
@@ -243,12 +243,11 @@ public:
             }
 
             auto cost = std::make_shared<CostTotal>(_patchSize,referenceFrame,targetFrame,level,nVisiblePoints);
-            auto lls = std::make_shared<LevenbergMarquardt>(
-                    [&](const Eigen::VectorXd& x, Eigen::VectorXd& residual, Eigen::VectorXd& weights) { return cost->computeResidual(x,residual,weights);},
-                    [&](const Eigen::VectorXd& x, Eigen::MatrixXd& jacobian) { return cost->computeJacobian(x,jacobian);},
-                    [&](const Eigen::VectorXd& dx, Eigen::VectorXd& x) { x = (Sophus::SE3d::exp(x) * Sophus::SE3d::exp(-dx)).log(); return true;},
+            auto lls = std::make_shared<LevenbergMarquardt<Sophus::SE3d::DoF>>(
+                    [&](const Eigen::Vector6d& x, Eigen::VectorXd& residual, Eigen::VectorXd& weights) { return cost->computeResidual(x,residual,weights);},
+                    [&](const Eigen::Vector6d& x, Eigen::Matrix<double,Eigen::Dynamic,6>& jacobian) { return cost->computeJacobian(x,jacobian);},
+                    [&](const Eigen::Vector6d& dx, Eigen::Vector6d& x) { x = (Sophus::SE3d::exp(x) * Sophus::SE3d::exp(-dx)).log(); return true;},
                     nVisiblePoints * _patchSize * _patchSize,
-                    Sophus::SE3d::DoF,
                     0.0001,
                     0.0001,
                     100
