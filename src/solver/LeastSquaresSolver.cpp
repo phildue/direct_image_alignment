@@ -5,7 +5,7 @@
 
 namespace pd{namespace vision{
 
-    LeastSquaresSolver::LeastSquaresSolver(std::function<bool(const Eigen::VectorXd&, Eigen::VectorXd&,Eigen::VectorXd&)> computeResidual,
+    LevenbergMarquardt::LevenbergMarquardt(std::function<bool(const Eigen::VectorXd&, Eigen::VectorXd&,Eigen::VectorXd&)> computeResidual,
             std::function<bool(const Eigen::VectorXd&, Eigen::MatrixXd&)> computeJacobian,
             std::function<bool(const Eigen::VectorXd&, Eigen::VectorXd&)> updateX,
             int nObservations,
@@ -25,7 +25,7 @@ namespace pd{namespace vision{
     {
         Log::get("solver");
     }
-    void LeastSquaresSolver::solve(Eigen::VectorXd& x)
+    void LevenbergMarquardt::solve(Eigen::VectorXd& x)
     {
         Eigen::VectorXd chiSquared(_maxIterations);
         chiSquared.setZero();
@@ -41,7 +41,7 @@ namespace pd{namespace vision{
 
     
 
-        void LeastSquaresSolver::solve(Eigen::VectorXd &x, Eigen::VectorXd &chi2,Eigen::VectorXd &dchi2pred, Eigen::VectorXd &lambda, Eigen::VectorXd& stepSize) {
+        void LevenbergMarquardt::solve(Eigen::VectorXd &x, Eigen::VectorXd &chi2,Eigen::VectorXd &dchi2pred, Eigen::VectorXd &lambda, Eigen::VectorXd& stepSize) {
              SOLVER( INFO ) << "Solving Problem for " << _nParameters << " parameters. With " << _nObservations << " observations.";
 
             auto xprev = x;
@@ -133,7 +133,7 @@ namespace pd{namespace vision{
             }
         }
 
-        void LeastSquaresSolver::computeWeights(const Eigen::VectorXd& residuals, Eigen::VectorXd& weights)
+        void LevenbergMarquardt::computeWeights(const Eigen::VectorXd& residuals, Eigen::VectorXd& weights)
         {
             // first order derivative of Tukey’s biweight loss function.
             // alternatively we could here assign weights based on the expected distribution of errors (e.g. t distribution)

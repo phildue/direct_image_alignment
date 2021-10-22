@@ -209,7 +209,7 @@ TEST(SolverTest,SolveLM)
     Log::getImageLog("T")->append(mat1);
 
     auto cost = std::make_shared<Cost>(img1,img0);
-    auto lls = std::make_shared<LeastSquaresSolver>(
+    auto lls = std::make_shared<LevenbergMarquardt>(
                 [&](const Eigen::VectorXd& x, Eigen::VectorXd& residual, Eigen::VectorXd& weights) { return cost->computeResidual(x,residual,weights);},
                 [&](const Eigen::VectorXd& x, Eigen::MatrixXd& jacobian) { return cost->computeJacobian(x,jacobian);},
                 [&](const Eigen::VectorXd& dx, Eigen::VectorXd& x) { return cost->updateX(dx,x);},

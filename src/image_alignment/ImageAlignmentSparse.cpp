@@ -243,7 +243,7 @@ public:
             }
 
             auto cost = std::make_shared<CostTotal>(_patchSize,referenceFrame,targetFrame,level,nVisiblePoints);
-            auto lls = std::make_shared<LeastSquaresSolver>(
+            auto lls = std::make_shared<LevenbergMarquardt>(
                     [&](const Eigen::VectorXd& x, Eigen::VectorXd& residual, Eigen::VectorXd& weights) { return cost->computeResidual(x,residual,weights);},
                     [&](const Eigen::VectorXd& x, Eigen::MatrixXd& jacobian) { return cost->computeJacobian(x,jacobian);},
                     [&](const Eigen::VectorXd& dx, Eigen::VectorXd& x) { x = (Sophus::SE3d::exp(x) * Sophus::SE3d::exp(-dx)).log(); return true;},

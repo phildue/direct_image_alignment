@@ -9,10 +9,10 @@
 ///
 namespace pd{namespace vision{
 
-    class LeastSquaresSolver{
+    class LevenbergMarquardt{
 
         public:
-        LeastSquaresSolver(std::function<bool(const Eigen::VectorXd&, Eigen::VectorXd&, Eigen::VectorXd& )> computeResidual,
+        LevenbergMarquardt(std::function<bool(const Eigen::VectorXd&, Eigen::VectorXd&, Eigen::VectorXd& )> computeResidual,
                 std::function<bool(const Eigen::VectorXd&, Eigen::MatrixXd&)> computeJacobian,
                 std::function<bool(const Eigen::VectorXd&, Eigen::VectorXd&)> updateX,
                 int nObservations,

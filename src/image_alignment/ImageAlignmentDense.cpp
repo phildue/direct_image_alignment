@@ -178,7 +178,7 @@ public:
             const int nPixels = countValidPoints(referenceFrame,level);
 
             auto cost = std::make_shared<OptimizerHandle>(referenceFrame,targetFrame,level,_stepSizeX,_stepSizeY,nPixels);
-            auto lls = std::make_shared<LeastSquaresSolver>(
+            auto lls = std::make_shared<LevenbergMarquardt>(
                     [&](const Eigen::VectorXd& x, Eigen::VectorXd& residual, Eigen::VectorXd& weights) { return cost->computeResidual(x,residual,weights);},
                     [&](const Eigen::VectorXd& x, Eigen::MatrixXd& jacobian) { return cost->computeJacobian(x,jacobian);},
                     [&](const Eigen::VectorXd& dx, Eigen::VectorXd& x) { x = (Sophus::SE3d::exp(x) * Sophus::SE3d::exp(-dx)).log(); return true;},
