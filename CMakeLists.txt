@@ -14,7 +14,8 @@ set(sources
 		src/core/Point3D.cpp
         src/core/Camera.cpp
 		src/core/algorithm.cpp
-		src/solver/LeastSquaresSolver.cpp
+		src/solver/LevenbergMarquardt.cpp
+		src/solver/GaussNewton.cpp
 		src/image_alignment/ImageAlignmentSparse.cpp
 		src/image_alignment/ImageAlignmentDense.cpp
 		src/utils/visuals.cpp
@@ -33,7 +34,8 @@ set(headers
 		src/core/Point3D.h
         src/core/Camera.h
 		src/core/algorithm.h
-		src/solver/LeastSquaresSolver.h
+		src/solver/LevenbergMarquardt.h
+		src/solver/GaussNewton.h
 		src/feature_extraction/Descriptor.h
 		src/utils/Exceptions.h
 		src/utils/visuals.h
