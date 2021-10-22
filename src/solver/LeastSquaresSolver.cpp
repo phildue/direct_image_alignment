@@ -10,18 +10,18 @@ namespace pd{namespace vision{
             std::function<bool(const Eigen::VectorXd&, Eigen::VectorXd&)> updateX,
             int nObservations,
             int nParameters,
-            double lambda0,
+            int maxIterations,
             double minStepSize,
-            int maxIterations
+            double minGradient
             )
     :_computeResidual(computeResidual)
     ,_computeJacobian(computeJacobian)
     ,_updateX(updateX)
-    ,_lambda0(lambda0)
     ,_maxIterations(maxIterations)
     ,_nObservations(nObservations)
     ,_nParameters(nParameters)
     ,_minStepSize(minStepSize)
+    ,_minGradient(minGradient)
     {
         Log::get("solver");
     }
@@ -33,7 +33,7 @@ namespace pd{namespace vision{
         chi2Predicted.setZero();
        
         Eigen::VectorXd lambda(_maxIterations);
-        lambda.setConstant(_lambda0);
+        lambda.setZero();
         Eigen::VectorXd stepSize(_maxIterations);
         stepSize.setZero();
         solve(x,chiSquared,chi2Predicted,lambda,stepSize);
@@ -58,19 +58,18 @@ namespace pd{namespace vision{
             computeWeights(r,W);
             chi2(0) = (r.transpose() * W.asDiagonal() * r);
             _computeJacobian(x,J);
+            // For GN / LM we drop the second part of the Hessian
             Eigen::MatrixXd H  = (J.transpose() * W.asDiagonal() * J);
             double chi2Last;
             for(int i = 0; i < _maxIterations -1; i++)
             {
-                // For GN / LM we drop the second part of the Hessian
-                // Lagrange multiplier steers magnitude and direction of the step
-                // For lambda ~ 0 the update will be Gauss-Newton
-                // For large lambda the update will be gradient
                 if ( i == 0)
                 {
                     lambda(i) = H.norm();
                 }
-
+                // Lagrange multiplier steers magnitude and direction of the step
+                // For lambda ~ 0 the update will be Gauss-Newton
+                // For large lambda the update will be gradient
                 H.noalias() += lambda(i)*Eigen::MatrixXd::Identity(J.cols(),J.cols());
                
                 SOLVER(DEBUG) << i << " > H.:\n" << H;
@@ -86,9 +85,10 @@ namespace pd{namespace vision{
                 _updateX(dx,x);
                 stepSize(i) = dx.norm();
 
-                if ( stepSize(i) < _minStepSize )
+                if ( stepSize(i) < _minStepSize || std::abs(gradient.maxCoeff()) < _minGradient)
                 {
-                    SOLVER( INFO ) << i << " > " << stepSize(i) << "/" << _minStepSize << " CONVERGED. ";
+                    SOLVER( INFO ) << i << " > Stepsize: " << stepSize(i) << "/" << _minStepSize << 
+                    " Gradient: " << gradient.maxCoeff() << "/" << _minGradient << " CONVERGED. ";
                     break;
                 }
 

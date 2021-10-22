@@ -162,8 +162,8 @@ TEST(SolverTest,SolveGaussNewton)
                 (img1.cols())*(img1.rows()),
                 2,
                 0.1,
-                1e-1,
-                100);
+                1e-3,
+                50);
    
     /*Eigen::MatrixXd x(6,1);
     x(0,0) = A(0,0);
@@ -215,9 +215,9 @@ TEST(SolverTest,SolveLM)
                 [&](const Eigen::VectorXd& dx, Eigen::VectorXd& x) { return cost->updateX(dx,x);},
                 (img1.cols())*(img1.rows()),
                 2,
-                0.1,
+                50,
                 1e-3,
-                100);
+                1e-3);
    
     /*Eigen::MatrixXd x(6,1);
     x(0,0) = A(0,0);

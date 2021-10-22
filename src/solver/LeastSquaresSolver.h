@@ -17,9 +17,9 @@ namespace pd{namespace vision{
                 std::function<bool(const Eigen::VectorXd&, Eigen::VectorXd&)> updateX,
                 int nObservations,
                 int nParameters,
-                double lambda0,
+                int maxIterations,
                 double minStepSize,
-                int maxIterations
+                double minGradient
                 );
 
         void solve(Eigen::VectorXd& x);
@@ -31,7 +31,7 @@ namespace pd{namespace vision{
         std::function<bool(const Eigen::VectorXd& x, Eigen::MatrixXd& jacobian)> _computeJacobian;
         std::function<bool(const Eigen::VectorXd& dx, Eigen::VectorXd& x)> _updateX;
         void computeWeights(const Eigen::VectorXd& residuals, Eigen::VectorXd& weights);
-        const double _lambda0, _minStepSize;
+        const double _minGradient, _minStepSize;
         const int _maxIterations, _nObservations, _nParameters;
         const double _Lup = 5,_Ldown = 4; ///<Scalar to multiply lambda in case linearization was good/bad
     };
