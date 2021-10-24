@@ -1,12 +1,16 @@
 #ifndef LUKAS_KANADE_H__
 #define LUKAS_KANADE_H__
+#include <memory>
 #include "core/types.h"
 #include "solver/solver.h"
 namespace pd{namespace vision{
 class LukasKanadeOpticalFlow{
 public:
-    LukasKanade (const Image& templ, const Image& image, int maxIterations, double minStepSize = 1e-3, double minGradient = 1e-3);
+    LukasKanadeOpticalFlow (const Image& templ, const Image& image, int maxIterations, double minStepSize = 1e-3, double minGradient = 1e-3);
    
+    void solve(Eigen::Vector2d& x) const;
+   
+protected:
     //
     // r = T(x) - I(W(x,p))
     //
@@ -15,20 +19,22 @@ public:
     //
     // J = Ixy*dW/dp
     //
-    bool computeJacobian(const Eigen::Vector2d& x, Eigen::Matrix<double,-1,2>d& j) const;
+    bool computeJacobian(const Eigen::Vector2d& x, Eigen::Matrix<double,-1,2>& j) const;
 
-    bool updateX(const Eigen::Vector2d& dx, Eigen::VectorXd& x);
-protected:
+    bool updateX(const Eigen::Vector2d& dx, Eigen::Vector2d& x) const;
+
+
     const Image _T;
     const Image _Iref;
     Eigen::MatrixXi _dIx;
     Eigen::MatrixXi _dIy;
-    std::shared_ptr<const Solver<2>> _solver;
+    const std::shared_ptr<const Solver<2>> _solver;
     
 };
+#if 0
 class LukasKanadeAffine{
 public:
-    LukasKanade (const Image& templ, const Image& image);
+    LukasKanadeAffine (const Image& templ, const Image& image);
    
     //
     // r = T(x) - I(W(x,p))
@@ -46,8 +52,9 @@ protected:
     const Image _Iref;
     Eigen::MatrixXi _dIx;
     Eigen::MatrixXi _dIy;
-    LevenbergMarquardt _solver;
+    std::shared_ptr<const Solver<6>> _solver;
     
 };
+#endif
 }}
 #endif

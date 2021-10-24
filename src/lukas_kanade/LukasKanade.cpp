@@ -1,35 +1,40 @@
 #include "LukasKanade.h"
-#include "solver/LevenbergMarquardt"
+#include "solver/LevenbergMarquardt.h"
+#include "utils/visuals.h"
 namespace pd{namespace vision{
 
- LukasKanadeOpticalFlow::LukasKanade (const Image& templ, const Image& image, int maxIterations, double minStepSize, double minGradient)
+ LukasKanadeOpticalFlow::LukasKanadeOpticalFlow (const Image& templ, const Image& image, int maxIterations, double minStepSize, double minGradient)
     : _T(templ)
     , _Iref(image)
     , _dIx(algorithm::gradX(image))
     , _dIy(algorithm::gradY(image))
-    , _solver(std::make_shared<LevenbergMarquardt>(
+    , _solver(std::make_shared<LevenbergMarquardt<2>>(
                 [&](const Eigen::Vector2d& x, Eigen::VectorXd& residual, Eigen::VectorXd& weights) { return this->computeResidual(x,residual,weights);},
                 [&](const Eigen::Vector2d& x, Eigen::Matrix<double,Eigen::Dynamic,2>& jacobian) { return this->computeJacobian(x,jacobian);},
                 [&](const Eigen::Vector2d& dx, Eigen::Vector2d& x) { return this->updateX(dx,x);},
-                (img1.cols())*(img1.rows()),
+                (templ.cols())*(templ.rows()),
                 maxIterations,
                 minGradient,
                 minStepSize)
-    ))
+    )
     {
 
     }
+    void LukasKanadeOpticalFlow::solve(Eigen::Vector2d& x) const
+    {
+        return _solver->solve(x);
+    }
 
-    bool LukasKanadeOpticalFlow::computeResidual(const Eigen::VectorXd& x, Eigen::VectorXd& r, Eigen::VectorXd& w) const
+    bool LukasKanadeOpticalFlow::computeResidual(const Eigen::Vector2d& x, Eigen::VectorXd& r, Eigen::VectorXd& w) const
     {
         Eigen::Matrix3d warp = Eigen::Matrix3d::Identity();
         warp(0,2) = x(0);
         warp(1,2) = x(1);
 
-        Eigen::MatrixXd residualImage = Eigen::MatrixXd::Zeros(_T.rows(),_T.cols());
-        Eigen::MatrixXd weightsImage = Eigen::MatrixXd::Zeros(_T.rows(),_T.cols());
+        Eigen::MatrixXd residualImage = Eigen::MatrixXd::Zero(_T.rows(),_T.cols());
+        Eigen::MatrixXd weightsImage = Eigen::MatrixXd::Zero(_T.rows(),_T.cols());
         Image IWxp = _Iref;
-        algorithm::warpAffine(_Iref,A,IWxp);
+        algorithm::warpAffine(_Iref,warp,IWxp);
         r.setZero();
         w.setZero();
         int idxPixel = 0;
@@ -38,7 +43,7 @@ namespace pd{namespace vision{
             for (int u = 0; u < _T.cols(); u++)
             {
                 const Eigen::Vector3d uv1(u,v,1);
-                const auto pWarped = A.inverse() * uv1;
+                const auto pWarped = warp.inverse() * uv1;
                 if (1 < pWarped.x() && pWarped.x() < _Iref.cols() -1  &&
                     1 < pWarped.y() && pWarped.y() < _Iref.rows()-1)
                 {
@@ -60,17 +65,17 @@ namespace pd{namespace vision{
     //
     // J = Ixy*dW/dp
     //
-    bool LukasKanadeOpticalFlow::computeJacobian(const Eigen::VectorXd& x, Eigen::MatrixXd& j) const
+    bool LukasKanadeOpticalFlow::computeJacobian(const Eigen::Vector2d& x, Eigen::Matrix<double,-1,2>& j) const
     {
         Eigen::Matrix3d warp = Eigen::Matrix3d::Identity();
         warp(0,2) = x(0);
         warp(1,2) = x(1);
 
-        Eigen::MatrixXd steepestDescent = Eigen::MatrixXd::Zeros(_T.rows(),_T.cols());
+        Eigen::MatrixXd steepestDescent = Eigen::MatrixXd::Zero(_T.rows(),_T.cols());
         j.setZero();
         Eigen::MatrixXi dIxWp = _dIx,dIyWp = _dIy;
-        algorithm::warpAffine(_dIx,A,dIxWp);
-        algorithm::warpAffine(_dIy,A,dIyWp);
+        algorithm::warpAffine(_dIx,warp,dIxWp);
+        algorithm::warpAffine(_dIy,warp,dIyWp);
 
         int idxPixel = 0;
         for (int v = 0; v < _T.rows(); v++)
@@ -100,13 +105,14 @@ namespace pd{namespace vision{
 
         return true;
     }
-    bool LukasKanadeOpticalFlow::updateX(const Eigen::VectorXd& dx, Eigen::VectorXd& x) const
+    bool LukasKanadeOpticalFlow::updateX(const Eigen::Vector2d& dx, Eigen::Vector2d& x) const
     {
         x.noalias() += dx;
 
         return true;
     }
-    LukasKanadeAffine::LukasKanade (const Image& templ, const Image& image)
+    #if 0
+    LukasKanadeAffine::LukasKanadeAffine (const Image& templ, const Image& image)
     : _T(templ)
     , _Iref(image)
     , _dIx(algorithm::gradX(image))
@@ -116,7 +122,6 @@ namespace pd{namespace vision{
     }
 
     bool LukasKanadeAffine::computeResidual(const Eigen::VectorXd& x, Eigen::VectorXd& r, Eigen::VectorXd& w) const
-    {
          Eigen::MatrixXd A(3,3);
         A.setIdentity();
         /*A(0,0) = x(0,0);
@@ -220,4 +225,5 @@ namespace pd{namespace vision{
 
         return true;
     }
+    #endif
 }}
