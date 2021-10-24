@@ -9,7 +9,8 @@
 #include "utils/visuals.h"
 #include "core/algorithm.h"
 #include "core/types.h"
-#include "lukas_kanade/LukasKanade.h"
+#include "lukas_kanade/LukasKanadeAffine.h"
+#include "lukas_kanade/LukasKanadeOpticalFlow.h"
 
 using namespace testing;
 using namespace pd;

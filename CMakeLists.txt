@@ -14,7 +14,8 @@ set(sources
 		src/core/Point3D.cpp
         src/core/Camera.cpp
 		src/core/algorithm.cpp
-		src/lukas_kanade/LukasKanade.cpp
+		src/lukas_kanade/LukasKanadeOpticalFlow.cpp
+		src/lukas_kanade/LukasKanadeAffine.cpp
 		src/image_alignment/ImageAlignmentSparse.cpp
 		src/image_alignment/ImageAlignmentDense.cpp
 		src/utils/visuals.cpp
@@ -37,7 +38,8 @@ set(headers
 		src/solver/LevenbergMarquardt.hpp
 		src/solver/GaussNewton.hpp
 		src/solver/GaussNewton.h
-		src/lukas_kanade/LukasKanade.h
+		src/lukas_kanade/LukasKanadeOpticalFlow.h
+		src/lukas_kanade/LukasKanadeAffine.h
 		src/solver/solver.h
 		src/feature_extraction/Descriptor.h
 		src/utils/Exceptions.h
