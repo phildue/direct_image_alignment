@@ -73,6 +73,8 @@ namespace pd{namespace vision{
             _updateX(dx,x);
             stepSize(i) = dx.norm();
 
+            const double dChi2 = i > 0 ? chi2(i)-chi2(i-1) : 0;
+            SOLVER( INFO ) << "Iteration: " << i << " chi2: " << chi2(i) << " dChi2: " << dChi2 << " stepSize: " << stepSize(i) << " Total Weight: " << W.sum();
             if ( stepSize(i) < _minStepSize )
             {
                 SOLVER( INFO ) << i << " > " << stepSize(i) << "/" << _minStepSize << " CONVERGED. ";
@@ -83,10 +85,6 @@ namespace pd{namespace vision{
             {
                 throw pd::Exception(std::to_string(i) + "> NaN during optimization.");
             }
-
-            const double dChi2 = i > 0 ? chi2(i)-chi2(i-1) : 0;
-            SOLVER( INFO ) << "Iteration: " << i << " chi2: " << chi2(i) << " dChi2: " << dChi2 << " stepSize: " << stepSize(i) << " Total Weight: " << W.sum();
-            
 
 
         }

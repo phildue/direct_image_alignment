@@ -80,14 +80,16 @@ namespace pd{ namespace vision{ namespace algorithm{
     template <typename Derived, typename Derived1>
     void warpAffine(const Eigen::MatrixBase<Derived>& img, const Eigen::MatrixBase<Derived1>& warp, Eigen::MatrixBase<Derived>& imgWarped)
     {
-        imgWarped.setZero();
-
+        const double cx = imgWarped.cols()/2;
+        const double cy = imgWarped.rows()/2;
         for (int v = 0; v < imgWarped.rows(); v++)
         {
             for (int u = 0; u < imgWarped.cols(); u++)
             {
-                const Eigen::Vector3d uv1(u,v,1);
-                const auto uvRef = warp.inverse() * uv1;
+                const Eigen::Vector3d xy1(u - cx,v - cy,1);
+                const Eigen::Vector3d xy1Ref = warp.inverse() * xy1;
+                Eigen::Vector2d uvRef;
+                uvRef << xy1Ref.x() + cx,xy1Ref.y() + cy;
                 if (1 < uvRef.x() && uvRef.x() < img.cols() - 1 &&
                     1 < uvRef.y() && uvRef.y() < img.rows() - 1 )
                 {
@@ -119,5 +121,9 @@ namespace pd{ namespace vision{ namespace algorithm{
     /// Computes T01 from T0 and T1
     Sophus::SE3d computeRelativeTransform(const Sophus::SE3d& t0, const Sophus::SE3d& t1);
 
-}}}
+}
+namespace transforms{
+    Eigen::MatrixXd createdTransformMatrix2D(double x, double y, double angle);
+}
+}}
 #endif //DIRECT_IMAGE_ALIGNMENT_ALGORITHM_H

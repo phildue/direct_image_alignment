@@ -66,7 +66,7 @@ namespace pd{namespace vision{
         {
             if ( i == 0)
             {
-                lambda(i) = H.norm();
+                lambda(i) = std::min< double >( H.norm(), double( 1e7 ) );
             }
             // Lagrange multiplier steers magnitude and direction of the step
             // For lambda ~ 0 the update will be Gauss-Newton
@@ -85,18 +85,6 @@ namespace pd{namespace vision{
             SOLVER(DEBUG) << i <<" > dx:\n" << dx.transpose() ;
             _updateX(dx,x);
             stepSize(i) = dx.norm();
-
-            if ( stepSize(i) < _minStepSize || std::abs(gradient.maxCoeff()) < _minGradient)
-            {
-                SOLVER( INFO ) << i << " > Stepsize: " << stepSize(i) << "/" << _minStepSize << 
-                " Gradient: " << gradient.maxCoeff() << "/" << _minGradient << " CONVERGED. ";
-                break;
-            }
-
-            if (!std::isfinite(stepSize(i)))
-            {
-                throw pd::Exception(std::to_string(i) + "> NaN during optimization.");
-            }
 
             //Rho expresses the ratio between the actual reduction and the predicted reduction
             // (assuming the linerization was corect)
@@ -125,12 +113,22 @@ namespace pd{namespace vision{
             }else{
                 x = xprev;
             }
-
-                SOLVER( INFO ) << "Iteration: " << i << 
+            
+            SOLVER( INFO ) << "Iteration: " << i << 
             " chi2: " << chi2(i) << " dChi2: " << dChi2 << 
             " stepSize: " << stepSize(i) << " Total Weight: " << W.sum() <<
             " lambda: " << lambda(i) << " rho: " << rho;
+                if ( stepSize(i) < _minStepSize /*|| std::abs(gradient.maxCoeff()) < _minGradient*/)
+            {
+                SOLVER( INFO ) << i << " > Stepsize: " << stepSize(i) << "/" << _minStepSize << 
+                " Gradient: " << gradient.maxCoeff() << "/" << _minGradient << " CONVERGED. ";
+                break;
+            }
 
+            if (!std::isfinite(stepSize(i)))
+            {
+                throw pd::Exception(std::to_string(i) + "> NaN during optimization.");
+            }
             }
         }
 

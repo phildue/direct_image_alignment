@@ -37,17 +37,22 @@ namespace pd{namespace vision{
         algorithm::warpAffine(_Iref,warp,IWxp);
         r.setZero();
         w.setZero();
+        const Eigen::Matrix3d warpInv = warp.inverse();
+        const double cx = _T.cols()/2;
+        const double cy = _T.rows()/2;
         int idxPixel = 0;
         for (int v = 0; v < _T.rows(); v++)
         {
             for (int u = 0; u < _T.cols(); u++)
             {
-                const Eigen::Vector3d uv1(u,v,1);
-                const auto pWarped = warp.inverse() * uv1;
-                if (1 < pWarped.x() && pWarped.x() < _Iref.cols() -1  &&
-                    1 < pWarped.y() && pWarped.y() < _Iref.rows()-1)
+                const Eigen::Vector3d xy1(u - cx,v - cy,1);
+                const Eigen::Vector3d xy1Ref = warp.inverse() * xy1;
+                Eigen::Vector2d uvRef;
+                uvRef << xy1Ref.x() + cx,xy1Ref.y() +cy;
+                if (1 < uvRef.x() && uvRef.x() < _Iref.cols() -1  &&
+                   1 < uvRef.y() && uvRef.y() < _Iref.rows()-1)
                 {
-                    r(idxPixel) = IWxp(v,u) - _T(v,u);
+                    r(idxPixel) = IWxp(v,u) -_T(v,u);
                     residualImage(v,u) = r(idxPixel);
                     w(idxPixel) = 1.0;
                     weightsImage(v,u) = w(idxPixel);
@@ -82,14 +87,9 @@ namespace pd{namespace vision{
         {
             for (int u = 0; u < _T.cols(); u++)
             {
-                /*Eigen::Matrix<double,2,6> J_Ap;
-                J_Ap << u,0,v,0,1,0,
-                        0,u,0,v,0,1;*/
-                Eigen::Matrix<double,2,2> J_Ap;
-                J_Ap << 1,0,
-                        0,1;
+                Eigen::Matrix2d Jwarp = Eigen::Matrix2d::Identity();
                         
-                j.row(idxPixel) = (dIxWp(v,u) * J_Ap.row(0) + dIyWp(v,u) * J_Ap.row(1));
+                j.row(idxPixel) = (dIxWp(v,u) * Jwarp.row(0) + dIyWp(v,u) * Jwarp.row(1));
                 steepestDescent(v,u) = j.row(idxPixel).norm();
 
                 idxPixel++;
@@ -111,44 +111,55 @@ namespace pd{namespace vision{
 
         return true;
     }
-    #if 0
-    LukasKanadeAffine::LukasKanadeAffine (const Image& templ, const Image& image)
+    LukasKanadeAffine::LukasKanadeAffine (const Image& templ, const Image& image, int maxIterations, double minStepSize, double minGradient)
     : _T(templ)
     , _Iref(image)
     , _dIx(algorithm::gradX(image))
     , _dIy(algorithm::gradY(image))
+    , _solver(std::make_shared<LevenbergMarquardt<6>>(
+                [&](const Eigen::Vector6d& x, Eigen::VectorXd& residual, Eigen::VectorXd& weights) { return this->computeResidual(x,residual,weights);},
+                [&](const Eigen::Vector6d& x, Eigen::Matrix<double,Eigen::Dynamic,6>& jacobian) { return this->computeJacobian(x,jacobian);},
+                [&](const Eigen::Vector6d& dx, Eigen::Vector6d& x) { return this->updateX(dx,x);},
+                (templ.cols())*(templ.rows()),
+                maxIterations,
+                minGradient,
+                minStepSize)
+    )
     {
 
     }
 
-    bool LukasKanadeAffine::computeResidual(const Eigen::VectorXd& x, Eigen::VectorXd& r, Eigen::VectorXd& w) const
-         Eigen::MatrixXd A(3,3);
-        A.setIdentity();
-        /*A(0,0) = x(0,0);
-        A(0,1) = x(1,0);
-        A(0,2) = x(2,0);
-        A(1,0) = x(3,0);
-        A(1,1) = x(4,0);
-        A(1,2) = x(5,0);*/
-         A(0,2) = x(0,0);
-        A(1,2) = x(1,0);
-        int idxPixel = 0;
-        Eigen::MatrixXd residualImage(_T.rows(),_T.cols());
-        residualImage.setZero();
-        Eigen::MatrixXd weightsImage(_T.rows(),_T.cols());
-        weightsImage.setZero();
+     void LukasKanadeAffine::solve(Eigen::Vector6d& x) const
+    {
+        return _solver->solve(x);
+    }
+
+    bool LukasKanadeAffine::computeResidual(const Eigen::Vector6d& x, Eigen::VectorXd& r, Eigen::VectorXd& w) const
+    {
+        Eigen::Matrix3d warp;
+        warp << 1+x(0),   x(2), x(4),
+                  x(1), 1+x(3), x(5),
+                     0,      0,    1;
+
+        Eigen::MatrixXd residualImage = Eigen::MatrixXd::Zero(_T.rows(),_T.cols());
+        Eigen::MatrixXd weightsImage = Eigen::MatrixXd::Zero(_T.rows(),_T.cols());
         Image IWxp = _Iref;
-        algorithm::warpAffine(_Iref,A,IWxp);
+        algorithm::warpAffine(_Iref,warp,IWxp);
         r.setZero();
         w.setZero();
+        const double cx = _T.cols()/2;
+        const double cy = _T.rows()/2;
+        const Eigen::Matrix3d warpInv = warp.inverse();
+        int idxPixel = 0;
         for (int v = 0; v < _T.rows(); v++)
         {
             for (int u = 0; u < _T.cols(); u++)
             {
-                const Eigen::Vector3d uv1(u,v,1);
-                const auto pWarped = A.inverse() * uv1;
-                if (1 < pWarped.x() && pWarped.x() < _Iref.cols() -1  &&
-                    1 < pWarped.y() && pWarped.y() < _Iref.rows()-1)
+                const Eigen::Vector3d xy1(u - cx,v - cy,1);
+                const auto xy1Ref = warp.inverse() * xy1;
+                const auto uv1Ref = xy1Ref + Eigen::Vector3d(cx,cy,0);
+                if (1 < uv1Ref.x() && uv1Ref.x() < _Iref.cols() -1  &&
+                1 < uv1Ref.y() && uv1Ref.y() < _Iref.rows()-1)
                 {
                     r(idxPixel) = IWxp(v,u) - _T(v,u);
                     residualImage(v,u) = r(idxPixel);
@@ -168,42 +179,29 @@ namespace pd{namespace vision{
     //
     // J = Ixy*dW/dp
     //
-    bool LukasKanadeAffine::computeJacobian(const Eigen::VectorXd& x, Eigen::MatrixXd& j) const
+    bool LukasKanadeAffine::computeJacobian(const Eigen::Vector6d& x, Eigen::Matrix<double, -1,6>& j) const
     {
-        //f
-        // Wx = (1 + a00)*x + a01*y + b0
-        // Wy = a10*x + (1+a11)*y + b1
-        // dt0/x = a00
-        // dt1/y = a11
-        Eigen::MatrixXd A(3,3);
-        A.setIdentity();
-        /*A(0,0) = x(0,0);
-        A(0,1) = x(1,0);
-        A(0,2) = x(2,0);
-        A(1,0) = x(3,0);
-        A(1,1) = x(4,0);
-        A(1,2) = x(5,0);*/
-        A(0,2) = x(0,0);
-        A(1,2) = x(1,0);
-        Eigen::MatrixXd steepestDescent(_T.rows(),_T.cols());
+        Eigen::Matrix3d warp;
+        warp << 1+x(0),   x(2), x(4),
+                  x(1), 1+x(3), x(5),
+                     0,      0,    1;
+       Eigen::MatrixXd steepestDescent = Eigen::MatrixXd::Zero(_T.rows(),_T.cols());
         j.setZero();
-        int idxPixel = 0;
         Eigen::MatrixXi dIxWp = _dIx,dIyWp = _dIy;
-        algorithm::warpAffine(_dIx,A,dIxWp);
-        algorithm::warpAffine(_dIy,A,dIyWp);
-
-        for (int v = 0; v < _T.rows(); v++)
+        algorithm::warpAffine(_dIx,warp,dIxWp);
+        algorithm::warpAffine(_dIy,warp,dIyWp);
+        int idxPixel = 0;
+        const double cx = _T.cols()/2;
+        const double cy = _T.rows()/2;
+       for (int v = 0; v < _T.rows(); v++)
         {
             for (int u = 0; u < _T.cols(); u++)
             {
-                /*Eigen::Matrix<double,2,6> J_Ap;
-                J_Ap << u,0,v,0,1,0,
-                        0,u,0,v,0,1;*/
-                Eigen::Matrix<double,2,2> J_Ap;
-                J_Ap << 1,0,
-                        0,1;
+                Eigen::Matrix<double,2,6> Jwarp;
+                Jwarp << u - cx,0,v - cy,0,1,0,
+                         0,u - cx,0,v - cy,0,1;
                         
-                j.row(idxPixel) = (dIxWp(v,u) * J_Ap.row(0) + dIyWp(v,u) * J_Ap.row(1));
+                j.row(idxPixel) = (dIxWp(v,u) * Jwarp.row(0) + dIyWp(v,u) * Jwarp.row(1));
                 steepestDescent(v,u) = j.row(idxPixel).norm();
 
                 idxPixel++;
@@ -219,11 +217,26 @@ namespace pd{namespace vision{
 
         return true;
     }
-    bool LukasKanadeAffine::updateX(const Eigen::VectorXd& dx, Eigen::VectorXd& x) const
+    bool LukasKanadeAffine::updateX(const Eigen::Vector6d& dx, Eigen::Vector6d& x) const
     {
         x.noalias() += dx;
+        /*Eigen::Matrix3d warp;
+        warp << x(0),x(1),x(2),
+                x(3),x(4),x(5),
+                0   ,   0,  1;
+
+        Eigen::Matrix3d dwarp;
+        dwarp << dx(0),dx(1),dx(2),
+                dx(3),dx(4),dx(5),
+                0   ,   0,  1;
+        warp = warp * dwarp;
+        x(0) = warp(0,0);
+        x(1) = warp(0,1);
+        x(2) = warp(0,2);
+        x(3) = warp(1,0);
+        x(4) = warp(1,1);
+        x(5) = warp(1,2);*/
 
         return true;
     }
-    #endif
 }}

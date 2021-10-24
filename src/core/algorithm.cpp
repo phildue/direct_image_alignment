@@ -115,5 +115,16 @@ namespace pd{ namespace vision{ namespace algorithm{
             return r[n/2];
         }
     }
+}
+namespace transforms{
+       Eigen::MatrixXd createdTransformMatrix2D(double x, double y, double angle) {
+       Eigen::Rotation2Dd rot(angle);
+       Eigen::Matrix2d r = rot.toRotationMatrix();
+       Eigen::Matrix3d m;
+       m << r(0,0), r(0,1),x,
+            r(1,0), r(1,1),y,
+                 0,      0,1;
+       return m;
+    }
 
 }}}
