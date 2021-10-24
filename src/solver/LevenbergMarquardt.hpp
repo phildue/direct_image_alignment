@@ -5,9 +5,9 @@
 namespace pd{namespace vision{
 
     template<int nParameters>
-    LevenbergMarquardt<nParameters>::LevenbergMarquardt(std::function<bool(const Vn&, Eigen::VectorXd&, Eigen::VectorXd& )> computeResidual,
-            std::function<bool(const Vn&, Mmxn&)> computeJacobian,
-            std::function<bool(const Vn&, Vn&)> updateX,
+    LevenbergMarquardt<nParameters>::LevenbergMarquardt(std::function<bool(const Eigen::Matrix<double, nParameters, 1>&, Eigen::VectorXd&, Eigen::VectorXd& )> computeResidual,
+            std::function<bool(const Eigen::Matrix<double, nParameters, 1>&, Mmxn&)> computeJacobian,
+            std::function<bool(const Eigen::Matrix<double, nParameters, 1>&, Eigen::Matrix<double, nParameters, 1>&)> updateX,
             int nObservations,
             int maxIterations,
             double minStepSize,
@@ -25,7 +25,7 @@ namespace pd{namespace vision{
         Log::get("solver");
     }
     template<int nParameters>
-    void LevenbergMarquardt<nParameters>::solve(Vn& x)
+    void LevenbergMarquardt<nParameters>::solve(Eigen::Matrix<double, nParameters, 1>& x) const
     {
         Eigen::VectorXd chiSquared(_maxIterations);
         chiSquared.setZero();
@@ -42,7 +42,7 @@ namespace pd{namespace vision{
     
 
     template<int nParameters>
-    void LevenbergMarquardt<nParameters>::solve(Vn &x, Eigen::VectorXd &chi2,Eigen::VectorXd &dchi2pred, Eigen::VectorXd &lambda, Eigen::VectorXd& stepSize) {
+    void LevenbergMarquardt<nParameters>::solve(Eigen::Matrix<double, nParameters, 1> &x, Eigen::VectorXd &chi2,Eigen::VectorXd &dchi2pred, Eigen::VectorXd &lambda, Eigen::VectorXd& stepSize) const{
             SOLVER( INFO ) << "Solving Problem for " << _nParameters << " parameters. With " << _nObservations << " observations.";
 
         auto xprev = x;
@@ -135,7 +135,7 @@ namespace pd{namespace vision{
         }
 
     template<int nParameters>
-    void LevenbergMarquardt<nParameters>::computeWeights(const Eigen::VectorXd& residuals, Eigen::VectorXd& weights)
+    void LevenbergMarquardt<nParameters>::computeWeights(const Eigen::VectorXd& residuals, Eigen::VectorXd& weights) const
     {
         // first order derivative of Tukey’s biweight loss function.
         // alternatively we could here assign weights based on the expected distribution of errors (e.g. t distribution)

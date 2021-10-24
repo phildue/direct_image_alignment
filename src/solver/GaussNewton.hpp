@@ -5,9 +5,9 @@
 namespace pd{namespace vision{
 
     template<int nParameters>
-    GaussNewton<nParameters>::GaussNewton(std::function<bool(const Vn&, Eigen::VectorXd&, Eigen::VectorXd& )> computeResidual,
-            std::function<bool(const Vn&, Mmxn&)> computeJacobian,
-            std::function<bool(const Vn&, Vn&)> updateX,
+    GaussNewton<nParameters>::GaussNewton(std::function<bool(const Eigen::Matrix<double, nParameters, 1>&, Eigen::VectorXd&, Eigen::VectorXd& )> computeResidual,
+            std::function<bool(const Eigen::Matrix<double, nParameters, 1>&, Mmxn&)> computeJacobian,
+            std::function<bool(const Eigen::Matrix<double, nParameters, 1>&, Eigen::Matrix<double, nParameters, 1>&)> updateX,
             int nObservations,
             double alpha,
             double minStepSize,
@@ -25,7 +25,7 @@ namespace pd{namespace vision{
         Log::get("solver");
     }
     template<int nParameters>
-    void GaussNewton<nParameters>::solve(Vn& x) const
+    void GaussNewton<nParameters>::solve(Eigen::Matrix<double, nParameters, 1>& x) const
     {
         Eigen::VectorXd chiSquared(_maxIterations);
         chiSquared.setZero();
@@ -37,7 +37,7 @@ namespace pd{namespace vision{
    
 
     template<int nParameters>
-    void GaussNewton<nParameters>::solve(Vn &x, Eigen::VectorXd &chi2, Eigen::VectorXd& stepSize) const {
+    void GaussNewton<nParameters>::solve(Eigen::Matrix<double, nParameters, 1> &x, Eigen::VectorXd &chi2, Eigen::VectorXd& stepSize) const {
         
         SOLVER( INFO ) << "Solving Problem for " << _nParameters << " parameters. With " << _nObservations << " observations.";
         

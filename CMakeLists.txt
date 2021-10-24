@@ -36,6 +36,7 @@ set(headers
 		src/solver/LevenbergMarquardt.hpp
 		src/solver/GaussNewton.hpp
 		src/solver/GaussNewton.h
+		src/solver/solver.h
 		src/feature_extraction/Descriptor.h
 		src/utils/Exceptions.h
 		src/utils/visuals.h

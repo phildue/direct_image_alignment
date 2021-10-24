@@ -2,32 +2,31 @@
 #define VSLAM_GAUSS_NEWTON_H__
 
 #include <Eigen/Dense>
+#include "solver.h"
 
 namespace pd{namespace vision{
 
 template<int nParameters>
-      class GaussNewton{
-        typedef Eigen::Matrix<double, nParameters, 1> Vn;
+      class GaussNewton : public Solver<nParameters>{
         typedef Eigen::Matrix<double, Eigen::Dynamic, nParameters> Mmxn;
  
         public:
-        GaussNewton(std::function<bool(const Vn&, Eigen::VectorXd&, Eigen::VectorXd& )> computeResidual,
-                std::function<bool(const Vn&, Mmxn&)> computeJacobian,
-                std::function<bool(const Vn&, Vn&)> updateX,
+        GaussNewton(std::function<bool(const Eigen::Matrix<double, nParameters, 1>&, Eigen::VectorXd&, Eigen::VectorXd& )> computeResidual,
+                std::function<bool(const Eigen::Matrix<double, nParameters, 1>&, Mmxn&)> computeJacobian,
+                std::function<bool(const Eigen::Matrix<double, nParameters, 1>&, Eigen::Matrix<double, nParameters, 1>&)> updateX,
                 int nObservations,
                 double alpha,
                 double minStepSize,
                 int maxIterations
                 );
 
-        void solve(Vn& x) const;
-        void solve(Vn& x, Eigen::VectorXd& chi2, Eigen::VectorXd& stepSize) const;
+        void solve(Eigen::Matrix<double, nParameters, 1>& x) const override;
+        void solve(Eigen::Matrix<double, nParameters, 1>& x, Eigen::VectorXd& chi2, Eigen::VectorXd& stepSize) const;
 
-        double computeChi2(const Eigen::VectorXd& x,const Eigen::VectorXd& weights) const;
         private:
-        std::function<bool(const Vn& x, Eigen::VectorXd& residual, Eigen::VectorXd& weights)> _computeResidual;
-        std::function<bool(const Vn& x, Mmxn& jacobian)> _computeJacobian;
-        std::function<bool(const Vn& dx, Vn& x)> _updateX;
+        std::function<bool(const Eigen::Matrix<double, nParameters, 1>& x, Eigen::VectorXd& residual, Eigen::VectorXd& weights)> _computeResidual;
+        std::function<bool(const Eigen::Matrix<double, nParameters, 1>& x, Mmxn& jacobian)> _computeJacobian;
+        std::function<bool(const Eigen::Matrix<double, nParameters, 1>& dx, Eigen::Matrix<double, nParameters, 1>& x)> _updateX;
         void computeWeights(const Eigen::VectorXd& residuals, Eigen::VectorXd& weights) const;
         const double _minStepSize, _alpha;
         const int _maxIterations, _nObservations, _nParameters;
