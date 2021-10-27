@@ -183,9 +183,9 @@ public:
                     [&](const Eigen::Vector6d& x, Eigen::Matrix<double, Eigen::Dynamic,6>& jacobian) { return cost->computeJacobian(x,jacobian);},
                     [&](const Eigen::Vector6d& dx, Eigen::Vector6d& x) { x = (Sophus::SE3d::exp(x) * Sophus::SE3d::exp(-dx)).log(); return true;},
                     nPixels,
-                    1e-2,
-                    1e-16,
-                    30
+                    50,
+                    1e-9,
+                    1e-16
             );
 
             lls->solve(posev6d);

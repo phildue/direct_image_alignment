@@ -100,6 +100,8 @@ namespace pd{ namespace vision{ namespace algorithm{
         }
     }
 
+    
+
     double median( const Eigen::VectorXd& d );
 
     double rmse(const Eigen::MatrixXi& patch1, const Eigen::MatrixXi& patch2);
