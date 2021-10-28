@@ -19,8 +19,8 @@ class RecipeConan(ConanFile):
         self.requires("eigen/3.4.0")
         self.requires("sophus/1.0.0")
         self.requires("opencv/4.5.2")
-        self.requires("easyloggingpp/9.94.1")
-     #   self.requires("ceres-solver/2.0.0") Broken
+        self.requires("easyloggingpp/9.97.0")
+        self.requires("ceres-solver/2.0.0")
         self.requires("glog/0.5.0")
 
     def configure(self):

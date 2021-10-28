@@ -14,7 +14,7 @@
 #include "utils/Exceptions.h"
 #include "utils/utils.h"
 #include "SE3Parameterization.h"
-
+#include "utils/visuals.h"
 namespace pd{ namespace vision{
 
         template<int patchSize>

@@ -16,17 +16,17 @@ protected:
     //
     // r = T(x) - I(W(x,p))
     //
-    bool computeResidual(const Eigen::Matrix<double,nParameters,1>& x, Eigen::VectorXd& r, Eigen::VectorXd& w) const;
+    virtual bool computeResidual(const Eigen::Matrix<double,nParameters,1>& x, Eigen::VectorXd& r, Eigen::VectorXd& w) const;
    
     //
     // J = Ixy*dW/dp
     //
-    bool computeJacobian(const Eigen::Matrix<double,nParameters,1>& x, Eigen::Matrix<double,-1,nParameters>& j) const;
+    virtual bool computeJacobian(const Eigen::Matrix<double,nParameters,1>& x, Eigen::Matrix<double,-1,nParameters>& j) const;
 
     virtual bool updateX(const Eigen::Matrix<double,nParameters,1>& dx, Eigen::Matrix<double,nParameters,1>& x) const = 0;
 
     virtual Eigen::MatrixXi warp(const Eigen::Matrix<double,nParameters,1>& x, const Eigen::MatrixXi& img) const = 0;
-    virtual Image warp(const Eigen::Matrix<double,nParameters,1>& x, const Image& img) const = 0;
+    virtual void warp(const Eigen::Matrix<double,nParameters,1>& x, const Image& img, Image& out, Eigen::MatrixXd& weights) const = 0;
 
     virtual Eigen::Matrix<double,2,nParameters> jacobianWarp(int v, int u) const = 0;
 

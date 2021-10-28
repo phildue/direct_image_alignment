@@ -77,11 +77,11 @@ namespace pd{ namespace vision{ namespace algorithm{
         return res;
     }
 
-    template <typename Derived, typename Derived1>
-    void warpAffine(const Eigen::MatrixBase<Derived>& img, const Eigen::MatrixBase<Derived1>& warp, Eigen::MatrixBase<Derived>& imgWarped)
+    template <typename Derived,typename Derived1>
+    void warpAffine(const Eigen::MatrixBase<Derived>& img, const Eigen::Matrix<Derived1,3,3>& warp, Eigen::MatrixBase<Derived>& imgWarped)
     {
-        const double cx = imgWarped.cols()/2;
-        const double cy = imgWarped.rows()/2;
+        const double cx = img.cols()/2;
+        const double cy = img.rows()/2;
         for (int v = 0; v < imgWarped.rows(); v++)
         {
             for (int u = 0; u < imgWarped.cols(); u++)

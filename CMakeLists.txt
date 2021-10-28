@@ -51,8 +51,8 @@ set(headers
 		src/utils/Log.h
 		src/utils/utils.h
 		src/image_alignment/SE3Parameterization.h
-		src/image_alignment/ImageAlignmentSparseCeresAutoDiff.hpp
-		src/image_alignment/ImageAlignmentSparseCeres.hpp
+#		src/image_alignment/ImageAlignmentSparseCeresAutoDiff.hpp
+#		src/image_alignment/ImageAlignmentSparseCeres.hpp
 		src/image_alignment/ImageAlignmentSparse.h
 		src/image_alignment/ImageAlignmentDense.h
 		src/feature_extraction/FeatureExtraction.h
@@ -83,12 +83,12 @@ include(conanbuildinfo)
 conan_basic_setup(TARGETS)
 
 #Cannot get ceres via conan since package is broken
-find_package(Ceres REQUIRED)
-target_link_libraries(${PROJECT_NAME} Ceres::ceres)
+#find_package(Ceres REQUIRED)
+#target_link_libraries(${PROJECT_NAME} Ceres::ceres)
 #target_link_libraries(${PROJECT_NAME} CONAN_PKG::ceres-solver)
 
 
-	target_link_libraries(${PROJECT_NAME} CONAN_PKG::eigen)
+target_link_libraries(${PROJECT_NAME} CONAN_PKG::eigen)
 
 if (DEFINED OpenCV_LIBRARIES)
 	target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBRARIES})

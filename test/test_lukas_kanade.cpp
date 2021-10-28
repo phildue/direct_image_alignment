@@ -53,7 +53,7 @@ TEST(LukasKanadeTest,LukasKanadeAffine)
     const Image img0 = utils::loadImage(TEST_RESOURCE"/stuff.png",50,50,true);
     const Eigen::Matrix<double, 3,3> A = transforms::createdTransformMatrix2D(1,1,0);
 
-    Image img1 = img0;
+    Image img1 = Image::Zero(img0.rows(),img0.cols());
     algorithm::warpAffine(img0,A,img1);
     auto mat0 = vis::drawMat(img0);
     auto mat1 = vis::drawMat(img1);

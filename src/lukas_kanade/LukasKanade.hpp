@@ -36,7 +36,9 @@ namespace pd{namespace vision{
 
         Eigen::MatrixXd residualImage = Eigen::MatrixXd::Zero(_T.rows(),_T.cols());
         Eigen::MatrixXd weightsImage = Eigen::MatrixXd::Zero(_T.rows(),_T.cols());
-        Image IWxp = warp(x,_Iref);
+        Image IWxp = _Iref;
+        Eigen::MatrixXd weights = Eigen::MatrixXd::Zero(_T.rows(),_T.cols());
+        warp(x,_Iref,IWxp,weights);
         r.setZero();
         w.setZero();
         int idxPixel = 0;
@@ -46,7 +48,7 @@ namespace pd{namespace vision{
             {
                 r(idxPixel) = IWxp(v,u) - _T(v,u);
                 residualImage(v,u) = r(idxPixel);
-                w(idxPixel) = 1.0;
+                w(idxPixel) = weights(v,u);
                 weightsImage(v,u) = w(idxPixel);
                 idxPixel++;
             }

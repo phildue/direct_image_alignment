@@ -226,11 +226,11 @@ TEST_F(ImageAlignmentTest,DenseResidual)
     EXPECT_FALSE(std::isnan(residualImage.norm()));
 
     VLOG(3) << "max: " << max << " min: " << min << "\n" << residualImage;
-    Log::logMat(residualImage.cast<std::uint8_t >(),3,"Residual");
+  /*  Log::logMat(residualImage.cast<std::uint8_t >(),3,"Residual");
     Log::logMat(jacobianImage.cast<std::uint8_t >(),3,"Jacobian");
     Log::logMat(imgRef,3,"ImgRef");
     Log::logMat(imgTarget,3,"ImgTarget");
-
+*/
 }
 
 
@@ -252,7 +252,6 @@ TEST_F(ImageAlignmentTest,AnalyticalDiffGt)
 
 TEST_F(ImageAlignmentTest,DenseAnalyticalDiffNoise)
 {
-    Log::init(4,0,0);
     SE3d motion;
     loadRefImage(fs::path(TEST_RESOURCE"/sim.png"),120,160);
 
