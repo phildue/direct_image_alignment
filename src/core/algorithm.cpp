@@ -65,23 +65,28 @@ namespace pd{ namespace vision{ namespace algorithm{
 
     Eigen::MatrixXi gradX(const Image& image)
     {
-        Eigen::MatrixXi ix = image.cast<int>().rightCols(image.cols()-1) - image.cast<int>().leftCols(image.cols()-1);
-        ix.conservativeResize(Eigen::NoChange,image.cols());
-        for (int i = 0; i < ix.rows() ; ++i) {
-            ix.row(i).tail(1).setConstant(0);
+        Eigen::MatrixXi ix = Eigen::MatrixXi::Zero(image.rows(),image.cols());
+        for (int i = 0; i < image.rows(); i++)
+        {
+            for(int j = 1; j < image.cols()-1; j++)
+            {
+                ix(i,j) = (int)((-(double)image(i,j - 1) + (double)image(i,j + 1))/2.0);
+            }
         }
         return ix;
     }
 
     Eigen::MatrixXi gradY(const Image& image)
     {
-        Eigen::MatrixXi iy = image.cast<int>().bottomRows(image.rows()-1) - image.cast<int>().topRows(image.rows()-1);
-        iy.conservativeResize(image.rows(),Eigen::NoChange);
-        for (int i = 0; i < iy.cols() ; ++i) {
-            iy.col(i).tail(1).setConstant(0);
+        Eigen::MatrixXi iy = Eigen::MatrixXi::Zero(image.rows(),image.cols());
+        for (int i = 1; i < image.rows()-1; i++)
+        {
+            for(int j = 0; j < image.cols(); j++)
+            {
+                iy(i,j) = (int) ((-(double)image(i-1,j) + (double)image(i+1,j))/2.0);
+            }
         }
         return iy;
-
     }
 
     Sophus::SE3d computeRelativeTransform(const Sophus::SE3d& t0, const Sophus::SE3d& t1)
@@ -127,4 +132,20 @@ namespace transforms{
        return m;
     }
 
-}}}
+}
+
+namespace random{
+    double U(double min, double max){
+        std::random_device rd;
+        std::default_random_engine eng(rd());
+        std::uniform_real_distribution<double> distr(min, max);
+        return distr(eng);
+    }
+    int sign()
+    {
+        return U(-1,1) > 0 ? 1 : -1;
+    }
+
+}
+
+}}

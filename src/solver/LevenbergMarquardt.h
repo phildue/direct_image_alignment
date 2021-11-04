@@ -15,7 +15,9 @@ template<int nParameters>
                 int nObservations,
                 int maxIterations,
                 double minStepSize,
-                double minGradient
+                double minGradient,
+                double lambdaMin = 1e-7,
+                double lambdaMax = 1e7
                 );
 
         void solve(Eigen::Matrix<double, nParameters, 1>& x) const override;
@@ -28,6 +30,7 @@ template<int nParameters>
         void computeWeights(const Eigen::VectorXd& residuals, Eigen::VectorXd& weights) const;
         const double _minGradient, _minStepSize;
         const int _maxIterations, _nObservations, _nParameters;
+        const double _lambdaMax = 1e7, _lambdaMin = 1e-7;
         const double _Lup = 5,_Ldown = 4; ///<Scalar to multiply lambda in case linearization was good/bad
     };
 }}

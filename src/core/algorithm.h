@@ -7,7 +7,7 @@
 
 #include <Eigen/Dense>
 #include <algorithm>
-
+#include <random>
 #include "types.h"
 
 namespace pd{ namespace vision{ namespace algorithm{
@@ -100,6 +100,25 @@ namespace pd{ namespace vision{ namespace algorithm{
         }
     }
 
+    template <typename Derived,typename Derived1>
+    void shift(const Eigen::MatrixBase<Derived>& img, const Eigen::Matrix<Derived1,2,1>& shift, Eigen::MatrixBase<Derived>& imgWarped)
+    {
+        for (int v = 0; v < imgWarped.rows(); v++)
+        {
+            for (int u = 0; u < imgWarped.cols(); u++)
+            {
+                Eigen::Vector2d uvRef;
+                uvRef << u - shift.x(), v - shift.y();
+                if (1 < uvRef.x() && uvRef.x() < img.cols() - 1 &&
+                    1 < uvRef.y() && uvRef.y() < img.rows() - 1 )
+                {
+                    imgWarped(v,u) = algorithm::bilinearInterpolation(img,uvRef.x(),uvRef.y());
+                }
+
+            }
+        }
+    }
+
     
 
     double median( const Eigen::VectorXd& d );
@@ -126,6 +145,11 @@ namespace pd{ namespace vision{ namespace algorithm{
 }
 namespace transforms{
     Eigen::MatrixXd createdTransformMatrix2D(double x, double y, double angle);
+}
+
+namespace random{
+    double U(double min, double max);
+    int sign();
 }
 }}
 #endif //DIRECT_IMAGE_ALIGNMENT_ALGORITHM_H

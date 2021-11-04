@@ -11,7 +11,9 @@ namespace pd{namespace vision{
             int nObservations,
             int maxIterations,
             double minStepSize,
-            double minGradient
+            double minGradient,
+            double lambdaMin,
+            double lambdaMax
             )
     :_computeResidual(computeResidual)
     ,_computeJacobian(computeJacobian)
@@ -21,6 +23,8 @@ namespace pd{namespace vision{
     ,_nParameters(nParameters)
     ,_minStepSize(minStepSize)
     ,_minGradient(minGradient)
+    ,_lambdaMin(lambdaMin)
+    ,_lambdaMax(lambdaMax)
     {
         Log::get("solver");
     }
@@ -50,10 +54,18 @@ namespace pd{namespace vision{
         Eigen::VectorXd W = Eigen::VectorXd::Zero(_nObservations);
         Mmxn J = Eigen::MatrixXd::Zero(_nObservations, _nParameters);
         Eigen::VectorXd r = Eigen::VectorXd::Zero(_nObservations);
-        
-        // We want to solve dx = (JWJ)^(-1)*JWr
-            // This can be solved with cholesky decomposition (Ax = b)
-            // Where A = (JWJ + lambda * I), x = dx, b = JWr
+        /**
+         * 2 IxydWp^T*(Iwxp + IxydWp * dp - T) = 0
+         * IxydWp^T*IxydWp * dp + IxydWp^T( Iwxp - T) = 0
+         * IxydWp^T*( Iwxp - T) = -IxydWp^T*IxydWp * dp
+         * -IxydWp^T( Iwxp - T) = IxydWp^T*IxydWp * dp
+         * IxydWp^T( T-Iwxp ) = IxydWp^T*IxydWp * dp 
+         * J^T*r = H*dp
+         * dp =H^(-1)*J^T*r
+         * **/
+        // We want to solve dx = (H)^(-1)*JWr
+        // This can be solved with cholesky decomposition (Ax = b)
+        // Where A = (JWJ + lambda * I), x = dx, b = JWr
 
         _computeResidual(x,r,W);
         computeWeights(r,W);
@@ -66,7 +78,7 @@ namespace pd{namespace vision{
         {
             if ( i == 0)
             {
-                lambda(i) = std::min< double >( H.norm(), double( 1e7 ) );
+                lambda(i) = std::min< double >( H.norm(), double( _lambdaMax ) );
             }
             // Lagrange multiplier steers magnitude and direction of the step
             // For lambda ~ 0 the update will be Gauss-Newton
@@ -79,11 +91,11 @@ namespace pd{namespace vision{
 
             SOLVER(DEBUG) << i << " > Grad.:\n" << gradient.transpose() ;
 
-            const Eigen::VectorXd dx = H.ldlt().solve( gradient );
+            const Eigen::VectorXd dx = (H.ldlt().solve( gradient ));
+            //const Eigen::VectorXd dx = H.inverse()* gradient ;
 
             SOLVER(DEBUG) << i <<" > x:\n" << x.transpose() ;
             SOLVER(DEBUG) << i <<" > dx:\n" << dx.transpose() ;
-            _updateX(dx,x);
             stepSize(i) = dx.norm();
 
             //Rho expresses the ratio between the actual reduction and the predicted reduction
@@ -94,24 +106,25 @@ namespace pd{namespace vision{
                 
             if ( rho > 0.75 )
             {
-                lambda(i+1) = std::max< double >( lambda(i) / _Ldown, double( 1e-7 ) );
+                lambda(i+1) = std::max< double >( lambda(i) / _Ldown, double( _lambdaMin ) );
             }else if (rho < 0.25){
-                lambda(i+1) = std::min< double >( lambda(i) * _Lup, double( 1e7 ) );
+                lambda(i+1) = std::min< double >( lambda(i) * _Lup, double( _lambdaMax ) );
             }else{
                 lambda(i+1) = lambda(i);
             }
             if(rho > 0)
             {
+                _updateX(dx,x);
                 xprev = x;
                 _computeResidual(x,r,W);
                 computeWeights(r,W);
                 chi2(i) = (r.transpose() * W.asDiagonal() * r);
                 _computeJacobian(x,J);
-                Eigen::MatrixXd H  = (J.transpose() * W.asDiagonal() * J);
+                H  = (J.transpose() * W.asDiagonal() * J);
                 chi2Last = chi2(i);
 
             }else{
-                x = xprev;
+                 x = xprev;
             }
             
             SOLVER( INFO ) << "Iteration: " << i << 
