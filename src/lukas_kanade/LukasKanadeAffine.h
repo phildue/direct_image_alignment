@@ -8,20 +8,18 @@ namespace pd{namespace vision{
 class LukasKanadeAffine : public LukasKanade<6>{
 public:
     LukasKanadeAffine (const Image& templ, const Image& image, int maxIterations, double minStepSize = 1e-3, double minGradient = 1e-3);
-    void solve(Eigen::Vector6d& x) const;
+    void solve(Eigen::Vector6d& x);
 
 protected:
 
     //
     // r = T(x) - I(W(x,p))
     //
-    bool updateX(const Eigen::Vector6d& dx, Eigen::Vector6d& x) const override;
+    bool updateX(const Eigen::Vector6d& dx, Eigen::Vector6d& x) override;
 
-    Eigen::MatrixXi warp(const Eigen::Matrix<double,6,1>& x, const Eigen::MatrixXi& img) const override;
-    void warp(const Eigen::Matrix<double,6,1>& x, const Image& img, Image& out, Eigen::MatrixXd& mask) const override;
+    Eigen::Matrix<double,2,6> jacobianWarp(int v, int u) override;
 
-    Eigen::Matrix<double,2,6> jacobianWarp(int v, int u) const override;
-
+    Eigen::Vector2d warp(int u, int v,const Eigen::Vector6d& x) const override;
 
     const double _cx,_cy;
 

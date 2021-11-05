@@ -9,26 +9,25 @@ template<int nParameters>
 class LukasKanade{
 public:
     LukasKanade (const Image& templ, const Image& image, int maxIterations, double minStepSize = 1e-3, double minGradient = 1e-3);
-    void solve(Eigen::Matrix<double,nParameters,1>& x) const;
+    void solve(Eigen::Matrix<double,nParameters,1>& x);
 
 protected:
 
     //
     // r = T(x) - I(W(x,p))
     //
-    virtual bool computeResidual(const Eigen::Matrix<double,nParameters,1>& x, Eigen::VectorXd& r, Eigen::VectorXd& w) const;
+    virtual bool computeResidual(const Eigen::Matrix<double,nParameters,1>& x, Eigen::VectorXd& r, Eigen::VectorXd& w);
    
     //
     // J = Ixy*dW/dp
     //
-    virtual bool computeJacobian(const Eigen::Matrix<double,nParameters,1>& x, Eigen::Matrix<double,-1,nParameters>& j) const;
+    virtual bool computeJacobian(const Eigen::Matrix<double,nParameters,1>& x, Eigen::Matrix<double,-1,nParameters>& j) ;
 
-    virtual bool updateX(const Eigen::Matrix<double,nParameters,1>& dx, Eigen::Matrix<double,nParameters,1>& x) const = 0;
+    virtual bool updateX(const Eigen::Matrix<double,nParameters,1>& dx, Eigen::Matrix<double,nParameters,1>& x) = 0;
 
-    virtual Eigen::MatrixXi warp(const Eigen::Matrix<double,nParameters,1>& x, const Eigen::MatrixXi& img) const = 0;
-    virtual void warp(const Eigen::Matrix<double,nParameters,1>& x, const Image& img, Image& out, Eigen::MatrixXd& weights) const = 0;
+    virtual Eigen::Vector2d warp(int u, int v,const Eigen::Matrix<double, nParameters,1>& x) const = 0;
 
-    virtual Eigen::Matrix<double,2,nParameters> jacobianWarp(int v, int u) const = 0;
+    virtual Eigen::Matrix<double,2,nParameters> jacobianWarp(int v, int u)  = 0;
 
     const Image _T;
     const Image _Iref;
