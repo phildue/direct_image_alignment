@@ -23,6 +23,8 @@ protected:
 
     bool updateX(const Eigen::Vector2d& dx, Eigen::Vector2d& x) const;
 
+    Eigen::Vector2d warp(int u, int v,const Eigen::Vector2d& x) const;
+
 
     const Image _T;
     const Image _Iref;

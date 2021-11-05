@@ -46,7 +46,6 @@ namespace pd{namespace vision{
         Eigen::MatrixXd residualImage = Eigen::MatrixXd::Zero(_T.rows(),_T.cols());
         Eigen::MatrixXd weightsImage = Eigen::MatrixXd::Zero(_T.rows(),_T.cols());
         Image IWxp = Image::Zero(_Iref.rows(),_Iref.cols());
-        //algorithm::shift(_Iref,x,IWxp);
         r.setZero();
         w.setZero();
         int idxPixel = 0;
@@ -54,12 +53,12 @@ namespace pd{namespace vision{
         {
             for (int u = 0; u < _T.cols(); u++)
             {
-                Eigen::Vector2d uvWarped;
-                uvWarped << u + x.x(), v + x.y();
+                Eigen::Vector2d uvWarped = warp(u,v,x);
                 if (1 < uvWarped.x() && uvWarped.x() < _Iref.cols() -1  &&
                    1 < uvWarped.y() && uvWarped.y() < _Iref.rows()-1)
                 {
-                    r(idxPixel) = _T(v,u) - algorithm::bilinearInterpolation(_Iref,uvWarped.x(),uvWarped.y());
+                    IWxp(v,u) =  algorithm::bilinearInterpolation(_Iref,uvWarped.x(),uvWarped.y());
+                    r(idxPixel) = _T(v,u) - IWxp(v,u);
                     residualImage(v,u) = r(idxPixel);
                     w(idxPixel) = 1.0;
                     weightsImage(v,u) = w(idxPixel);
@@ -84,22 +83,22 @@ namespace pd{namespace vision{
         j.setZero();
         Eigen::MatrixXi dIxWp = Eigen::MatrixXi::Zero(_Iref.rows(),_Iref.cols());
         Eigen::MatrixXi dIyWp = Eigen::MatrixXi::Zero(_Iref.rows(),_Iref.cols());
-        algorithm::shift(_dIx,x,dIxWp);
-        algorithm::shift(_dIy,x,dIyWp);
 
         int idxPixel = 0;
         for (int v = 0; v < _T.rows(); v++)
         {
             for (int u = 0; u < _T.cols(); u++)
             {
-                Eigen::Vector2d uvWarped;
-                uvWarped << u + x.x(), v + x.y();
+                Eigen::Vector2d uvWarped = warp(u,v,x);
                 if (1 < uvWarped.x() && uvWarped.x() < _Iref.cols() -1  &&
                    1 < uvWarped.y() && uvWarped.y() < _Iref.rows()-1)
                 {
+                    dIxWp(v,u) = algorithm::bilinearInterpolation(_dIx,uvWarped.x(),uvWarped.y());
+                    dIyWp(v,u) = algorithm::bilinearInterpolation(_dIy,uvWarped.x(),uvWarped.y());
+
                     Eigen::Matrix2d Jwarp = Eigen::Matrix2d::Identity();
                             
-                    j.row(idxPixel) = (algorithm::bilinearInterpolation(_dIx,uvWarped.x(),uvWarped.y()) * Jwarp.row(0) + algorithm::bilinearInterpolation(_dIy,uvWarped.x(),uvWarped.y()) * Jwarp.row(1));
+                    j.row(idxPixel) = (dIxWp(v,u) * Jwarp.row(0) + dIyWp(v,u) * Jwarp.row(1));
                     steepestDescent(v,u) = j.row(idxPixel).norm();
                 }
                 idxPixel++;
@@ -117,9 +116,17 @@ namespace pd{namespace vision{
     }
     bool LukasKanadeOpticalFlow::updateX(const Eigen::Vector2d& dx, Eigen::Vector2d& x) const
     {
-        x.noalias() = dx;
+        x.noalias() += dx;
 
         return true;
     }
+
+    Eigen::Vector2d LukasKanadeOpticalFlow::warp(int u, int v,const Eigen::Vector2d& x) const
+    {
+          Eigen::Vector2d uvWarped;
+          uvWarped << u + x.x(), v + x.y();
+          return uvWarped;    
+    }
+
   
 }}
