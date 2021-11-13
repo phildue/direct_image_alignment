@@ -5,35 +5,35 @@
 #include <memory>
 namespace pd{namespace vision{
 
-template<int nParameters>
+template<typename Warp>
 class LukasKanade{
 public:
-    LukasKanade (const Image& templ, const Image& image, int maxIterations, double minStepSize = 1e-3, double minGradient = 1e-3);
-    void solve(Eigen::Matrix<double,nParameters,1>& x);
+    inline constexpr static int nParameters = Warp::nParameters;
+    LukasKanade (const Image& templ, const Image& image, std::shared_ptr<Warp> w0);
+    const std::shared_ptr<const Warp> warp();
 
-protected:
-
-    //
+      //
     // r = T(x) - I(W(x,p))
     //
-    virtual bool computeResidual(const Eigen::Matrix<double,nParameters,1>& x, Eigen::VectorXd& r, Eigen::VectorXd& w);
+    bool computeResidual(Eigen::VectorXd& r);
    
     //
     // J = Ixy*dW/dp
     //
-    virtual bool computeJacobian(const Eigen::Matrix<double,nParameters,1>& x, Eigen::Matrix<double,-1,nParameters>& j) ;
+    bool computeJacobian(Eigen::Matrix<double,-1,Warp::nParameters>& j) ;
 
-    virtual bool updateX(const Eigen::Matrix<double,nParameters,1>& dx, Eigen::Matrix<double,nParameters,1>& x) = 0;
+    bool updateX(const Eigen::Matrix<double,Warp::nParameters,1>& dx);
 
-    virtual Eigen::Vector2d warp(int u, int v,const Eigen::Matrix<double, nParameters,1>& x) const = 0;
+    Eigen::Matrix<double,Warp::nParameters,1> x() const {return _w->x();}
 
-    virtual Eigen::Matrix<double,2,nParameters> jacobianWarp(int v, int u)  = 0;
+protected:
 
     const Image _T;
     const Image _Iref;
     Eigen::MatrixXi _dIx;
     Eigen::MatrixXi _dIy;
-    std::shared_ptr<const Solver<nParameters>> _solver;
+    const std::shared_ptr<Warp> _w;
+
 };
 }}
 #include "LukasKanade.hpp"

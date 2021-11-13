@@ -14,11 +14,9 @@ set(sources
 		src/core/Point3D.cpp
         src/core/Camera.cpp
 		src/core/algorithm.cpp
-		src/lukas_kanade/LukasKanadeOpticalFlow.cpp
-		src/lukas_kanade/LukasKanadeAffine.cpp
-		src/lukas_kanade/LukasKanadeSE3d.cpp
-		src/image_alignment/ImageAlignmentSparse.cpp
-		src/image_alignment/ImageAlignmentDense.cpp
+		#src/lukas_kanade/LukasKanadeOpticalFlow.cpp
+		#src/lukas_kanade/LukasKanadeSE3d.cpp
+		src/solver/Loss.cpp
 		src/utils/visuals.cpp
 		src/utils/Log.cpp
 		src/utils/utils.cpp
@@ -39,22 +37,18 @@ set(headers
 		src/solver/LevenbergMarquardt.hpp
 		src/solver/GaussNewton.hpp
 		src/solver/GaussNewton.h
+		src/solver/Loss.h
 		src/lukas_kanade/LukasKanade.hpp
 		src/lukas_kanade/LukasKanade.h
-		src/lukas_kanade/LukasKanadeOpticalFlow.h
+		#src/lukas_kanade/LukasKanadeOpticalFlow.h
 		src/lukas_kanade/LukasKanadeAffine.h
-		src/lukas_kanade/LukasKanadeSE3d.h
+		#src/lukas_kanade/LukasKanadeSE3d.h
 		src/solver/solver.h
 		src/feature_extraction/Descriptor.h
 		src/utils/Exceptions.h
 		src/utils/visuals.h
 		src/utils/Log.h
 		src/utils/utils.h
-		src/image_alignment/SE3Parameterization.h
-#		src/image_alignment/ImageAlignmentSparseCeresAutoDiff.hpp
-#		src/image_alignment/ImageAlignmentSparseCeres.hpp
-		src/image_alignment/ImageAlignmentSparse.h
-		src/image_alignment/ImageAlignmentDense.h
 		src/feature_extraction/FeatureExtraction.h
 		src/feature_extraction/FeatureExtractionOpenCv.h
 		src/feature_extraction/feature_extraction.h
@@ -73,6 +67,10 @@ target_compile_definitions(${PROJECT_NAME} PUBLIC
 $<BUILD_INTERFACE:LOG_DIR="${CMAKE_BINARY_DIR}/log">
 $<INSTALL_INTERFACE:CFG_DIR="/tmp/vslam/log">)
 
+target_compile_definitions(${PROJECT_NAME} PUBLIC
+ELPP_FEATURE_PERFORMANCE_TRACKING
+)
+
 # Dependencies
 
 if (UNIX)
@@ -85,7 +83,7 @@ conan_basic_setup(TARGETS)
 #Cannot get ceres via conan since package is broken
 #find_package(Ceres REQUIRED)
 #target_link_libraries(${PROJECT_NAME} Ceres::ceres)
-#target_link_libraries(${PROJECT_NAME} CONAN_PKG::ceres-solver)
+target_link_libraries(${PROJECT_NAME} CONAN_PKG::ceres-solver)
 
 
 target_link_libraries(${PROJECT_NAME} CONAN_PKG::eigen)
@@ -102,8 +100,8 @@ target_link_libraries(${PROJECT_NAME} CONAN_PKG::easyloggingpp)
 
 
 # Add tests
-option(MyLibrary_BUILD_TESTS "Enable to build tests" ON)
-if(MyLibrary_BUILD_TESTS)
+option(VSLAM_BUILD_TESTS "Enable to build tests" ON)
+if(VSLAM_BUILD_TESTS)
 	enable_testing()
 	add_subdirectory(test)
 endif()

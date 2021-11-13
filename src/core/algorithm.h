@@ -138,7 +138,6 @@ namespace pd{ namespace vision{ namespace algorithm{
     Eigen::MatrixXd normalize(const Eigen::MatrixXd& mat,double min, double max);
 
 
-
     /// Computes T01 from T0 and T1
     Sophus::SE3d computeRelativeTransform(const Sophus::SE3d& t0, const Sophus::SE3d& t1);
 

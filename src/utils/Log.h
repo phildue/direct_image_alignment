@@ -13,6 +13,7 @@
 
 #include <opencv2/core/mat.hpp>
 #include "core/types.h"
+
 #include "easylogging++.h"
 
 #define SYSTEM(loglevel) CLOG(loglevel, "system")

@@ -7,63 +7,41 @@
 #include "core/algorithm.h"
 namespace pd{namespace vision{
 
-    template<int nParameters>
-    LukasKanade<nParameters>::LukasKanade (const Image& templ, const Image& image, int maxIterations, double minStepSize, double minGradient)
+    template<typename Warp>
+    LukasKanade<Warp>::LukasKanade (const Image& templ, const Image& image,std::shared_ptr<Warp> w0)
     : _T(templ)
     , _Iref(image)
     , _dIx(algorithm::gradX(image))
     , _dIy(algorithm::gradY(image))
-    /*, _solver(std::make_shared<LevenbergMarquardt<nParameters>>(
-                [&](const Eigen::Matrix<double,nParameters,1>& x, Eigen::VectorXd& residual, Eigen::VectorXd& weights) { return this->computeResidual(x,residual,weights);},
-                [&](const Eigen::Matrix<double,nParameters,1>& x, Eigen::Matrix<double,-1,nParameters>& jacobian) { return this->computeJacobian(x,jacobian);},
-                [&](const Eigen::Matrix<double,nParameters,1>& dx, Eigen::Matrix<double, nParameters,1>& x) { return this->updateX(dx,x);},
-                (templ.cols())*(templ.rows()),
-                maxIterations,
-                minGradient,
-                minStepSize)
-    )*/
-     , _solver(std::make_shared<GaussNewton<nParameters>>(
-                [&](const Eigen::Matrix<double,nParameters,1>& x, Eigen::VectorXd& residual, Eigen::VectorXd& weights) { return this->computeResidual(x,residual,weights);},
-                [&](const Eigen::Matrix<double,nParameters,1>& x, Eigen::Matrix<double,-1,nParameters>& jacobian) { return this->computeJacobian(x,jacobian);},
-                [&](const Eigen::Matrix<double,nParameters,1>& dx, Eigen::Matrix<double, nParameters,1>& x) { return this->updateX(dx,x);},
-                (templ.cols())*(templ.rows()),
-                0.1,
-                minStepSize,
-                maxIterations)
-    )
+    , _w(w0)
+    
     {
 
     }
 
-    template<int nParameters>
-    void LukasKanade<nParameters>::solve(Eigen::Matrix<double,nParameters,1>& x)
-    {
-        return _solver->solve(x);
-    }
+  
 
-    template<int nParameters>
-    bool LukasKanade<nParameters>::computeResidual(const Eigen::Matrix<double,nParameters,1>& x, Eigen::VectorXd& r, Eigen::VectorXd& w)
+    template<typename Warp>
+    bool LukasKanade<Warp>::computeResidual(Eigen::VectorXd& r)
     {
 
         Eigen::MatrixXd residualImage = Eigen::MatrixXd::Zero(_T.rows(),_T.cols());
-        Eigen::MatrixXd weightsImage = Eigen::MatrixXd::Zero(_T.rows(),_T.cols());
+        Eigen::MatrixXd visibilityImage = Eigen::MatrixXd::Zero(_T.rows(),_T.cols());
         Image IWxp = Image::Zero(_Iref.rows(),_Iref.cols());
         r.setZero();
-        w.setZero();
         int idxPixel = 0;
         for (int v = 0; v < _T.rows(); v++)
         {
             for (int u = 0; u < _T.cols(); u++)
             {
-                Eigen::Vector2d uvWarped = warp(u,v,x);
+                Eigen::Vector2d uvWarped = _w->apply(u,v);
                 if (1 < uvWarped.x() && uvWarped.x() < _Iref.cols() -1  &&
                    1 < uvWarped.y() && uvWarped.y() < _Iref.rows()-1)
                 {
                     IWxp(v,u) =  algorithm::bilinearInterpolation(_Iref,uvWarped.x(),uvWarped.y());
                     r(idxPixel) = _T(v,u) - IWxp(v,u);
                     residualImage(v,u) = r(idxPixel);
-                    w(idxPixel) = 1.0;
-                    weightsImage(v,u) = w(idxPixel);
+                    visibilityImage(v,u) = 1.0;
                 }
                 idxPixel++;
             }
@@ -71,34 +49,35 @@ namespace pd{namespace vision{
         const auto IWxpmat = vis::drawAsImage(IWxp.cast<double>());
         Log::getImageLog("Image Warped")->append(IWxpmat);
         Log::getImageLog("Residual")->append(vis::drawAsImage,residualImage);
-        Log::getImageLog("Weights")->append(vis::drawAsImage,weightsImage);
+        Log::getImageLog("Visibility")->append(vis::drawAsImage,visibilityImage);
         return true;
     }
 
     //
     // J = Ixy*dW/dp
     //
-    template<int nParameters>
-    bool LukasKanade<nParameters>::computeJacobian(const Eigen::Matrix<double,nParameters,1>& x, Eigen::Matrix<double, -1,nParameters>& j)
+    template<typename Warp>
+    bool LukasKanade<Warp>::computeJacobian(Eigen::Matrix<double, -1,Warp::nParameters>& j)
     {
         Eigen::MatrixXd steepestDescent = Eigen::MatrixXd::Zero(_T.rows(),_T.cols());
         j.setZero();
         Eigen::MatrixXi dIxWp = Eigen::MatrixXi::Zero(_Iref.rows(),_Iref.cols());
         Eigen::MatrixXi dIyWp = Eigen::MatrixXi::Zero(_Iref.rows(),_Iref.cols());
 
+
         int idxPixel = 0;
         for (int v = 0; v < _T.rows(); v++)
         {
             for (int u = 0; u < _T.cols(); u++)
             {
-                Eigen::Vector2d uvWarped = warp(u,v,x);
+                Eigen::Vector2d uvWarped = _w->apply(u,v);
                 if (1 < uvWarped.x() && uvWarped.x() < _Iref.cols() -1  &&
                    1 < uvWarped.y() && uvWarped.y() < _Iref.rows()-1)
                 {
                     dIxWp(v,u) = algorithm::bilinearInterpolation(_dIx,uvWarped.x(),uvWarped.y());
                     dIyWp(v,u) = algorithm::bilinearInterpolation(_dIy,uvWarped.x(),uvWarped.y());
 
-                    const Eigen::Matrix<double, -1,nParameters> Jwarp = jacobianWarp(v,u);
+                    const Eigen::Matrix<double, 2,nParameters> Jwarp = _w->J(u,v);
                             
                     j.row(idxPixel) = (dIxWp(v,u) * Jwarp.row(0) + dIyWp(v,u) * Jwarp.row(1));
                     steepestDescent(v,u) = j.row(idxPixel).norm();
@@ -115,5 +94,14 @@ namespace pd{namespace vision{
         Log::getImageLog("SteepestDescent")->append(vis::drawAsImage,steepestDescent);
         return true;
     }
+
+    template<typename Warp>
+    bool LukasKanade<Warp>::updateX(const Eigen::Matrix<double,Warp::nParameters,1>& dx)
+    {
+        _w->updateAdditive(dx);
+        return true;
+    }
+
+ 
     
 }}

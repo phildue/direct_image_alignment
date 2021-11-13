@@ -11,6 +11,7 @@
 #include "Exceptions.h"
 #include "core/Point3D.h"
 #include "core/algorithm.h"
+
 INITIALIZE_EASYLOGGINGPP
 
 

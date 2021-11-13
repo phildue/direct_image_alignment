@@ -35,7 +35,7 @@ class Cost{
     //
     bool computeResidual(const Eigen::Vector2d& x, Eigen::VectorXd& r, Eigen::VectorXd& w) const
     {
-         Eigen::MatrixXd A(3,3);
+         Eigen::Matrix3d A(3,3);
         A.setIdentity();
         /*A(0,0) = x(0,0);
         A(0,1) = x(1,0);
@@ -88,7 +88,7 @@ class Cost{
         // Wy = a10*x + (1+a11)*y + b1
         // dt0/x = a00
         // dt1/y = a11
-        Eigen::MatrixXd A(3,3);
+        Eigen::Matrix3d A(3,3);
         A.setIdentity();
         /*A(0,0) = x(0,0);
         A(0,1) = x(1,0);

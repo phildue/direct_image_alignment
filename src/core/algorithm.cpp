@@ -6,7 +6,6 @@
 namespace pd{ namespace vision{ namespace algorithm{
 
 
-
     double rmse(const Eigen::MatrixXi& patch1, const Eigen::MatrixXi& patch2)
     {
         if (patch1.rows() != patch2.rows() || patch1.cols() != patch2.cols())
@@ -120,6 +119,9 @@ namespace pd{ namespace vision{ namespace algorithm{
             return r[n/2];
         }
     }
+
+
+   
 }
 namespace transforms{
        Eigen::MatrixXd createdTransformMatrix2D(double x, double y, double angle) {
@@ -135,9 +137,10 @@ namespace transforms{
 }
 
 namespace random{
+
+    static std::default_random_engine eng ( 0 );
+
     double U(double min, double max){
-        std::random_device rd;
-        std::default_random_engine eng(rd());
         std::uniform_real_distribution<double> distr(min, max);
         return distr(eng);
     }

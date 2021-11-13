@@ -9,7 +9,6 @@
 #include "core/Camera.h"
 #include "core/Frame.h"
 #include "core/algorithm.h"
-#include "image_alignment/ImageAlignmentSparse.h"
 #include "feature_extraction/FeatureExtraction.h"
 #include "system/StereoAlignment.h"
 #include "core/types.h"

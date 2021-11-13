@@ -1,12 +1,12 @@
 #ifndef VSLAM_SOLVER_H__
 #define VSLAM_SOLVER_H__
 
-template<int nParameters>
+template<typename Problem>
 class Solver
 {
     public:
-    using Vn = Eigen::Matrix<double, nParameters, 1>;
-    virtual void solve(Eigen::Matrix<double, nParameters, 1>& x) const = 0;
+    using Vn = Eigen::Matrix<double, Problem::nParameters, 1>;
+    virtual void solve(std::shared_ptr<Problem> problem) const = 0;
 };
 
 #endif

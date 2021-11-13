@@ -4,10 +4,8 @@
 
 namespace pd{namespace vision{
 
-    template<int nParameters>
-    LevenbergMarquardt<nParameters>::LevenbergMarquardt(std::function<bool(const Eigen::Matrix<double, nParameters, 1>&, Eigen::VectorXd&, Eigen::VectorXd& )> computeResidual,
-            std::function<bool(const Eigen::Matrix<double, nParameters, 1>&, Mmxn&)> computeJacobian,
-            std::function<bool(const Eigen::Matrix<double, nParameters, 1>&, Eigen::Matrix<double, nParameters, 1>&)> updateX,
+    template<typename Problem>
+    LevenbergMarquardt<Problem>::LevenbergMarquardt(
             int nObservations,
             int maxIterations,
             double minStepSize,
@@ -15,12 +13,8 @@ namespace pd{namespace vision{
             double lambdaMin,
             double lambdaMax
             )
-    :_computeResidual(computeResidual)
-    ,_computeJacobian(computeJacobian)
-    ,_updateX(updateX)
-    ,_maxIterations(maxIterations)
+    :_maxIterations(maxIterations)
     ,_nObservations(nObservations)
-    ,_nParameters(nParameters)
     ,_minStepSize(minStepSize)
     ,_minGradient(minGradient)
     ,_lambdaMin(lambdaMin)
@@ -28,8 +22,8 @@ namespace pd{namespace vision{
     {
         Log::get("solver");
     }
-    template<int nParameters>
-    void LevenbergMarquardt<nParameters>::solve(Eigen::Matrix<double, nParameters, 1>& x) const
+    template<typename Problem>
+    void LevenbergMarquardt<Problem>::solve(std::shared_ptr<Problem> problem) const
     {
         Eigen::VectorXd chiSquared(_maxIterations);
         chiSquared.setZero();
@@ -40,19 +34,18 @@ namespace pd{namespace vision{
         lambda.setZero();
         Eigen::VectorXd stepSize(_maxIterations);
         stepSize.setZero();
-        solve(x,chiSquared,chi2Predicted,lambda,stepSize);
+        solve(problem,chiSquared,chi2Predicted,lambda,stepSize);
     }
 
     
 
-    template<int nParameters>
-    void LevenbergMarquardt<nParameters>::solve(Eigen::Matrix<double, nParameters, 1> &x, Eigen::VectorXd &chi2,Eigen::VectorXd &dchi2pred, Eigen::VectorXd &lambda, Eigen::VectorXd& stepSize) const{
-            SOLVER( INFO ) << "Solving Problem for " << _nParameters << " parameters. With " << _nObservations << " observations.";
+    template<typename Problem>
+    void LevenbergMarquardt<Problem>::solve(std::shared_ptr<Problem> problem, Eigen::VectorXd &chi2,Eigen::VectorXd &dchi2pred, Eigen::VectorXd &lambda, Eigen::VectorXd& stepSize) const{
+        SOLVER( INFO ) << "Solving Problem for " << Problem::nParameters << " parameters. With " << _nObservations << " observations.";
 
-        auto xprev = x;
     
         Eigen::VectorXd W = Eigen::VectorXd::Zero(_nObservations);
-        Mmxn J = Eigen::MatrixXd::Zero(_nObservations, _nParameters);
+        Mmxn J = Eigen::MatrixXd::Zero(_nObservations, Problem::nParameters);
         Eigen::VectorXd r = Eigen::VectorXd::Zero(_nObservations);
         /**
          * 2 IxydWp^T*(Iwxp + IxydWp * dp - T) = 0
@@ -67,10 +60,10 @@ namespace pd{namespace vision{
         // This can be solved with cholesky decomposition (Ax = b)
         // Where A = (JWJ + lambda * I), x = dx, b = JWr
 
-        _computeResidual(x,r,W);
-        computeWeights(r,W);
+        problem->computeResidual(r,W);
+        problem->computeWeights(r,W);
         chi2(0) = (r.transpose() * W.asDiagonal() * r);
-        _computeJacobian(x,J);
+        problem->computeJacobian(J);
         // For GN / LM we drop the second part of the Hessian
         Eigen::MatrixXd H  = (J.transpose() * W.asDiagonal() * J);
         double chi2Last;
@@ -94,7 +87,7 @@ namespace pd{namespace vision{
             const Eigen::VectorXd dx = (H.ldlt().solve( gradient ));
             //const Eigen::VectorXd dx = H.inverse()* gradient ;
 
-            SOLVER(DEBUG) << i <<" > x:\n" << x.transpose() ;
+            SOLVER(DEBUG) << i <<" > x:\n" << problem->x().transpose() ;
             SOLVER(DEBUG) << i <<" > dx:\n" << dx.transpose() ;
             stepSize(i) = dx.norm();
 
@@ -114,24 +107,21 @@ namespace pd{namespace vision{
             }
             if(rho > 0)
             {
-                _updateX(dx,x);
-                xprev = x;
-                _computeResidual(x,r,W);
-                computeWeights(r,W);
+                problem->updateX(dx);
+                problem->computeResidual(r,W);
+                problem->computeWeights(r,W);
                 chi2(i) = (r.transpose() * W.asDiagonal() * r);
-                _computeJacobian(x,J);
+                problem->computeJacobian(J);
                 H  = (J.transpose() * W.asDiagonal() * J);
                 chi2Last = chi2(i);
 
-            }else{
-                 x = xprev;
             }
             
             SOLVER( INFO ) << "Iteration: " << i << 
             " chi2: " << chi2(i) << " dChi2: " << dChi2 << 
             " stepSize: " << stepSize(i) << " Total Weight: " << W.sum() <<
             " lambda: " << lambda(i) << " rho: " << rho;
-                if ( stepSize(i) < _minStepSize /*|| std::abs(gradient.maxCoeff()) < _minGradient*/)
+            if ( stepSize(i) < _minStepSize /*|| std::abs(gradient.maxCoeff()) < _minGradient*/)
             {
                 SOLVER( INFO ) << i << " > Stepsize: " << stepSize(i) << "/" << _minStepSize << 
                 " Gradient: " << gradient.maxCoeff() << "/" << _minGradient << " CONVERGED. ";
@@ -145,27 +135,5 @@ namespace pd{namespace vision{
             }
         }
 
-    template<int nParameters>
-    void LevenbergMarquardt<nParameters>::computeWeights(const Eigen::VectorXd& residuals, Eigen::VectorXd& weights) const
-    {
-        // first order derivative of Tukey’s biweight loss function.
-        // alternatively we could here assign weights based on the expected distribution of errors (e.g. t distribution)
-        const auto t = residuals/algorithm::median(residuals);
-        constexpr double kappa = 4.6851; //constant from paper
-        constexpr double kappa2 = kappa*kappa;
-        constexpr double kappa2_6 = kappa2/6;
-
-        if (t.norm() <= kappa)
-        {
-            const auto t_k = t/kappa;
-            for(int i = 0; i < weights.rows(); i++)
-            {
-                weights(i) *= kappa2_6 * 1 - std::pow(( 1 - std::pow(t_k(i),2)),3);
-            }
-        
-        }else{
-            weights *= kappa2_6;
-        }
-            
-    }
+    
 }}
