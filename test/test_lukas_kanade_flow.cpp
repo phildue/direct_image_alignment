@@ -9,7 +9,8 @@
 #include "utils/visuals.h"
 #include "core/algorithm.h"
 #include "core/types.h"
-#include "lukas_kanade/LukasKanadeOpticalFlow.h"
+#include "lukas_kanade/LukasKanade.h"
+#include "solver/Loss.h"
 
 using namespace testing;
 using namespace pd;
@@ -41,22 +42,21 @@ TEST_P(LukasKanadeOpticalFlowTest,LukasKanadeOpticalFlow)
     Log::getImageLog("I")->append(mat0);
     Log::getImageLog("T")->append(mat1);
 
-    auto lk = std::make_shared<LukasKanadeOpticalFlow>(img1,img0,50);
-    Eigen::Matrix3d Ares = Eigen::Matrix3d::Identity();
-    Ares(0,2) = x(0);
-    Ares(1,2) = x(1);
-    std::cout << Ares << std::endl;
-    
-    ASSERT_FALSE((Ares - A).norm() <= 0.5) << "Test should have minimum shift.";
+    auto w = std::make_shared<WarpOpticalFlow>(x);
+    auto gn = std::make_shared<GaussNewton<LukasKanadeOpticalFlow,TukeyLoss>> ( img0.rows()*img0.cols(),
+                0.1,
+                1e-3,
+                100);
+    auto lk = std::make_shared<LukasKanadeOpticalFlow> (img1,img0,w);
+  
    
-    lk->solve(x);
-    Ares(0,2) = x(0);
-    Ares(1,2) = x(1);
+    ASSERT_GT(w->x().norm(), 0.5);
+
+    gn->solve(lk);
     
+    EXPECT_LE(w->x().norm(), 0.5);
    
-    std::cout << Ares << std::endl;
-    EXPECT_NEAR((Ares - A).norm(),0,0.5);
 }
-INSTANTIATE_TEST_CASE_P(Instantiation, LukasKanadeOpticalFlowTest, ::testing::Range(1, 1));
+INSTANTIATE_TEST_CASE_P(Instantiation, LukasKanadeOpticalFlowTest, ::testing::Range(1, 11));
 
 

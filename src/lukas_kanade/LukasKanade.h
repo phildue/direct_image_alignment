@@ -37,4 +37,13 @@ protected:
 };
 }}
 #include "LukasKanade.hpp"
+#include "WarpAffine.h"
+#include "WarpOpticalFlow.h"
+#include "WarpSE3.h"
+namespace pd{namespace vision{
+
+typedef LukasKanade<WarpAffine> LukasKanadeAffine;
+typedef LukasKanade<WarpOpticalFlow> LukasKanadeOpticalFlow;
+typedef LukasKanade<WarpSE3> LukasKanadeSE3;
+}}
 #endif
