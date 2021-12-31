@@ -90,6 +90,8 @@ namespace pd{ namespace vision{
     static std::shared_ptr<Log> get(const std::string& name,Level level = el::Level::Info);
     static std::shared_ptr<LogImage> getImageLog(const std::string& name, Level level = el::Level::Info);
     static std::shared_ptr<LogCsv> getCsvLog(const std::string& name, Level level);
+    static Level _showLevel;
+    static Level _blockLevel;
     
     Log(const std::string& name);
 

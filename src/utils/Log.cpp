@@ -19,7 +19,8 @@ namespace pd{ namespace vision {
 std::map<std::string, std::map<Level,std::shared_ptr<Log>>> Log::_logs = {};
 std::map<std::string, std::map<Level,std::shared_ptr<LogCsv>>> Log::_logsCsv = {};
 std::map<std::string, std::map<Level,std::shared_ptr<LogImage>>> Log::_logsImage = {};
-
+Level Log::_blockLevel = Level::Unknown;
+Level Log::_showLevel = Level::Debug;
        
     std::shared_ptr<Log> Log::get(const std::string& name,Level level)
     {
@@ -48,13 +49,18 @@ std::map<std::string, std::map<Level,std::shared_ptr<LogImage>>> Log::_logsImage
         {
             return it->second[level];
         }else{
-            std::map<Level,std::shared_ptr<LogImage>> log = {
-                {el::Level::Debug,std::make_shared<LogImage>(name)},
-                {el::Level::Info,std::make_shared<LogImage>(name)},
-                {el::Level::Warning,std::make_shared<LogImage>(name)},
-                {el::Level::Error,std::make_shared<LogImage>(name)},
-
+            const std::vector<Level> levels = {
+                Level::Debug,
+                Level::Info,
+                Level::Warning,
+                Level::Error
             };
+            std::map<Level,std::shared_ptr<LogImage>> log;
+            for (const auto & l : levels)
+            {
+                log[l] = std::make_shared<LogImage>(name,l >= _blockLevel, l >= _showLevel);
+            }
+             
             _logsImage[name] = log;
             return log[level];
         }
