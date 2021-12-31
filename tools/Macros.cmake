@@ -12,7 +12,7 @@ add_library(${namespace}::${name} ALIAS ${name})
 # Set include path (can be different in build/install)
 target_include_directories(${name} PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/src/>
-    $<INSTALL_INTERFACE:include/>
+    $<INSTALL_INTERFACE:include/${name}>
     )
 target_include_directories(${name} PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include/>
@@ -23,7 +23,6 @@ install(TARGETS ${name} EXPORT ${name}Targets
     LIBRARY DESTINATION lib
     ARCHIVE DESTINATION lib
     RUNTIME DESTINATION bin
-    INCLUDES DESTINATION include
     )
 
 install(EXPORT ${name}Targets
@@ -38,7 +37,11 @@ install(DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/src/
     FILES_MATCHING # install only matched files
     PATTERN "*.h" # select header files
     )
-    
+install(DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/src/
+    DESTINATION include/${name}
+    FILES_MATCHING # install only matched files
+    PATTERN "*.hpp" # select header files
+    )  
 install(DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/include/
     DESTINATION include/
     FILES_MATCHING # install only matched files
@@ -46,7 +49,7 @@ install(DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/include/
     )
 
 install(DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/cfg/
-    DESTINATION cfg/
+    DESTINATION share/${name}/cfg/
     FILES_MATCHING # install only matched files
     PATTERN "*" # select all files
     )
@@ -78,7 +81,7 @@ macro(pd_add_test unit lib)
 	target_link_libraries(${unit}Test
 			PRIVATE
 			pd::${lib}
-			GTest::Main
+			GTest::gtest_main
 			)
 
 	add_test(NAME ${unit}.UnitTest

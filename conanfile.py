@@ -12,16 +12,16 @@ class RecipeConan(ConanFile):
     settings = "os", "compiler", "build_type", "arch"
     options = {"shared": [True, False], "fPIC": [True, False], "build_tests":[True, False]}
     default_options = {"shared": False, "fPIC": True, "build_tests": True}
-    generators = "cmake_paths","cmake"
+    generators = "cmake_find_package_multi"
     def requirements(self):
         if self.options.build_tests:
            self.requires("gtest/cci.20210126")
         self.requires("eigen/3.4.0")
         self.requires("sophus/1.0.0")
-        self.requires("opencv/4.5.2")
+        #self.requires("opencv/4.5.2")
         self.requires("easyloggingpp/9.97.0")
-        self.requires("ceres-solver/2.0.0")
-        self.requires("glog/0.5.0")
+        #self.requires("ceres-solver/2.0.0")
+        #self.requires("glog/0.5.0")
 
     def configure(self):
         pass
