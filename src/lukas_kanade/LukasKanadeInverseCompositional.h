@@ -31,9 +31,7 @@ protected:
     const Image _T;
     const Image _Iref;
     const std::shared_ptr<Warp> _w;
-    Image _IWxp;
     Eigen::Matrix<double,-1,Warp::nParameters> _J;
-    Eigen::MatrixXi _dIx,_dIy;
 };
 
 }}

@@ -19,7 +19,7 @@ namespace pd{namespace vision{
     void WarpSE3::updateCompositional(const Eigen::Vector6d& dx)
     {
         //TODO
-        _pose = Sophus::SE3d::exp(dx) * _pose;
+        _pose =  Sophus::SE3d::exp(dx)*_pose;
         _x = _pose.log();
 
     }

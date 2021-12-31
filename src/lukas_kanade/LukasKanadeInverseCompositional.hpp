@@ -10,14 +10,11 @@ namespace pd{namespace vision{
     : _T(templ)
     , _Iref(image)
     , _w(w0)
-    , _IWxp(Image::Zero(_Iref.rows(),_Iref.cols()))
     , _J(Eigen::MatrixXd::Zero(_Iref.rows()*_Iref.cols(),Warp::nParameters))
-    , _dIx(algorithm::gradX(templ))
-    , _dIy(algorithm::gradY(templ))
     {
         Eigen::MatrixXd steepestDescent = Eigen::MatrixXd::Zero(_T.rows(),_T.cols());
-        Eigen::MatrixXi dIxWp = Eigen::MatrixXi::Zero(_Iref.rows(),_Iref.cols());
-        Eigen::MatrixXi dIyWp = Eigen::MatrixXi::Zero(_Iref.rows(),_Iref.cols());
+        const Eigen::MatrixXi dTx = algorithm::gradX(templ);
+        const Eigen::MatrixXi dTy = algorithm::gradY(templ);
 
 
         int idxPixel = 0;
@@ -25,28 +22,22 @@ namespace pd{namespace vision{
         {
             for (int u = 0; u < _T.cols(); u++)
             {
-                Eigen::Vector2d uvWarped = _w->apply(u,v);
-                if (1 < uvWarped.x() && uvWarped.x() < _Iref.cols() -1  &&
-                   1 < uvWarped.y() && uvWarped.y() < _Iref.rows()-1)
-                {
-                    dIxWp(v,u) = algorithm::bilinearInterpolation(_dIx,uvWarped.x(),uvWarped.y());
-                    dIyWp(v,u) = algorithm::bilinearInterpolation(_dIy,uvWarped.x(),uvWarped.y());
-
-                    const Eigen::Matrix<double, 2,nParameters> Jwarp = _w->J(u,v);
-                            
-                    _J.row(idxPixel) = (dIxWp(v,u) * Jwarp.row(0) + dIyWp(v,u) * Jwarp.row(1));
-                    steepestDescent(v,u) = _J.row(idxPixel).norm();
-                }
+                
+                const Eigen::Matrix<double, 2,nParameters> Jwarp = _w->J(u,v);
+                        
+                _J.row(idxPixel) = (dTx(v,u) * Jwarp.row(0) + dTy(v,u) * Jwarp.row(1));
+                steepestDescent(v,u) = _J.row(idxPixel).norm();
                 idxPixel++;
                     
             }
         }
-        const auto dIWxpmat = vis::drawAsImage(dIxWp.cast<double>());
-        const auto dIWypmat = vis::drawAsImage(dIyWp.cast<double>());
+        //TODO draw only when logged
+        const auto dTxmat = vis::drawAsImage(dTx.cast<double>());
+        const auto dTymat = vis::drawAsImage(dTy.cast<double>());
 
-        Log::getImageLog("Gradient X Warped")->append(dIWxpmat);
-        Log::getImageLog("Gradient Y Warped")->append(dIWypmat);
-        Log::getImageLog("SteepestDescent")->append(vis::drawAsImage,steepestDescent);
+        Log::getImageLog("dTx",Level::Debug)->append(dTxmat);
+        Log::getImageLog("dTy",Level::Debug)->append(dTymat);
+        Log::getImageLog("SteepestDescent",Level::Debug)->append(vis::drawAsImage,steepestDescent);
     }
 
   
@@ -54,10 +45,12 @@ namespace pd{namespace vision{
     template<typename Warp>
     bool LukasKanadeInverseCompositional<Warp>::computeResidual(Eigen::VectorXd& r)
     {
+        r.setZero();
 
         Eigen::MatrixXd residualImage = Eigen::MatrixXd::Zero(_T.rows(),_T.cols());
         Eigen::MatrixXd visibilityImage = Eigen::MatrixXd::Zero(_T.rows(),_T.cols());
-        r.setZero();
+        Image IWxp = Image::Zero(_Iref.rows(),_Iref.cols());
+
         int idxPixel = 0;
         for (int v = 0; v < _T.rows(); v++)
         {
@@ -67,18 +60,20 @@ namespace pd{namespace vision{
                 if (1 < uvWarped.x() && uvWarped.x() < _Iref.cols() -1  &&
                    1 < uvWarped.y() && uvWarped.y() < _Iref.rows()-1)
                 {
-                    _IWxp(v,u) =  algorithm::bilinearInterpolation(_Iref,uvWarped.x(),uvWarped.y());
-                    r(idxPixel) = _IWxp(v,u) - _T(v,u);
+                    IWxp(v,u) =  algorithm::bilinearInterpolation(_Iref,uvWarped.x(),uvWarped.y());
+                    r(idxPixel) = IWxp(v,u) - _T(v,u);
                     residualImage(v,u) = r(idxPixel);
                     visibilityImage(v,u) = 1.0;
                 }
                 idxPixel++;
             }
         }
-        const auto IWxpmat = vis::drawAsImage(_IWxp.cast<double>());
-        Log::getImageLog("Image Warped")->append(IWxpmat);
-        Log::getImageLog("Residual")->append(vis::drawAsImage,residualImage);
-        Log::getImageLog("Visibility")->append(vis::drawAsImage,visibilityImage);
+        //TODO draw only when logged
+
+        const auto IWxpmat = vis::drawAsImage(IWxp.cast<double>());
+        Log::getImageLog("Image Warped",Level::Debug)->append(IWxpmat);
+        Log::getImageLog("Residual",Level::Debug)->append(vis::drawAsImage,residualImage);
+        Log::getImageLog("Visibility",Level::Debug)->append(vis::drawAsImage,visibilityImage);
         return true;
     }
 
