@@ -51,6 +51,12 @@ namespace pd{
                0, 0, 1;
             _Kinv = _K.inverse();
         }
+        void Camera::resize(double s)
+        {
+            _K *= s;
+            _Kinv = _K.inverse();
+        }
+
 
 
     }}

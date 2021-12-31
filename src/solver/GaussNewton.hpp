@@ -25,13 +25,16 @@ namespace pd{namespace vision{
         chiSquared.setZero();
         Eigen::VectorXd stepSize(_maxIterations);
         stepSize.setZero();
-        solve(problem,chiSquared,stepSize);
+        Eigen::Matrix<double, Eigen::Dynamic, Problem::nParameters> x(_maxIterations,Problem::nParameters);
+        x.setZero();
+
+        solve(problem,chiSquared,stepSize,x);
     }
 
    
 
     template<typename Problem, typename Loss>
-    void GaussNewton<Problem, Loss>::solve(std::shared_ptr< Problem> problem, Eigen::VectorXd &chi2, Eigen::VectorXd& stepSize) const {
+    void GaussNewton<Problem, Loss>::solve(std::shared_ptr< Problem> problem, Eigen::VectorXd &chi2, Eigen::VectorXd& stepSize, GaussNewton::Mmxn & x) const {
         
         SOLVER( INFO ) << "Solving Problem for " << Problem::nParameters << " parameters. With " << _nObservations << " observations.";
         TIMED_FUNC(timerF);
@@ -63,11 +66,12 @@ namespace pd{namespace vision{
 
             SOLVER(DEBUG) << i << " > Grad.:\n" << gradient.transpose() ;
 
-            const Eigen::VectorXd dx = _alpha * H.ldlt().solve( gradient );
+            const Eigen::Vector<double, Eigen::Dynamic> dx = _alpha * H.ldlt().solve( gradient );
 
             SOLVER(DEBUG) << i <<" > x:\n" << problem->x().transpose() ;
             SOLVER(DEBUG) << i <<" > dx:\n" << dx.transpose() ;
             problem->updateX(dx);
+            x.row(i) = problem->x();
             stepSize(i) = dx.norm();
 
             const double dChi2 = i > 0 ? chi2(i)-chi2(i-1) : 0;

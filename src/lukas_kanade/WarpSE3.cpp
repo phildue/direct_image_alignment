@@ -6,10 +6,11 @@
 namespace pd{namespace vision{
     WarpSE3::WarpSE3(const Eigen::Vector6d& x, const Eigen::MatrixXd& depth, std::shared_ptr<Camera> cam)
     :_x(x)
+    ,_pose(Sophus::SE3d::exp(_x))
+    ,_depth(depth)
     ,_cam(cam)
-    ,_depth(depth){
-        _pose = Sophus::SE3d::exp(_x);
-    };
+    {
+    }
     void WarpSE3::updateAdditive(const Eigen::Vector6d& dx)
     {
         _pose = Sophus::SE3d::exp(dx) * _pose;
@@ -23,6 +24,10 @@ namespace pd{namespace vision{
 
     }
     Eigen::Vector2d WarpSE3::apply(int u, int v) const { 
+        if (std::isinf(_depth(v,u)) || _depth(v,u) <= 0 || std::isnan(_depth(v,u)))
+        {
+            return {-1,-1};
+        }
         return _cam->camera2image( _pose * _cam->image2camera({u,v},_depth(v,u)));
     }
     Eigen::Matrix<double,2,WarpSE3::nParameters> WarpSE3::J(int u, int v) const {
@@ -43,5 +48,10 @@ namespace pd{namespace vision{
         _pose = Sophus::SE3d::exp(x);
     }
     Eigen::Vector6d WarpSE3::x() const {return _x;}
+    
+    const SE3d& WarpSE3::pose() const
+    {
+        return _pose;
+    }
 
 }}

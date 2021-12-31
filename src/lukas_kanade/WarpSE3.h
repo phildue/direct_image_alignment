@@ -15,10 +15,11 @@ class WarpSE3
     Eigen::Matrix<double,2,nParameters> J(int u, int v) const;
     void setX(const Eigen::Vector6d& x);
     Eigen::Vector6d x() const;
+    const SE3d& pose() const;
     private:
     
-    SE3d _pose;
     Eigen::Vector6d _x;
+    SE3d _pose;
     const Eigen::MatrixXd _depth;
     const std::shared_ptr<const Camera> _cam;
 };

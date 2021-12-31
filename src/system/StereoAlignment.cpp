@@ -58,9 +58,9 @@ namespace pd { namespace  vision{
     : _config(config)
     , _featureExtractor(std::make_shared<FeatureExtractionOpenCv>(config.desiredFeatures))
     //, _imageAlignment(std::make_shared<ImageAlignmentDense>(config.levelMax,config.levelMin))
-    , _fNo(0)
     , _camera(std::make_shared<Camera>(config.fx,config.cx,config.cy))
     , _motionPredictor(std::make_shared<MotionPrediction>())
+    , _fNo(0)
     {
         Log::get("system");
         SYSTEM(INFO) << "Stereoaligner constructed with camera: " << config.fx << " , " << config.cx << " , " << config.cy;

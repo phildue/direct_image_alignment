@@ -17,14 +17,14 @@ namespace pd{namespace vision{
     }
     void WarpAffine::updateCompositional(const Eigen::Vector6d& dx)
     {
-        //TODO
-        _w = toMat(dx) * _w;
-        _x(0) = _w(0,0) - 1;
-        _x(1) = _w(1,0);
-        _x(2) = _w(0,1);
-        _x(3) = _w(1,1) - 1;
-        _x(4) = _w(0,2);
-        _x(5) = _w(1,2);
+        _x(0) = _x(0) + dx(0) +_x(0)*dx(0) + _x(2)*dx(1);
+        _x(1) = _x(1) + dx(1) +_x(1)*dx(0) + _x(3)*dx(1);
+        _x(2) = _x(2) + dx(2) +_x(0)*dx(2) + _x(2)*dx(3);
+        _x(3) = _x(3) + dx(3) +_x(1)*dx(2) + _x(3)*dx(3);
+        _x(4) = _x(4) + dx(4) +_x(0)*dx(4) + _x(2)*dx(5);
+        _x(5) = _x(5) + dx(5) +_x(1)*dx(4) + _x(3)*dx(5);
+
+        _w = toMat(_x);
 
     }
     Eigen::Vector2d WarpAffine::apply(int u, int v) const { 

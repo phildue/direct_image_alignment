@@ -10,8 +10,9 @@
 #include <string>
 #include <map>
 #include <iostream>
+#include "matplotlibcpp.h"
 
-#include <opencv2/core/mat.hpp>
+#include <opencv2/opencv.hpp>
 #include "core/types.h"
 
 #include "easylogging++.h"
@@ -25,20 +26,22 @@ namespace pd{ namespace vision{
     class Frame;
     class FrameRGBD;
     using Level = el::Level;
+    namespace plt = matplotlibcpp;
 
     class LogCsv
     {
         public:
-        LogCsv(const std::string& file, const std::vector<std::string>& header,const std::string& delimiter = ";");
+        LogCsv(const std::string& file, const std::string& delimiter = ";");
+        void setHeader(const std::vector<std::string>& header);
         virtual void append(const std::vector<std::string>& elements);
         virtual void append(const std::vector<double>& elements);
-        protected:
+        private:
         const std::string _name;
         const std::string _fileName;
         
         std::fstream _file;
 
-        const int _nElements;
+        int _nElements;
         const std::string _delimiter;
         void append(const std::stringstream& ss);
     };
@@ -54,54 +57,48 @@ namespace pd{ namespace vision{
     class LogImage
     {
         public:
-        LogImage(const std::string& name);
+        LogImage(const std::string& name, bool block = false, bool show = true, bool save = false);
         template<typename... Args>
         void append(DrawFunctor<Args...> draw,Args... args)
         {
-            if (shouldDraw())
+            if (_show)
             {
                 logMat(draw(args...));
             }
         }
         void append(const cv::Mat& mat)
         {
-            if (shouldDraw())
+            if (_show || _save)
             {
                 logMat(mat);
             }         
         }
-
+        bool _block;
+        bool _show;
+        bool _save;
         protected:
         const std::string _name;
         const std::string _folder;
-        Level _blockLevel, _showLevel;
-        Level _blockLevelDes, _showLevelDes;
+        std::uint32_t _ctr;
 
         void logMat(const cv::Mat &mat);
-        virtual bool shouldDraw() const {return true;}
 
     };
-    class LogImageNull : public LogImage
-    {
-        protected:
-        bool shouldDraw() const final {return false;}
-    };
+  
     class Log {
     public:
-    static std::shared_ptr<Log> get(const std::string& name);
-    static std::shared_ptr<LogImage> getImageLog(const std::string& name, Level show = el::Level::Info, Level block = el::Level::Debug);
-    static std::shared_ptr<LogCsv> getCsvLog(const std::string& name,const std::vector<std::string>& header, Level level);
-
+    static std::shared_ptr<Log> get(const std::string& name,Level level = el::Level::Info);
+    static std::shared_ptr<LogImage> getImageLog(const std::string& name, Level level = el::Level::Info);
+    static std::shared_ptr<LogCsv> getCsvLog(const std::string& name, Level level);
+    
     Log(const std::string& name);
 
      private:
-    int _showLevel;
-    int _blockLevel;
-    int _logLevel;
+
     const std::string _name;
-    static std::map<std::string, std::shared_ptr<Log>> _logs;
-    static std::map<std::string, std::shared_ptr<LogCsv>> _logsCsv;
-    static std::map<std::string, std::shared_ptr<LogImage>> _logsImage;
+    static std::map<std::string, std::map<Level,std::shared_ptr<Log>>> _logs;
+    static std::map<std::string, std::map<Level,std::shared_ptr<LogCsv>>> _logsCsv;
+    static std::map<std::string, std::map<Level,std::shared_ptr<LogImage>>> _logsImage;
 
     };
     }}

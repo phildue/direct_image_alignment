@@ -19,8 +19,8 @@ namespace pd{namespace vision{
                 );
 
         void solve(std::shared_ptr< Problem> problem) const override;
-        void solve(std::shared_ptr< Problem> problem, Eigen::VectorXd& chi2, Eigen::VectorXd& stepSize) const;
-
+        void solve(std::shared_ptr< Problem> problem, Eigen::VectorXd &chi2, Eigen::VectorXd& stepSize, Mmxn & x) const;
+        const int& maxIterations() const {return _maxIterations;}
         private:
         const double _minStepSize, _alpha;
         const int _maxIterations, _nObservations;

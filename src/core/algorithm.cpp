@@ -134,6 +134,17 @@ namespace transforms{
        return m;
     }
 
+    double deg2rad(double deg)
+    {
+        return deg/180 * M_PI;
+    }
+    double rad2deg(double rad)
+    {
+        return rad/M_PI * 180.0;
+
+    }
+
+
 }
 
 namespace random{

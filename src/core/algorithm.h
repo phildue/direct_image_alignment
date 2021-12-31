@@ -10,8 +10,8 @@
 #include <random>
 #include "types.h"
 
-namespace pd{ namespace vision{ namespace algorithm{
-
+namespace pd{ namespace vision{ 
+    namespace algorithm{
 
     template<typename Derived>
     double bilinearInterpolation(const Eigen::MatrixBase<Derived>& mat, double x, double y)
@@ -144,6 +144,9 @@ namespace pd{ namespace vision{ namespace algorithm{
 }
 namespace transforms{
     Eigen::MatrixXd createdTransformMatrix2D(double x, double y, double angle);
+    double deg2rad(double deg);
+    double rad2deg(double rad);
+
 }
 
 namespace random{

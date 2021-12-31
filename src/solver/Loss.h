@@ -1,7 +1,7 @@
 #ifndef VSLAM_LOSS_H__
 #define VSLAM_LOSS_H__
 
-#include <Eigen/Dense>
+#include <eigen3/Eigen/Dense>
 
 namespace pd{namespace vision{
 

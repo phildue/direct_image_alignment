@@ -1,7 +1,7 @@
 //
 // Created by phil on 07.08.21.
 //
-#include <Eigen/Dense>
+#include <eigen3/Eigen/Dense>
 #include <opencv4/opencv2/core/eigen.hpp>
 #include <opencv4/opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
@@ -16,50 +16,65 @@ INITIALIZE_EASYLOGGINGPP
 
 
 namespace pd{ namespace vision {
-std::map<std::string, std::shared_ptr<Log>> Log::_logs = {};
-std::map<std::string, std::shared_ptr<LogCsv>> Log::_logsCsv = {};
-std::map<std::string, std::shared_ptr<LogImage>> Log::_logsImage = {};
+std::map<std::string, std::map<Level,std::shared_ptr<Log>>> Log::_logs = {};
+std::map<std::string, std::map<Level,std::shared_ptr<LogCsv>>> Log::_logsCsv = {};
+std::map<std::string, std::map<Level,std::shared_ptr<LogImage>>> Log::_logsImage = {};
 
        
-    std::shared_ptr<Log> Log::get(const std::string& name)
+    std::shared_ptr<Log> Log::get(const std::string& name,Level level)
     {
         auto it = _logs.find(name);
         if (it != _logs.end())
         {
-            return it->second;
+            return it->second[level];
         }else{
-            auto log = std::make_shared<Log>(name);
+            std::map<Level,std::shared_ptr<Log>> log = {
+                {el::Level::Debug,std::make_shared<Log>(name)},
+                {el::Level::Info,std::make_shared<Log>(name)},
+                {el::Level::Warning,std::make_shared<Log>(name)},
+                {el::Level::Error,std::make_shared<Log>(name)},
+
+            };
             _logs[name] = log;
-            return log;
+            return log[level];
         }
         
     }
 
-    std::shared_ptr<LogImage> Log::getImageLog(const std::string& name, Level block, Level show)
+    std::shared_ptr<LogImage> Log::getImageLog(const std::string& name, Level level)
     {
         auto it = _logsImage.find(name);
         if (it != _logsImage.end())
         {
-            return it->second;
+            return it->second[level];
         }else{
-            //TODO check which label is configured
-            auto log = std::make_shared<LogImage>(name);
+            std::map<Level,std::shared_ptr<LogImage>> log = {
+                {el::Level::Debug,std::make_shared<LogImage>(name)},
+                {el::Level::Info,std::make_shared<LogImage>(name)},
+                {el::Level::Warning,std::make_shared<LogImage>(name)},
+                {el::Level::Error,std::make_shared<LogImage>(name)},
+
+            };
             _logsImage[name] = log;
-            return log;
+            return log[level];
         }
     }
-    std::shared_ptr<LogCsv> Log::getCsvLog(const std::string& name, const std::vector<std::string>& header, Level level)
+    std::shared_ptr<LogCsv> Log::getCsvLog(const std::string& name, Level level)
     {
         auto it = _logsCsv.find(name);
         if (it != _logsCsv.end())
         {
-            return it->second;
+            return it->second[level];
         }else{
-            //TODO check which label is configured
+            std::map<Level,std::shared_ptr<LogCsv>> log = {
+                {el::Level::Debug,std::make_shared<LogCsv>(name)},
+                {el::Level::Info,std::make_shared<LogCsv>(name)},
+                {el::Level::Warning,std::make_shared<LogCsv>(name)},
+                {el::Level::Error,std::make_shared<LogCsv>(name)},
 
-            auto log = std::make_shared<LogCsv>(name,header);
+            };
             _logsCsv[name] = log;
-            return log;
+            return log[level];
         }
     }
 
@@ -73,22 +88,22 @@ std::map<std::string, std::shared_ptr<LogImage>> Log::_logsImage = {};
       
     }
 
-   
-
-
-
-
-    LogCsv::LogCsv(const std::string& fileName, const std::vector<std::string>& header, const std::string& delimiter)
-    : _nElements(header.size())
+    LogCsv::LogCsv(const std::string& fileName, const std::string& delimiter)
+    : _nElements(0)
     , _delimiter(delimiter)
+    , _fileName(fileName)
     {
-        
+       
+    }
+    void LogCsv::setHeader(const std::vector<std::string>& header)
+    {
+        _nElements = header.size();
         std::stringstream ss;
         for (const auto& e: header)
         {
             ss << e << _delimiter;
         }
-        _file.open(fileName,std::ios::out);
+        _file.open(_fileName,std::ios::out);
         _file << ss.str() << std::endl;
         _file.close();
     }
@@ -128,13 +143,13 @@ std::map<std::string, std::shared_ptr<LogImage>> Log::_logsImage = {};
         _file.close();
     }
 
-    LogImage::LogImage(const std::string& name)
-    : _folder(LOG_DIR "/" + name)
+    LogImage::LogImage(const std::string& name,bool block, bool show, bool save)
+    : _block(block)
+    , _show(show)
+    , _save(save)
     , _name(name)
-    , _blockLevel(el::Level::Debug)
-    , _blockLevelDes(el::Level::Info)
-    , _showLevel(el::Level::Info)
-    , _showLevelDes(el::Level::Info)
+    , _folder(LOG_DIR "/" + name)
+    , _ctr(0U)
     {}
 
 
@@ -144,11 +159,17 @@ std::map<std::string, std::shared_ptr<LogImage>> Log::_logsImage = {};
         {
             throw pd::Exception("Image is empty!");
         }
-        if (_showLevel <= _showLevelDes) {
+        if (_show)
+        {
             cv::imshow(_name, mat);
-           // cv::waitKey(_blockLevel <= _blockLevelDes ? -1 : 30);
-            cv::waitKey(30);
+            // cv::waitKey(_blockLevel <= _blockLevelDes ? -1 : 30);
+            cv::waitKey(_block ? 0 : 30);
         }
+        if (_save)
+        {
+            cv::imwrite(_folder + "/" + _name + std::to_string(_ctr++) +".jpg",mat);
+        }
+       
     }
 }}
 
