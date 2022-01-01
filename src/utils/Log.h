@@ -13,10 +13,9 @@
 #include "matplotlibcpp.h"
 
 #include <opencv2/opencv.hpp>
-#include "core/types.h"
-
 #include "easylogging++.h"
-
+#include "core/types.h"
+#include "visuals.h"
 #define SYSTEM(loglevel) CLOG(loglevel, "system")
 #define IMAGE_ALIGNMENT(loglevel) CLOG(loglevel, "image_alignment")
 #define SOLVER(loglevel) CLOG(loglevel, "solver")
@@ -28,13 +27,12 @@ namespace pd{ namespace vision{
     using Level = el::Level;
     namespace plt = matplotlibcpp;
 
-    class LogCsv
+    class LogPlot
     {
         public:
-        LogCsv(const std::string& file, const std::string& delimiter = ";");
+        LogPlot(const std::string& file, const std::string& delimiter = ";");
         void setHeader(const std::vector<std::string>& header);
-        virtual void append(const std::vector<std::string>& elements);
-        virtual void append(const std::vector<double>& elements);
+        void append(vis::Plot::ConstShPtr plot){plot->plot();}
         private:
         const std::string _name;
         const std::string _fileName;
@@ -46,22 +44,19 @@ namespace pd{ namespace vision{
         void append(const std::stringstream& ss);
     };
 
-    class LogCsvNull : public LogCsv
-    {
-        void append(const std::vector<std::string>& elements) override {}
-    };
-
     template<typename... Args> 
     using DrawFunctor = cv::Mat(*)(Args... args);
 
     class LogImage
     {
         public:
+        typedef std::shared_ptr<LogImage> ShPtr;
+
         LogImage(const std::string& name, bool block = false, bool show = true, bool save = false);
         template<typename... Args>
         void append(DrawFunctor<Args...> draw,Args... args)
         {
-            if (_show)
+            if (_show || _save)
             {
                 logMat(draw(args...));
             }
@@ -72,6 +67,21 @@ namespace pd{ namespace vision{
             {
                 logMat(mat);
             }         
+        }
+        void append(vis::Drawable::ConstShPtr drawable)
+        {
+            if (_show || _save)
+            {
+                logMat(drawable->draw());
+            }
+        }
+        template <typename T>
+        void append(const Eigen::Matrix<T,-1,-1>& mat)
+        {
+             if (_show || _save)
+            {
+                logMat(vis::drawAsImage(mat.template cast<double>()));
+            }
         }
         bool _block;
         bool _show;
@@ -84,12 +94,18 @@ namespace pd{ namespace vision{
         void logMat(const cv::Mat &mat);
 
     };
+
+    template <typename T>
+    void operator<<(LogImage::ShPtr log, const Eigen::Matrix<T,-1,-1>& mat){
+        log->append(mat);
+    }
+    void operator<<(LogImage::ShPtr log, vis::Drawable::ConstShPtr drawable);
   
     class Log {
     public:
     static std::shared_ptr<Log> get(const std::string& name,Level level = el::Level::Info);
     static std::shared_ptr<LogImage> getImageLog(const std::string& name, Level level = el::Level::Info);
-    static std::shared_ptr<LogCsv> getCsvLog(const std::string& name, Level level);
+    static std::shared_ptr<LogPlot> getPlotLog(const std::string& name, Level level);
     static Level _showLevel;
     static Level _blockLevel;
     
@@ -99,7 +115,7 @@ namespace pd{ namespace vision{
 
     const std::string _name;
     static std::map<std::string, std::map<Level,std::shared_ptr<Log>>> _logs;
-    static std::map<std::string, std::map<Level,std::shared_ptr<LogCsv>>> _logsCsv;
+    static std::map<std::string, std::map<Level,std::shared_ptr<LogPlot>>> _logsPlot;
     static std::map<std::string, std::map<Level,std::shared_ptr<LogImage>>> _logsImage;
 
     };

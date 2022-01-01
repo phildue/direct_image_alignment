@@ -17,7 +17,7 @@ INITIALIZE_EASYLOGGINGPP
 
 namespace pd{ namespace vision {
 std::map<std::string, std::map<Level,std::shared_ptr<Log>>> Log::_logs = {};
-std::map<std::string, std::map<Level,std::shared_ptr<LogCsv>>> Log::_logsCsv = {};
+std::map<std::string, std::map<Level,std::shared_ptr<LogPlot>>> Log::_logsPlot = {};
 std::map<std::string, std::map<Level,std::shared_ptr<LogImage>>> Log::_logsImage = {};
 Level Log::_blockLevel = Level::Unknown;
 Level Log::_showLevel = Level::Debug;
@@ -65,21 +65,21 @@ Level Log::_showLevel = Level::Debug;
             return log[level];
         }
     }
-    std::shared_ptr<LogCsv> Log::getCsvLog(const std::string& name, Level level)
+    std::shared_ptr<LogPlot> Log::getPlotLog(const std::string& name, Level level)
     {
-        auto it = _logsCsv.find(name);
-        if (it != _logsCsv.end())
+        auto it = _logsPlot.find(name);
+        if (it != _logsPlot.end())
         {
             return it->second[level];
         }else{
-            std::map<Level,std::shared_ptr<LogCsv>> log = {
-                {el::Level::Debug,std::make_shared<LogCsv>(name)},
-                {el::Level::Info,std::make_shared<LogCsv>(name)},
-                {el::Level::Warning,std::make_shared<LogCsv>(name)},
-                {el::Level::Error,std::make_shared<LogCsv>(name)},
+            std::map<Level,std::shared_ptr<LogPlot>> log = {
+                {el::Level::Debug,std::make_shared<LogPlot>(name)},
+                {el::Level::Info,std::make_shared<LogPlot>(name)},
+                {el::Level::Warning,std::make_shared<LogPlot>(name)},
+                {el::Level::Error,std::make_shared<LogPlot>(name)},
 
             };
-            _logsCsv[name] = log;
+            _logsPlot[name] = log;
             return log[level];
         }
     }
@@ -94,60 +94,14 @@ Level Log::_showLevel = Level::Debug;
       
     }
 
-    LogCsv::LogCsv(const std::string& fileName, const std::string& delimiter)
+    LogPlot::LogPlot(const std::string& fileName, const std::string& delimiter)
     : _nElements(0)
     , _delimiter(delimiter)
     , _fileName(fileName)
     {
        
     }
-    void LogCsv::setHeader(const std::vector<std::string>& header)
-    {
-        _nElements = header.size();
-        std::stringstream ss;
-        for (const auto& e: header)
-        {
-            ss << e << _delimiter;
-        }
-        _file.open(_fileName,std::ios::out);
-        _file << ss.str() << std::endl;
-        _file.close();
-    }
-
-    void LogCsv::append(const std::vector<std::string>& elements)
-    {
-        if ( elements.size() != _nElements)
-        {
-            throw pd::Exception("Number of elements does not match header size: " + std::to_string(elements.size())+ "/" + std::to_string(_nElements));
-        }
-        std::stringstream ss;
-        for (const auto& e: elements)
-        {
-            ss << e << _delimiter;
-        }
-        append(ss);
-    }
-
-    void LogCsv::append(const std::vector<double>& elements)
-    {
-        if ( elements.size() != _nElements)
-        {
-            throw pd::Exception("Number of elements does not match header size: " + std::to_string(elements.size())+ "/" + std::to_string(_nElements));
-        }
-        std::stringstream ss;
-        for (const auto& e: elements)
-        {
-            ss << e << _delimiter;
-        }
-        append(ss);
-    }
-
-    void LogCsv::append(const std::stringstream& ss)
-    {
-        _file.open(_fileName,std::ios::app);
-        _file << ss.str() << std::endl;
-        _file.close();
-    }
+    
 
     LogImage::LogImage(const std::string& name,bool block, bool show, bool save)
     : _block(block)
@@ -176,6 +130,10 @@ Level Log::_showLevel = Level::Debug;
             cv::imwrite(_folder + "/" + _name + std::to_string(_ctr++) +".jpg",mat);
         }
        
+    }
+    
+    void operator<<(LogImage::ShPtr log, vis::Drawable::ConstShPtr drawable){
+        log->append(drawable);
     }
 }}
 

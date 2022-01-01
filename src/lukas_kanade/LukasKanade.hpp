@@ -5,7 +5,17 @@
 
 #include "utils/visuals.h"
 #include "core/algorithm.h"
+
 namespace pd{namespace vision{
+
+//Debug monitors
+#define STEEPEST_DESCENT Log::getImageLog("SteepestDescent",Level::Debug)
+#define GRAD_X_WARPED Log::getImageLog("Gradient X Warped",Level::Debug)
+#define GRAD_Y_WARPED Log::getImageLog("Gradient Y Warped",Level::Debug)
+#define RESIDUAL Log::getImageLog("Residual",Level::Debug)
+#define IMAGE_WARPED Log::getImageLog("Image Warped",Level::Debug)
+#define VISIBILITY Log::getImageLog("Visibility",Level::Debug)
+
 
     template<typename Warp>
     LukasKanade<Warp>::LukasKanade (const Image& templ, const Image& image,std::shared_ptr<Warp> w0)
@@ -14,12 +24,7 @@ namespace pd{namespace vision{
     , _dIx(algorithm::gradX(image))
     , _dIy(algorithm::gradY(image))
     , _w(w0)
-    
-    {
-
-    }
-
-  
+    {}
 
     template<typename Warp>
     bool LukasKanade<Warp>::computeResidual(Eigen::VectorXd& r)
@@ -47,10 +52,9 @@ namespace pd{namespace vision{
                 idxPixel++;
             }
         }
-        const auto IWxpmat = vis::drawAsImage(IWxp.cast<double>());
-        Log::getImageLog("Image Warped",Level::Debug)->append(IWxpmat);
-        Log::getImageLog("Residual",Level::Debug)->append(vis::drawAsImage,residualImage);
-        Log::getImageLog("Visibility",Level::Debug)->append(vis::drawAsImage,visibilityImage);
+        IMAGE_WARPED << IWxp;
+        RESIDUAL << residualImage;
+        VISIBILITY << visibilityImage;
         return true;
     }
 
@@ -64,7 +68,6 @@ namespace pd{namespace vision{
         j.setZero();
         Eigen::MatrixXi dIxWp = Eigen::MatrixXi::Zero(_Iref.rows(),_Iref.cols());
         Eigen::MatrixXi dIyWp = Eigen::MatrixXi::Zero(_Iref.rows(),_Iref.cols());
-
 
         int idxPixel = 0;
         for (int v = 0; v < _T.rows(); v++)
@@ -87,12 +90,10 @@ namespace pd{namespace vision{
                     
             }
         }
-        const auto dIWxpmat = vis::drawAsImage(dIxWp.cast<double>());
-        const auto dIWypmat = vis::drawAsImage(dIyWp.cast<double>());
 
-        Log::getImageLog("Gradient X Warped",Level::Debug)->append(dIWxpmat);
-        Log::getImageLog("Gradient Y Warped",Level::Debug)->append(dIWypmat);
-        Log::getImageLog("SteepestDescent",Level::Debug)->append(vis::drawAsImage,steepestDescent);
+        GRAD_X_WARPED << dIxWp;
+        GRAD_Y_WARPED << dIyWp;
+        STEEPEST_DESCENT << steepestDescent;
         return true;
     }
 
@@ -102,7 +103,4 @@ namespace pd{namespace vision{
         _w->updateAdditive(dx);
         return true;
     }
-
- 
-    
 }}

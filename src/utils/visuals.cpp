@@ -112,7 +112,7 @@ cv::Mat drawReprojection(std::shared_ptr<const pd::vision::Frame> frame0,
 }
 
 
-cv::Mat drawAsImage(Eigen::MatrixXd mat)
+cv::Mat drawAsImage(const Eigen::MatrixXd& mat)
 {
     return drawMat((algorithm::normalize(mat)*255).cast<uint8_t>());
 }

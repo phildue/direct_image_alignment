@@ -59,10 +59,9 @@ namespace pd{namespace vision{
                 idxPixel++;
             }
         }
-        const auto IWxpmat = vis::drawAsImage(_IWxp.cast<double>());
-        Log::getImageLog("Image Warped")->append(IWxpmat);
-        Log::getImageLog("Residual")->append(vis::drawAsImage,residualImage);
-        Log::getImageLog("Visibility")->append(vis::drawAsImage,visibilityImage);
+        Log::getImageLog("Image Warped")->append(_IWxp);
+        Log::getImageLog("Residual")->append(residualImage);
+        Log::getImageLog("Visibility")->append(visibilityImage);
         return true;
     }
 
@@ -96,12 +95,10 @@ namespace pd{namespace vision{
                     
             }
         }
-        const auto dIWxpmat = vis::drawAsImage(dIxWp.cast<double>());
-        const auto dIWypmat = vis::drawAsImage(dIyWp.cast<double>());
 
-        Log::getImageLog("Gradient X Warped")->append(dIWxpmat);
-        Log::getImageLog("Gradient Y Warped")->append(dIWypmat);
-        Log::getImageLog("SteepestDescent")->append(vis::drawAsImage,steepestDescent);
+        Log::getImageLog("Gradient X Warped")->append(dIxWp);
+        Log::getImageLog("Gradient Y Warped")->append(dIyWp);
+        Log::getImageLog("SteepestDescent")->append(steepestDescent);
         return true;
     }
 

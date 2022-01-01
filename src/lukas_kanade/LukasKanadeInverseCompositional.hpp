@@ -3,6 +3,15 @@
 
 #include "utils/visuals.h"
 #include "core/algorithm.h"
+
+//Debug monitors
+#define STEEPEST_DESCENT Log::getImageLog("SteepestDescent",Level::Debug)
+#define DTX Log::getImageLog("dTx",Level::Debug)
+#define DTY Log::getImageLog("dTy",Level::Debug)
+#define RESIDUAL Log::getImageLog("Residual",Level::Debug)
+#define IMAGE_WARPED Log::getImageLog("Image Warped",Level::Debug)
+#define VISIBILITY Log::getImageLog("Visibility",Level::Debug)
+
 namespace pd{namespace vision{
 
     template<typename Warp>
@@ -15,7 +24,6 @@ namespace pd{namespace vision{
         Eigen::MatrixXd steepestDescent = Eigen::MatrixXd::Zero(_T.rows(),_T.cols());
         const Eigen::MatrixXi dTx = algorithm::gradX(templ);
         const Eigen::MatrixXi dTy = algorithm::gradY(templ);
-
 
         int idxPixel = 0;
         for (int v = 0; v < _T.rows(); v++)
@@ -31,16 +39,11 @@ namespace pd{namespace vision{
                     
             }
         }
-        //TODO draw only when logged
-        const auto dTxmat = vis::drawAsImage(dTx.cast<double>());
-        const auto dTymat = vis::drawAsImage(dTy.cast<double>());
 
-        Log::getImageLog("dTx",Level::Debug)->append(dTxmat);
-        Log::getImageLog("dTy",Level::Debug)->append(dTymat);
-        Log::getImageLog("SteepestDescent",Level::Debug)->append(vis::drawAsImage,steepestDescent);
+        DTX << dTx;
+        DTY << dTy;
+        STEEPEST_DESCENT << steepestDescent;
     }
-
-  
 
     template<typename Warp>
     bool LukasKanadeInverseCompositional<Warp>::computeResidual(Eigen::VectorXd& r)
@@ -68,12 +71,9 @@ namespace pd{namespace vision{
                 idxPixel++;
             }
         }
-        //TODO draw only when logged
-
-        const auto IWxpmat = vis::drawAsImage(IWxp.cast<double>());
-        Log::getImageLog("Image Warped",Level::Debug)->append(IWxpmat);
-        Log::getImageLog("Residual",Level::Debug)->append(vis::drawAsImage,residualImage);
-        Log::getImageLog("Visibility",Level::Debug)->append(vis::drawAsImage,visibilityImage);
+        IMAGE_WARPED << IWxp;
+        RESIDUAL << residualImage;
+        VISIBILITY << visibilityImage;
         return true;
     }
 
@@ -93,7 +93,4 @@ namespace pd{namespace vision{
         _w->updateCompositional(-dx);
         return true;
     }
-
- 
-    
 }}

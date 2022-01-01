@@ -4,8 +4,8 @@
 
 namespace pd{namespace vision{
 
-    template<typename Problem>
-    LevenbergMarquardt<Problem>::LevenbergMarquardt(
+    template<typename Problem,typename Loss>
+    LevenbergMarquardt<Problem,Loss>::LevenbergMarquardt(
             int nObservations,
             int maxIterations,
             double minStepSize,
@@ -22,8 +22,8 @@ namespace pd{namespace vision{
     {
         Log::get("solver");
     }
-    template<typename Problem>
-    void LevenbergMarquardt<Problem>::solve(std::shared_ptr<Problem> problem) const
+    template<typename Problem,typename Loss>
+    void LevenbergMarquardt<Problem,Loss>::solve(std::shared_ptr<Problem> problem) const
     {
         Eigen::VectorXd chiSquared(_maxIterations);
         chiSquared.setZero();
@@ -34,13 +34,15 @@ namespace pd{namespace vision{
         lambda.setZero();
         Eigen::VectorXd stepSize(_maxIterations);
         stepSize.setZero();
-        solve(problem,chiSquared,chi2Predicted,lambda,stepSize);
+        Eigen::Matrix<double, Eigen::Dynamic, Problem::nParameters> x(_maxIterations,Problem::nParameters);
+        x.setZero();
+        solve(problem,chiSquared,chi2Predicted,lambda,stepSize,x);
     }
 
     
 
-    template<typename Problem>
-    void LevenbergMarquardt<Problem>::solve(std::shared_ptr<Problem> problem, Eigen::VectorXd &chi2,Eigen::VectorXd &dchi2pred, Eigen::VectorXd &lambda, Eigen::VectorXd& stepSize) const{
+    template<typename Problem,typename Loss>
+    void LevenbergMarquardt<Problem,Loss>::solve(std::shared_ptr<Problem> problem, Eigen::VectorXd &chi2,Eigen::VectorXd &dchi2pred, Eigen::VectorXd &lambda, Eigen::VectorXd& stepSize, Mmxn& x) const{
         SOLVER( INFO ) << "Solving Problem for " << Problem::nParameters << " parameters. With " << _nObservations << " observations.";
 
     
@@ -60,8 +62,8 @@ namespace pd{namespace vision{
         // This can be solved with cholesky decomposition (Ax = b)
         // Where A = (JWJ + lambda * I), x = dx, b = JWr
 
-        problem->computeResidual(r,W);
-        problem->computeWeights(r,W);
+        problem->computeResidual(r);
+        Loss::computeWeights(r,W);
         chi2(0) = (r.transpose() * W.asDiagonal() * r);
         problem->computeJacobian(J);
         // For GN / LM we drop the second part of the Hessian
@@ -69,13 +71,15 @@ namespace pd{namespace vision{
         double chi2Last;
         for(int i = 0; i < _maxIterations -1; i++)
         {
+            x.row(i) = problem->x();
+
             if ( i == 0)
             {
                 lambda(i) = std::min< double >( H.norm(), double( _lambdaMax ) );
             }
             // Lagrange multiplier steers magnitude and direction of the step
             // For lambda ~ 0 the update will be Gauss-Newton
-            // For large lambda the update will be gradient
+            // For large lambda the update will be gradient descent
             H.noalias() += lambda(i)*Eigen::MatrixXd::Identity(J.cols(),J.cols());
             
             SOLVER(DEBUG) << i << " > H.:\n" << H;
@@ -108,8 +112,8 @@ namespace pd{namespace vision{
             if(rho > 0)
             {
                 problem->updateX(dx);
-                problem->computeResidual(r,W);
-                problem->computeWeights(r,W);
+                problem->computeResidual(r);
+                Loss::computeWeights(r,W);
                 chi2(i) = (r.transpose() * W.asDiagonal() * r);
                 problem->computeJacobian(J);
                 H  = (J.transpose() * W.asDiagonal() * J);
