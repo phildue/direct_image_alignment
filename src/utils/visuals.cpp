@@ -11,7 +11,7 @@
 #include "core/Point3D.h"
 #include "core/algorithm.h"
 #include "visuals.h"
-
+#include "Log.h"
 namespace pd {
 namespace vision {
 namespace vis {
@@ -121,6 +121,39 @@ cv::Mat drawMat(const Image &matEigen) {
   cv::eigen2cv(matEigen, mat);
 
   return mat;
+}
+
+void PlotLevenbergMarquardt::plot() const
+{
+    plt::figure();
+    plt::subplot(1,4,1);
+    plt::title("$Chi^2$");
+    std::vector<double> chi2v(_chi2.data(), _chi2.data() + _chi2.rows() * _chi2.cols());
+    plt::named_plot("$Chi^2$",chi2v);
+    plt::legend();
+
+    plt::subplot(1,4,2);
+    plt::title("$\\Delta Chi^2$");
+    std::vector<double> chi2predv(_chi2pred.data(), _chi2pred.data() + _chi2pred.rows() * _chi2pred.cols());
+    plt::named_plot("$\\hat{\\Delta Chi^2}$",chi2predv);
+
+    plt::subplot(1,4,3);
+    plt::title("$\\lambda$");
+    std::vector<double> lambdav(_lambda.data(), _lambda.data() + _lambda.rows() * _lambda.cols());
+    plt::named_plot("$\\lambda$",lambdav);
+    plt::legend();
+
+    plt::subplot(1,4,4);
+    plt::title("$\\Delta X$");
+    std::vector<double> stepsizev(_stepSize.data(), _stepSize.data() + _stepSize.rows() * _stepSize.cols());
+    plt::named_plot("$\\Delta X$",stepsizev);
+    plt::legend();
+  
+
+}
+std::string PlotLevenbergMarquardt::csv() const 
+{
+    return "";
 }
 
 } // namespace vis

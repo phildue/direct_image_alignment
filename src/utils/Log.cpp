@@ -72,13 +72,17 @@ Level Log::_showLevel = Level::Debug;
         {
             return it->second[level];
         }else{
-            std::map<Level,std::shared_ptr<LogPlot>> log = {
-                {el::Level::Debug,std::make_shared<LogPlot>(name)},
-                {el::Level::Info,std::make_shared<LogPlot>(name)},
-                {el::Level::Warning,std::make_shared<LogPlot>(name)},
-                {el::Level::Error,std::make_shared<LogPlot>(name)},
-
+            const std::vector<Level> levels = {
+                Level::Debug,
+                Level::Info,
+                Level::Warning,
+                Level::Error
             };
+            std::map<Level,std::shared_ptr<LogPlot>> log;
+            for (const auto & l : levels)
+            {
+                log[l] = std::make_shared<LogPlot>(name,l >= _blockLevel, l >= _showLevel);
+            }
             _logsPlot[name] = log;
             return log[level];
         }
@@ -94,14 +98,17 @@ Level Log::_showLevel = Level::Debug;
       
     }
 
-    LogPlot::LogPlot(const std::string& fileName, const std::string& delimiter)
-    : _nElements(0)
-    , _delimiter(delimiter)
-    , _fileName(fileName)
+    LogPlot::LogPlot(const std::string& name, bool block, bool show, bool save)
+    : _name(name)
+    , _block(block)
+    , _show(show)
+    , _save(save)
     {
        
     }
-    
+     void operator<<(LogPlot::ShPtr log, vis::Plot::ConstShPtr plot){
+        log->append(plot);
+    }
 
     LogImage::LogImage(const std::string& name,bool block, bool show, bool save)
     : _block(block)

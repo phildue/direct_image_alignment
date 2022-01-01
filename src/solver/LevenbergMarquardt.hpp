@@ -1,6 +1,8 @@
+#include "utils/visuals.h"
 #include "utils/Log.h"
 #include "utils/Exceptions.h"
 #include "core/algorithm.h"
+#define LOG_PLOT Log::getPlotLog("SolverLM",Level::Debug)
 
 namespace pd{namespace vision{
 
@@ -45,7 +47,6 @@ namespace pd{namespace vision{
     void LevenbergMarquardt<Problem,Loss>::solve(std::shared_ptr<Problem> problem, Eigen::VectorXd &chi2,Eigen::VectorXd &dchi2pred, Eigen::VectorXd &lambda, Eigen::VectorXd& stepSize, Mmxn& x) const{
         SOLVER( INFO ) << "Solving Problem for " << Problem::nParameters << " parameters. With " << _nObservations << " observations.";
 
-    
         Eigen::VectorXd W = Eigen::VectorXd::Zero(_nObservations);
         Mmxn J = Eigen::MatrixXd::Zero(_nObservations, Problem::nParameters);
         Eigen::VectorXd r = Eigen::VectorXd::Zero(_nObservations);
@@ -89,13 +90,12 @@ namespace pd{namespace vision{
             SOLVER(DEBUG) << i << " > Grad.:\n" << gradient.transpose() ;
 
             const Eigen::VectorXd dx = (H.ldlt().solve( gradient ));
-            //const Eigen::VectorXd dx = H.inverse()* gradient ;
 
             SOLVER(DEBUG) << i <<" > x:\n" << problem->x().transpose() ;
             SOLVER(DEBUG) << i <<" > dx:\n" << dx.transpose() ;
             stepSize(i) = dx.norm();
 
-            //Rho expresses the ratio between the actual reduction and the predicted reduction
+            // Rho expresses the ratio between the actual reduction and the predicted reduction
             // (assuming the linerization was corect)
             const double dChi2 = i > 0 ? chi2Last-chi2(i) : 0;
             dchi2pred(i+1) = 0.5*dx.transpose() * (lambda(i)*dx + gradient);
@@ -136,8 +136,10 @@ namespace pd{namespace vision{
             {
                 throw pd::Exception(std::to_string(i) + "> NaN during optimization.");
             }
-            }
         }
+
+        LOG_PLOT << std::make_shared<vis::PlotLevenbergMarquardt>(chi2,dchi2pred,lambda,stepSize);
+    }
 
     
 }}

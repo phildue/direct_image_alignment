@@ -30,20 +30,34 @@ namespace pd{ namespace vision{
     class LogPlot
     {
         public:
-        LogPlot(const std::string& file, const std::string& delimiter = ";");
+        typedef std::shared_ptr<LogPlot> ShPtr;
+
+        LogPlot(const std::string& file, bool block = false, bool show = true, bool save = false);
         void setHeader(const std::vector<std::string>& header);
-        void append(vis::Plot::ConstShPtr plot){plot->plot();}
+        void append(vis::Plot::ConstShPtr plot){
+            if(_show || _save)
+            {
+                plot->plot();
+                if(_show)
+                {
+                    plt::show(_block);
+                }
+                if(_save)
+                {
+                    plt::save(_name + ".jpg");
+                }
+            }
+        }
+        bool _block;
+        bool _show;
+        bool _save;
         private:
         const std::string _name;
-        const std::string _fileName;
         
-        std::fstream _file;
-
-        int _nElements;
-        const std::string _delimiter;
-        void append(const std::stringstream& ss);
     };
-
+    
+    void operator<<(LogPlot::ShPtr log, vis::Plot::ConstShPtr plot);
+  
     template<typename... Args> 
     using DrawFunctor = cv::Mat(*)(Args... args);
 

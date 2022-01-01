@@ -52,8 +52,30 @@ namespace pd{ namespace vision{
             typedef std::shared_ptr<Plot> ShPtr;
             typedef std::shared_ptr<const Plot> ConstShPtr;
           
+           
             virtual void plot() const = 0;
-            virtual void csv() const = 0;
+            virtual std::string csv() const = 0;
+        };
+
+        
+        class PlotLevenbergMarquardt : public Plot{
+
+            public:
+            PlotLevenbergMarquardt(const Eigen::VectorXd& chi2,const Eigen::VectorXd &chi2pred,const Eigen::VectorXd& lambda,const Eigen::VectorXd& stepSize)
+            : _chi2(chi2)
+            , _chi2pred(chi2pred)
+            , _lambda(lambda)
+            , _stepSize(stepSize)
+            {}
+
+            void plot() const override;
+            std::string csv() const override;
+            private:
+            const Eigen::VectorXd _chi2;
+            const Eigen::VectorXd _chi2pred;
+            const Eigen::VectorXd _lambda;
+            const Eigen::VectorXd _stepSize;
+
         };
      
 }}}
