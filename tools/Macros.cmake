@@ -29,7 +29,7 @@ install(EXPORT ${name}Targets
     DESTINATION lib/cmake/${name}
     FILE ${name}Targets.cmake
     NAMESPACE ${namespace}::
-    DESTINATION lib/cmake/${name}
+    DESTINATION share/${name}/cmake
     )
 
 install(DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/src/
@@ -65,9 +65,9 @@ write_basic_package_version_file(${name}ConfigVersion.cmake
 include(CMakePackageConfigHelpers)
 configure_package_config_file(
 	"${CMAKE_CURRENT_LIST_DIR}/tools/${name}Config.cmake.in" "${CMAKE_CURRENT_BINARY_DIR}/${name}Config.cmake"
-	INSTALL_DESTINATION "lib/cmake/${name}"
+	INSTALL_DESTINATION "share/${name}/cmake/"
 )
-install(FILES "${CMAKE_CURRENT_BINARY_DIR}/${name}Config.cmake" DESTINATION "lib/cmake/${name}")
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/${name}Config.cmake" DESTINATION "share/${name}/cmake/")
 
 
 endfunction()

@@ -50,7 +50,7 @@ TEST_P(LukasKanadeSE3Test,LukasKanadeSE3)
     Log::getImageLog("T")->append(mat1);
 
     auto w = std::make_shared<WarpSE3>(_x,_depth,_camera);
-    auto gn = std::make_shared<GaussNewton<LukasKanadeSE3,TukeyLoss>> ( _img0.rows()*_img0.cols(),
+    auto gn = std::make_shared<GaussNewton<LukasKanadeSE3>> ( 
                 0.1,
                 1e-3,
                 100);

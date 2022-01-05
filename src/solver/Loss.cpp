@@ -1,26 +1,87 @@
 #include "Loss.h"
 #include "core/algorithm.h"
+#include "utils/Log.h"
+
 namespace pd{ namespace vision{
 
-    void TukeyLoss::computeWeights(const Eigen::VectorXd& residuals, Eigen::VectorXd& weights)
+
+    double TukeyLoss::compute(double r) const
     {
-        // first order derivative of Tukey’s biweight loss function.
-        // alternatively we could here assign weights based on the expected distribution of errors (e.g. t distribution)
-        const auto t = residuals/algorithm::median(residuals);
-        constexpr double kappa = 4.6851; //constant from paper
-        constexpr double kappa2 = kappa*kappa;
-        constexpr double kappa2_6 = kappa2/6;
-        weights.setZero();
-        if (t.norm() <= kappa)
-        {
-            const auto t_k = t/kappa;
-            for(int i = 0; i < weights.rows(); i++)
+
+            // If the residuals falls within the 95% the loss is quadratic
+            if ( std::abs(r) < TukeyLoss::C)
             {
-                weights(i) = kappa2_6 * 1 - std::pow(( 1 - std::pow(t_k(i),2)),3);
+                const double r_c = r/TukeyLoss::C;
+
+                return C2_6*(1.0-std::pow( 1.0 - r_c*r_c,3));
+
+            }else{
+            // Outliers are disregarded
+                return C2_6;
             }
-        
-        }else{
-            weights.setConstant(kappa2_6);
-        }
     }
+
+    double TukeyLoss::computeDerivative(double r) const
+    {
+
+            // If the residuals falls within the 95% the loss is quadratic
+            if ( std::abs(r) < TukeyLoss::C)
+            {
+                const double r_c = r/TukeyLoss::C;
+
+                return r*std::pow( 1.0 - r_c*r_c,2);
+
+            }else{
+                // Outliers are disregarded
+                return 0.0;
+            }
+    }
+
+    double TukeyLoss::computeWeight(double r) const
+    {
+
+            // If the residuals falls within the 95% the loss is quadratic
+            if ( std::abs(r) < TukeyLoss::C)
+            {
+                const double r_c = r/TukeyLoss::C;
+
+                return std::pow( 1.0 - r_c*r_c,2);
+
+            }else{
+                // Outliers are disregarded
+                return 0.0;
+            }
+    }
+
+    double HuberLoss::computeWeight(double r) const
+        {
+                if(std::abs(r) < _c )
+                {
+                        return 1.0;
+                }else{
+                        return (_c * r > 0.0 ? 1.0 : -1.0)/r;
+                }
+        }
+        //dl/dr
+        double HuberLoss::computeDerivative(double r) const
+        {
+                if(std::abs(r) < _c )
+                {
+                        return r;
+                }else{
+                        return _c * r > 0.0 ? 1.0 : -1.0;
+                }
+        }
+        //l(r)
+        double HuberLoss::compute(double r) const
+        {
+                if(std::abs(r) < _c )
+                {
+                        return 0.5 * r*r;
+                }else{
+                        return _c * std::abs(r) - 0.5 * r*r;
+                }
+        }
+   
+     
 }}

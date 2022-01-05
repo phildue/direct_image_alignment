@@ -8,7 +8,7 @@ namespace pd{namespace vision{
     _cx(cx),
     _cy(cy){
         _w = toMat(_x);
-    };
+    }
     void WarpAffine::updateAdditive(const Eigen::Vector6d& dx)
     {
         _x.noalias() += dx;

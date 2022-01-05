@@ -10,7 +10,6 @@
 #include <string>
 #include <map>
 #include <iostream>
-#include "matplotlibcpp.h"
 
 #include <opencv2/opencv.hpp>
 #include "easylogging++.h"
@@ -19,13 +18,15 @@
 #define SYSTEM(loglevel) CLOG(loglevel, "system")
 #define IMAGE_ALIGNMENT(loglevel) CLOG(loglevel, "image_alignment")
 #define SOLVER(loglevel) CLOG(loglevel, "solver")
+#define LOG_LOSS(loglevel) CLOG(loglevel, "loss")
+
+#define LOG_IMAGE_DEBUG(name) Log::getImageLog(name,Level::Debug)
 
 
 namespace pd{ namespace vision{
     class Frame;
     class FrameRGBD;
     using Level = el::Level;
-    namespace plt = matplotlibcpp;
 
     class LogPlot
     {
@@ -40,11 +41,11 @@ namespace pd{ namespace vision{
                 plot->plot();
                 if(_show)
                 {
-                    plt::show(_block);
+                    vis::plt::show(_block);
                 }
                 if(_save)
                 {
-                    plt::save(_name + ".jpg");
+                    vis::plt::save(_name + ".jpg");
                 }
             }
         }

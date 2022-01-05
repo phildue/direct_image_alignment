@@ -1,7 +1,7 @@
 #ifndef VSLAM_LUKAS_KANADE_H__
 #define VSLAM_LUKAS_KANADE_H__
 #include "core/types.h"
-#include "solver/solver.h"
+#include "solver/Loss.h"
 #include <memory>
 namespace pd{namespace vision{
 
@@ -9,13 +9,14 @@ template<typename Warp>
 class LukasKanade{
 public:
     inline constexpr static int nParameters = Warp::nParameters;
-    LukasKanade (const Image& templ, const Image& image, std::shared_ptr<Warp> w0);
+    LukasKanade (const Image& templ, const Image& image, std::shared_ptr<Warp> w0, std::shared_ptr<Loss> l = std::make_shared<QuadraticLoss>());
     const std::shared_ptr<const Warp> warp();
 
       //
     // r = T(x) - I(W(x,p))
     //
-    bool computeResidual(Eigen::VectorXd& r);
+    void computeResidual(Eigen::VectorXd& r, Eigen::VectorXd& w);
+
    
     //
     // J = Ixy*dW/dp
@@ -33,6 +34,7 @@ protected:
     Eigen::MatrixXi _dIx;
     Eigen::MatrixXi _dIy;
     const std::shared_ptr<Warp> _w;
+    const std::shared_ptr<Loss> _l;
 
 };
 

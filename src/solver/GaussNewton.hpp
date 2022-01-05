@@ -1,95 +1,94 @@
+#include <memory>
+
+#include "utils/visuals.h"
+
 #include "utils/Log.h"
 #include "utils/Exceptions.h"
 #include "core/algorithm.h"
-
 namespace pd{namespace vision{
+    #define LOG_PLOT_GN(name) Log::getPlotLog(name,Level::Debug)
 
-    template<typename Problem, typename Loss>
-    GaussNewton<Problem,Loss>::GaussNewton(
-            int nObservations,
+    template<typename Problem>
+    GaussNewton<Problem>::GaussNewton(
             double alpha,
             double minStepSize,
             int maxIterations
             )
-    :_maxIterations(maxIterations)
-    ,_nObservations(nObservations)
+    :_alpha(alpha)
     ,_minStepSize(minStepSize)
-    ,_alpha(alpha)
+    ,_maxIterations(maxIterations)
+    ,_minGradient(minStepSize)
+    ,_minReduction(minStepSize)
     {
         Log::get("solver");
+        _chi2 = Eigen::VectorXd::Zero(_maxIterations);
+        _stepSize = Eigen::VectorXd::Zero(_maxIterations);
+        _x = Eigen::MatrixXd::Zero(_maxIterations,Problem::nParameters);
+        _i = 0;
     }
-    template<typename Problem, typename Loss>
-    void GaussNewton<Problem, Loss>::solve(std::shared_ptr< Problem> problem) const
-    {
-        Eigen::VectorXd chiSquared(_maxIterations);
-        chiSquared.setZero();
-        Eigen::VectorXd stepSize(_maxIterations);
-        stepSize.setZero();
-        Eigen::Matrix<double, Eigen::Dynamic, Problem::nParameters> x(_maxIterations,Problem::nParameters);
-        x.setZero();
+  
 
-        solve(problem,chiSquared,stepSize,x);
-    }
-
-   
-
-    template<typename Problem, typename Loss>
-    void GaussNewton<Problem, Loss>::solve(std::shared_ptr< Problem> problem, Eigen::VectorXd &chi2, Eigen::VectorXd& stepSize, GaussNewton::Mmxn & x) const {
+    template<typename Problem>
+    void GaussNewton<Problem>::solve(std::shared_ptr< Problem> problem) {
         
-        SOLVER( INFO ) << "Solving Problem for " << Problem::nParameters << " parameters. With " << _nObservations << " observations.";
+        SOLVER( INFO ) << "Solving Problem for " << Problem::nParameters << " parameters.";
         TIMED_FUNC(timerF);
-        
-        int iLast = 0;
-        for(int i = 0; i < _maxIterations; i++)
+        _chi2.setZero();
+        _stepSize.setZero();
+        _x.setZero();
+        for(_i = 0; _i < _maxIterations; _i++ )
         {
-            TIMED_SCOPE(timerI,"solve ( " + std::to_string(i) + " )");
+            TIMED_SCOPE(timerI,"solve ( " + std::to_string(_i) + " )");
 
-            Eigen::VectorXd W = Eigen::VectorXd::Zero(_nObservations);
-            Mmxn J = Eigen::MatrixXd::Zero(_nObservations, Problem::nParameters);
-            Eigen::VectorXd residuals = Eigen::VectorXd::Zero(_nObservations);
 
             // We want to solve dx = (JWJ)^(-1)*JWr
             // This can be solved with cholesky decomposition (Ax = b)
             // Where A = (JWJ + lambda * I), x = dx, b = JWr
 
-            problem->computeResidual(residuals);
-            Loss::computeWeights(residuals,W);
-            chi2(i) = (residuals.transpose() * W.asDiagonal() * residuals);
+            Eigen::VectorXd r,w;
+            problem->computeResidual(r,w);
+            const auto W = w.asDiagonal();
+         
+            LOG_PLOT_GN("ErrorDistribution") << std::make_shared<vis::Histogram>(r,"Residuals");
 
+            _chi2(_i) = r.transpose() * W * r;
+            Mmxn J = Eigen::MatrixXd::Zero(r.rows(), Problem::nParameters);
             problem->computeJacobian(J);
             // For GN / LM we drop the second part of the Hessian
-            const Eigen::MatrixXd H  = (J.transpose() * W.asDiagonal() * J);
+            const Eigen::MatrixXd H  = (J.transpose() * W * J);
         
-            SOLVER(DEBUG) << i << " > H.:\n" << H;
+            SOLVER(DEBUG) << _i << " > H.:\n" << H;
         
-            const Eigen::VectorXd gradient = J.transpose() * W.asDiagonal() * residuals;
+            const Eigen::VectorXd gradient = J.transpose() * W * r;
 
-            SOLVER(DEBUG) << i << " > Grad.:\n" << gradient.transpose() ;
+            SOLVER(DEBUG) << _i << " > Grad.:\n" << gradient.transpose() ;
 
             const Eigen::Vector<double, Eigen::Dynamic> dx = _alpha * H.ldlt().solve( gradient );
 
-            SOLVER(DEBUG) << i <<" > x:\n" << problem->x().transpose() ;
-            SOLVER(DEBUG) << i <<" > dx:\n" << dx.transpose() ;
+            SOLVER(DEBUG) << _i <<" > x:\n" << problem->x().transpose() ;
+            SOLVER(DEBUG) << _i <<" > dx:\n" << dx.transpose() ;
             problem->updateX(dx);
-            x.row(i) = problem->x();
-            stepSize(i) = dx.norm();
+            _x.row(_i) = problem->x();
+            _stepSize(_i) = dx.norm();
 
-            const double dChi2 = i > 0 ? chi2(i)-chi2(i-1) : 0;
-            SOLVER( INFO ) << "Iteration: " << i << " chi2: " << chi2(i) << " dChi2: " << dChi2 << " stepSize: " << stepSize(i) << " Total Weight: " << W.sum();
-            if ( stepSize(i) < _minStepSize )
-            {
-                SOLVER( INFO ) << i << " > " << stepSize(i) << "/" << _minStepSize << " CONVERGED. ";
+            const double dChi2 = _i > 0 ? _chi2(_i)-_chi2(_i-1) : 0;
+            SOLVER( INFO ) << "Iteration: " << _i << " chi2: " << _chi2(_i) << " dChi2: " << dChi2 << " stepSize: " << _stepSize(_i) << " Valid Points: " << r.rows();
+            if ( _i > 0 && (_stepSize(_i) < _minStepSize || std::abs(gradient.maxCoeff()) < _minGradient || std::abs(dChi2) < _minReduction))
+            { 
+                SOLVER( INFO ) << _i << " > " << _stepSize(_i) << "/" << _minStepSize << " CONVERGED. ";
                 break;
             }
 
-            if (!std::isfinite(stepSize(i)))
+            if (!std::isfinite(_stepSize(_i)))
             {
-                throw pd::Exception(std::to_string(i) + "> NaN during optimization.");
+                throw pd::Exception(std::to_string(_i) + "> NaN during optimization.");
             }
 
-
         }
+        LOG_PLOT_GN("SolverGN") << std::make_shared<vis::PlotGaussNewton>(_i,_chi2,_stepSize);
+
     }
 
-       
-    }}
+
+
+}}

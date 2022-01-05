@@ -121,7 +121,8 @@ namespace pd{ namespace vision{
 
     
 
-    double median( const Eigen::VectorXd& d );
+    double median( const Eigen::VectorXd& d);
+    double median(const std::vector<double>& v);
 
     double rmse(const Eigen::MatrixXi& patch1, const Eigen::MatrixXi& patch2);
     double sad(const Eigen::MatrixXi& patch1, const Eigen::MatrixXi& patch2);

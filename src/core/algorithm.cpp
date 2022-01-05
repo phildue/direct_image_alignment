@@ -105,11 +105,18 @@ namespace pd{ namespace vision{ namespace algorithm{
 
     double median(const Eigen::VectorXd& d)
     {
-        std::vector<double> r (d.rows());
+        std::vector<double> r;
+        r.reserve (d.rows());
         for ( int i = 0; i < d.rows(); i++)
         {
-            r[i]=d(i);
+                r.push_back(d(i));
         }
+        return median(r);
+    }
+
+    double median(const std::vector<double>& v)
+    {
+        auto r = v;
         std::sort( r.begin(), r.end() );
         const int n = r.size();
         if (n % 2 == 0)
@@ -119,6 +126,7 @@ namespace pd{ namespace vision{ namespace algorithm{
             return r[n/2];
         }
     }
+   
 
 
    

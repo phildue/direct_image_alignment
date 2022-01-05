@@ -1,7 +1,7 @@
 #ifndef VSLAM_LUKAS_KANADE_INVERSE_COMPOSITIONAL_H__
 #define VSLAM_LUKAS_KANADE_INVERSE_COMPOSITIONAL_H__
 #include "core/types.h"
-#include "solver/solver.h"
+#include "solver/Loss.h"
 #include <memory>
 namespace pd{namespace vision{
 
@@ -9,13 +9,13 @@ template<typename Warp>
 class LukasKanadeInverseCompositional{
 public:
     inline constexpr static int nParameters = Warp::nParameters;
-    LukasKanadeInverseCompositional (const Image& templ, const Image& image, std::shared_ptr<Warp> w0);
+    LukasKanadeInverseCompositional (const Image& templ, const Image& image, std::shared_ptr<Warp> w0, std::shared_ptr<Loss> = std::make_shared<QuadraticLoss>());
     const std::shared_ptr<const Warp> warp();
 
       //
     // r = T(x) - I(W(x,p))
     //
-    bool computeResidual(Eigen::VectorXd& r);
+    void computeResidual(Eigen::VectorXd& r, Eigen::VectorXd& w);
    
     //
     // J = Ixy*dW/dp
@@ -32,6 +32,8 @@ protected:
     const Image _Iref;
     const std::shared_ptr<Warp> _w;
     Eigen::Matrix<double,-1,Warp::nParameters> _J;
+    const std::shared_ptr<Loss> _l;
+
 };
 
 }}

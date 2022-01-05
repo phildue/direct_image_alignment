@@ -43,7 +43,7 @@ TEST_P(LukasKanadeOpticalFlowTest,LukasKanadeOpticalFlow)
     Log::getImageLog("T")->append(mat1);
 
     auto w = std::make_shared<WarpOpticalFlow>(x);
-    auto gn = std::make_shared<GaussNewton<LukasKanadeOpticalFlow,TukeyLoss>> ( img0.rows()*img0.cols(),
+    auto gn = std::make_shared<GaussNewton<LukasKanadeOpticalFlow>> ( 
                 0.1,
                 1e-3,
                 100);

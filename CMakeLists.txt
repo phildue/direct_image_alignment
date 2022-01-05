@@ -40,8 +40,6 @@ set(headers
 		src/solver/Loss.h
 		src/lukas_kanade/LukasKanade.hpp
 		src/lukas_kanade/LukasKanade.h
-		src/lukas_kanade/LukasKanadeCompositional.hpp
-		src/lukas_kanade/LukasKanadeCompositional.h
 		src/lukas_kanade/LukasKanadeInverseCompositional.hpp
 		src/lukas_kanade/LukasKanadeInverseCompositional.h
 		src/lukas_kanade/WarpOpticalFlow.h
@@ -64,8 +62,8 @@ set(headers
 pd_setup_lib(${PROJECT_NAME} ${PROJECT_VERSION} "${sources}" "${headers}" pd)
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
 target_compile_definitions(${PROJECT_NAME} PUBLIC 
-$<BUILD_INTERFACE:CFG_DIR="${CMAKE_CURRENT_LIST_DIR}/cfg">
-$<INSTALL_INTERFACE:CFG_DIR="cfg">)
+$<BUILD_INTERFACE:CFG_DIR="${CMAKE_CURRENT_LIST_DIR}/cfg/">
+$<INSTALL_INTERFACE:CFG_DIR="/share/${PROJECT_NAME}/cfg/">)
 
 target_compile_definitions(${PROJECT_NAME} PUBLIC 
 $<BUILD_INTERFACE:LOG_DIR="${CMAKE_BINARY_DIR}/log">

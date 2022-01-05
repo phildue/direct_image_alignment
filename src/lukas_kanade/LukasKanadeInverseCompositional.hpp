@@ -1,25 +1,17 @@
 
-#include "LukasKanadeInverseCompositional.h"
-
 #include "utils/visuals.h"
 #include "core/algorithm.h"
-
-//Debug monitors
-#define STEEPEST_DESCENT Log::getImageLog("SteepestDescent",Level::Debug)
-#define DTX Log::getImageLog("dTx",Level::Debug)
-#define DTY Log::getImageLog("dTy",Level::Debug)
-#define RESIDUAL Log::getImageLog("Residual",Level::Debug)
-#define IMAGE_WARPED Log::getImageLog("Image Warped",Level::Debug)
-#define VISIBILITY Log::getImageLog("Visibility",Level::Debug)
+#include "utils/Log.h"
 
 namespace pd{namespace vision{
 
     template<typename Warp>
-    LukasKanadeInverseCompositional<Warp>::LukasKanadeInverseCompositional (const Image& templ, const Image& image,std::shared_ptr<Warp> w0)
+    LukasKanadeInverseCompositional<Warp>::LukasKanadeInverseCompositional (const Image& templ, const Image& image,std::shared_ptr<Warp> w0, std::shared_ptr<Loss> l)
     : _T(templ)
     , _Iref(image)
     , _w(w0)
     , _J(Eigen::MatrixXd::Zero(_Iref.rows()*_Iref.cols(),Warp::nParameters))
+    , _l(l)
     {
         Eigen::MatrixXd steepestDescent = Eigen::MatrixXd::Zero(_T.rows(),_T.cols());
         const Eigen::MatrixXi dTx = algorithm::gradX(templ);
@@ -40,41 +32,77 @@ namespace pd{namespace vision{
             }
         }
 
-        DTX << dTx;
-        DTY << dTy;
-        STEEPEST_DESCENT << steepestDescent;
+        LOG_IMAGE_DEBUG("DTX") << dTx;
+        LOG_IMAGE_DEBUG("DTY") << dTy;
+        LOG_IMAGE_DEBUG("SteepestDescent") << steepestDescent;
     }
 
     template<typename Warp>
-    bool LukasKanadeInverseCompositional<Warp>::computeResidual(Eigen::VectorXd& r)
+    void LukasKanadeInverseCompositional<Warp>::computeResidual(Eigen::VectorXd& r, Eigen::VectorXd& w)
     {
-        r.setZero();
+        TIMED_SCOPE(timerI,"computeResidual");
 
-        Eigen::MatrixXd residualImage = Eigen::MatrixXd::Zero(_T.rows(),_T.cols());
+        r.conservativeResize(_T.rows()*_T.cols());
+        w.conservativeResize(_T.rows()*_T.cols());
+
+        Eigen::MatrixXd residuals = Eigen::MatrixXd::Zero(_T.rows(),_T.cols());
         Eigen::MatrixXd visibilityImage = Eigen::MatrixXd::Zero(_T.rows(),_T.cols());
         Image IWxp = Image::Zero(_Iref.rows(),_Iref.cols());
-
-        int idxPixel = 0;
-        for (int v = 0; v < _T.rows(); v++)
+        std::vector<double> validRs;
+        validRs.reserve(_T.rows()*_T.cols());
         {
-            for (int u = 0; u < _T.cols(); u++)
+            TIMED_SCOPE(timerI,"computeResidualLoop");
+
+            int idxPixel = 0;
+            for (int v = 0; v < _T.rows(); v++)
             {
-                Eigen::Vector2d uvWarped = _w->apply(u,v);
-                if (1 < uvWarped.x() && uvWarped.x() < _Iref.cols() -1  &&
-                   1 < uvWarped.y() && uvWarped.y() < _Iref.rows()-1)
+
+                for (int u = 0; u < _T.cols(); u++)
                 {
-                    IWxp(v,u) =  algorithm::bilinearInterpolation(_Iref,uvWarped.x(),uvWarped.y());
-                    r(idxPixel) = IWxp(v,u) - _T(v,u);
-                    residualImage(v,u) = r(idxPixel);
-                    visibilityImage(v,u) = 1.0;
+                    Eigen::Vector2d uvWarped = _w->apply(u,v);
+                    if (1 < uvWarped.x() && uvWarped.x() < _Iref.cols() -1  &&
+                    1 < uvWarped.y() && uvWarped.y() < _Iref.rows()-1)
+                    {
+                        IWxp(v,u) =  algorithm::bilinearInterpolation(_Iref,uvWarped.x(),uvWarped.y());
+                        residuals(v,u) = IWxp(v,u) - _T(v,u);
+                        r(idxPixel) = residuals(v,u);
+                        visibilityImage(v,u) = 1.0;
+                        validRs.push_back(r(idxPixel));
+                    }else{
+                        w(idxPixel) = 0.0;
+                        r(idxPixel) = 0.0;
+                    }
+                    idxPixel++;
                 }
-                idxPixel++;
             }
         }
-        IMAGE_WARPED << IWxp;
-        RESIDUAL << residualImage;
-        VISIBILITY << visibilityImage;
-        return true;
+
+        double median = algorithm::median(validRs);
+        const auto rCentered = (r.array() - median);
+        const auto stddev = rCentered.sum()/(validRs.size() - 1);
+        const Eigen::VectorXd rScaled = rCentered/stddev;
+
+        {
+            TIMED_SCOPE(timerI,"computeWeightsLoop");
+
+            int idxPixel = 0;
+            for (int v = 0; v < _T.rows(); v++)
+            {
+
+                for (int u = 0; u < _T.cols(); u++)
+                {
+                    if (visibilityImage(v,u) > 0.0)
+                    {
+                        w(idxPixel) = _l->computeWeight(rScaled(idxPixel));
+                        visibilityImage(v,u) = w(idxPixel);
+                    }
+                    idxPixel++;
+                }
+            }
+        }
+        LOG_IMAGE_DEBUG("ImageWarped") << IWxp;
+        LOG_IMAGE_DEBUG("Residual") << residuals;
+        LOG_IMAGE_DEBUG("Visibility") << visibilityImage;
     }
 
     //
@@ -83,6 +111,8 @@ namespace pd{namespace vision{
     template<typename Warp>
     bool LukasKanadeInverseCompositional<Warp>::computeJacobian(Eigen::Matrix<double, -1,Warp::nParameters>& j)
     {
+        TIMED_SCOPE(timerI,"computeJacobian");
+
         j = _J;
         return true;
     }

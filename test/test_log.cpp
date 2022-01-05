@@ -9,12 +9,4 @@ using namespace testing;
 using namespace pd;
 using namespace pd::vision;
 #define VISUALIZE false
-TEST(LogTest,Plot)
-{
 
-    plt::plot({1,3,2,4});
-    if(VISUALIZE)
-    {
-        plt::show();
-    }
-}

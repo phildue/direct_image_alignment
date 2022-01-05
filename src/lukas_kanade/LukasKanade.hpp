@@ -5,36 +5,31 @@
 
 #include "utils/visuals.h"
 #include "core/algorithm.h"
-
+#include "utils/Log.h"
 namespace pd{namespace vision{
 
-//Debug monitors
-#define STEEPEST_DESCENT Log::getImageLog("SteepestDescent",Level::Debug)
-#define GRAD_X_WARPED Log::getImageLog("Gradient X Warped",Level::Debug)
-#define GRAD_Y_WARPED Log::getImageLog("Gradient Y Warped",Level::Debug)
-#define RESIDUAL Log::getImageLog("Residual",Level::Debug)
-#define IMAGE_WARPED Log::getImageLog("Image Warped",Level::Debug)
-#define VISIBILITY Log::getImageLog("Visibility",Level::Debug)
-
-
     template<typename Warp>
-    LukasKanade<Warp>::LukasKanade (const Image& templ, const Image& image,std::shared_ptr<Warp> w0)
+    LukasKanade<Warp>::LukasKanade (const Image& templ, const Image& image,std::shared_ptr<Warp> w0, std::shared_ptr<Loss> l)
     : _T(templ)
     , _Iref(image)
     , _dIx(algorithm::gradX(image))
     , _dIy(algorithm::gradY(image))
     , _w(w0)
+    , _l(l)
     {}
 
     template<typename Warp>
-    bool LukasKanade<Warp>::computeResidual(Eigen::VectorXd& r)
+    void LukasKanade<Warp>::computeResidual(Eigen::VectorXd& r, Eigen::VectorXd& w)
     {
+        r.conservativeResize(_T.rows()*_T.cols());
+        w.conservativeResize(_T.rows()*_T.cols());
 
-        Eigen::MatrixXd residualImage = Eigen::MatrixXd::Zero(_T.rows(),_T.cols());
+        Eigen::MatrixXd residuals = Eigen::MatrixXd::Zero(_T.rows(),_T.cols());
         Eigen::MatrixXd visibilityImage = Eigen::MatrixXd::Zero(_T.rows(),_T.cols());
         Image IWxp = Image::Zero(_Iref.rows(),_Iref.cols());
-        r.setZero();
         int idxPixel = 0;
+        std::vector<double> validRs;
+        validRs.reserve(_T.rows()*_T.cols());
         for (int v = 0; v < _T.rows(); v++)
         {
             for (int u = 0; u < _T.cols(); u++)
@@ -45,19 +40,36 @@ namespace pd{namespace vision{
                    1 < uvWarped.y() && uvWarped.y() < _Iref.rows()-1)
                 {
                     IWxp(v,u) =  algorithm::bilinearInterpolation(_Iref,uvWarped.x(),uvWarped.y());
-                    r(idxPixel) = _T(v,u) - IWxp(v,u);
-                    residualImage(v,u) = r(idxPixel);
+                    residuals(v,u) = _T(v,u) - IWxp(v,u);
                     visibilityImage(v,u) = 1.0;
+                    r(idxPixel) = residuals(v,u);
+                    validRs.push_back(r(idxPixel));
+                }else{
+                    w(idxPixel) = 0.0;
+                    r(idxPixel) = 0.0;
                 }
                 idxPixel++;
             }
         }
-        IMAGE_WARPED << IWxp;
-        RESIDUAL << residualImage;
-        VISIBILITY << visibilityImage;
-        return true;
+        const double median = algorithm::median(validRs);
+        const Eigen::VectorXd rScaled = median != 0 ? (r.array() - median).array()/median : r;
+        idxPixel = 0;
+        for (int v = 0; v < _T.rows(); v++)
+        {
+            for (int u = 0; u < _T.cols(); u++)
+            {
+                if (visibilityImage(v,u) > 0.0)
+                {
+                    w(idxPixel) = _l->computeWeight(rScaled(idxPixel));
+                    visibilityImage(v,u) = w(idxPixel);
+                }
+                idxPixel++;
+            }
+        }
+        LOG_IMAGE_DEBUG("ImageWarped") << IWxp;
+        LOG_IMAGE_DEBUG("Residual") << residuals;
+        LOG_IMAGE_DEBUG("Visibility") << visibilityImage;
     }
-
     //
     // J = Ixy*dW/dp
     //
@@ -83,17 +95,16 @@ namespace pd{namespace vision{
 
                     const Eigen::Matrix<double, 2,nParameters> Jwarp = _w->J(u,v);
                             
-                    j.row(idxPixel) = (dIxWp(v,u) * Jwarp.row(0) + dIyWp(v,u) * Jwarp.row(1));
+                    j.row(idxPixel++) = (dIxWp(v,u) * Jwarp.row(0) + dIyWp(v,u) * Jwarp.row(1));
                     steepestDescent(v,u) = j.row(idxPixel).norm();
                 }
-                idxPixel++;
                     
             }
         }
 
-        GRAD_X_WARPED << dIxWp;
-        GRAD_Y_WARPED << dIyWp;
-        STEEPEST_DESCENT << steepestDescent;
+        LOG_IMAGE_DEBUG("Gradient_X_Warped") << dIxWp;
+        LOG_IMAGE_DEBUG("Gradient_Y_Warped") << dIyWp;
+        LOG_IMAGE_DEBUG("SteepestDescent") << steepestDescent;
         return true;
     }
 
