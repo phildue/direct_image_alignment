@@ -167,6 +167,16 @@ namespace random{
     {
         return U(-1,1) > 0 ? 1 : -1;
     }
+    Eigen::VectorXd N(const Eigen::MatrixXd& cov)
+    {
+        std::normal_distribution<> dist;
+        Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> eigenSolver(cov);
+        auto transform = eigenSolver.eigenvectors() * eigenSolver.eigenvalues().cwiseSqrt().asDiagonal();
+
+        return transform * Eigen::VectorXd{ cov.cols() }.unaryExpr([&](auto x) { return dist(eng); });
+ 
+    }
+
 
 }
 

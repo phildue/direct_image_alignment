@@ -23,6 +23,7 @@ pd_add_test(lukas_kanade_se3 vslam)
 pd_add_test(log vslam)
 pd_add_test(plot vslam)
 pd_add_test(loss vslam)
+pd_add_test(random vslam)
 
 #target_compile_definitions(image_alignmentTest PUBLIC TEST_RESOURCE="${CMAKE_CURRENT_LIST_DIR}/resource")
 

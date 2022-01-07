@@ -34,20 +34,26 @@ namespace pd{
             jacobian(0,2) = -u*z_inv_2;           
             jacobian(0,3) = -v*jacobian(0,2);            
             jacobian(0,4) = (1.0 + u*jacobian(0,2));   
-            jacobian(0,5) = -v*z_inv;             
+            jacobian(0,5) = -v*z_inv;
+            jacobian.row(0) *= fx()/scale;             
 
             jacobian(1,0) = 0.0;                 
             jacobian(1,1) = z_inv;             
             jacobian(1,2) = -v*z_inv_2;           
             jacobian(1,3) = -(1.0 + v*jacobian(1,2));      
             jacobian(1,4) = jacobian(0,3);            
-            jacobian(1,5) = u*z_inv;           
-            return jacobian * focalLength() / scale;
+            jacobian(1,5) = u*z_inv;    
+            jacobian.row(1) *= fy()/scale;             
+
+            return jacobian;
         }
 
-        Camera::Camera(double f, double cx, double cy) {
-            _K << f, 0, cx,
-               0, f, cy,
+        Camera::Camera(double f, double cx, double cy)
+        :Camera(f,f,cx,cy){}
+
+        Camera::Camera(double fx, double fy, double cx, double cy) {
+            _K << fx, 0, cx,
+               0, fy, cy,
                0, 0, 1;
             _Kinv = _K.inverse();
         }
@@ -55,6 +61,10 @@ namespace pd{
         {
             _K *= s;
             _Kinv = _K.inverse();
+        }
+        Camera::ShPtr Camera::resize(Camera::ConstShPtr cam, double s)
+        {
+            return std::make_shared<Camera>(cam->_K(0,0)*s,cam->_K(1,1)*s,cam->principalPoint().x()*s,cam->principalPoint().y()*s);
         }
 
 

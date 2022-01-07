@@ -17,6 +17,7 @@ set(sources
 		src/utils/visuals.cpp
 		src/utils/Log.cpp
 		src/utils/utils.cpp
+		src/odometry/odometry.cpp
 		src/lukas_kanade/WarpOpticalFlow.cpp
 		src/lukas_kanade/WarpAffine.cpp
 		src/lukas_kanade/WarpSE3.cpp
@@ -42,6 +43,7 @@ set(headers
 		src/lukas_kanade/LukasKanade.h
 		src/lukas_kanade/LukasKanadeInverseCompositional.hpp
 		src/lukas_kanade/LukasKanadeInverseCompositional.h
+		src/odometry/odometry.h
 		src/lukas_kanade/WarpOpticalFlow.h
 		src/lukas_kanade/WarpAffine.h
 		src/lukas_kanade/WarpSE3.h
@@ -72,7 +74,11 @@ $<INSTALL_INTERFACE:CFG_DIR="/tmp/vslam/log">)
 target_compile_definitions(${PROJECT_NAME} PUBLIC
 ELPP_FEATURE_PERFORMANCE_TRACKING
 )
-
+option(VSLAM_PERFORMANCE_TRACKING Off)
+if(NOT VSLAM_PERFORMANCE_TRACKING)
+	target_compile_definitions(${PROJECT_NAME} PUBLIC
+		ELPP_DISABLE_PERFORMANCE_TRACKING)	
+endif()
 # Dependencies
 
 if (UNIX)

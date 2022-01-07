@@ -153,6 +153,7 @@ namespace transforms{
 namespace random{
     double U(double min, double max);
     int sign();
+    Eigen::VectorXd N(const Eigen::MatrixXd& cov);
 }
 }}
 #endif //DIRECT_IMAGE_ALIGNMENT_ALGORITHM_H

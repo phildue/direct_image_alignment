@@ -1,6 +1,7 @@
 #include <memory>
 #include "core/types.h"
 #include "core/Camera.h"
+#include "core/algorithm.h"
 #include "WarpSE3.h"
 #include "utils/utils.h"
 namespace pd{namespace vision{
@@ -24,11 +25,12 @@ namespace pd{namespace vision{
 
     }
     Eigen::Vector2d WarpSE3::apply(int u, int v) const { 
-        if (std::isinf(_depth(v,u)) || _depth(v,u) <= 0 || std::isnan(_depth(v,u)))
+        if (std::isfinite(_depth(v,u)) && _depth(v,u) > 0)
         {
+            return _cam->camera2image( _pose * _cam->image2camera({u,v},_depth(v,u)));
+        }else{
             return {-1,-1};
         }
-        return _cam->camera2image( _pose * _cam->image2camera({u,v},_depth(v,u)));
     }
     Eigen::Matrix<double,2,WarpSE3::nParameters> WarpSE3::J(int u, int v) const {
         Eigen::Matrix<double,2,6> J = Eigen::Matrix<double,2,6>::Zero();
@@ -36,7 +38,6 @@ namespace pd{namespace vision{
         {
             const Eigen::Vector3d pCcsRef = _cam->image2camera({u,v},_depth(v,u));
             const Eigen::Matrix<double,2,6> j = _cam->J_xyz2uv(pCcsRef);  
-            utils::throw_if_nan(j.cast<double>(),"J");
             return j;
         }else{
             return J;
@@ -52,6 +53,13 @@ namespace pd{namespace vision{
     const SE3d& WarpSE3::pose() const
     {
         return _pose;
+    }
+
+    WarpSE3 WarpSE3::resize(const WarpSE3& w, double scale)
+    {
+        auto camScaled = std::make_shared<Camera>(*w._cam);
+        camScaled->resize(scale);
+        return WarpSE3(w._x,algorithm::resize(w._depth,scale),camScaled);
     }
 
 }}

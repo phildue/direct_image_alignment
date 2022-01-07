@@ -16,6 +16,8 @@ class WarpSE3
     void setX(const Eigen::Vector6d& x);
     Eigen::Vector6d x() const;
     const SE3d& pose() const;
+    const DepthMap& depth() const { return _depth;}
+    static WarpSE3 resize(const WarpSE3& w, double scale);
     private:
     
     Eigen::Vector6d _x;

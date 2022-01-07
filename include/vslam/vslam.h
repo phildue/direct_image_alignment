@@ -1,5 +1,5 @@
-#ifndef DIRECT_IMAGE_ALIGNMENT_H__
-#define DIRECT_IMAGE_ALIGNMENT_H__
+#ifndef VSLAM_H__
+#define VSLAM_H__
 
 #include "utils/Exceptions.h"
 #include "utils/Log.h"
@@ -17,5 +17,5 @@
 #include "solver/Loss.h"
 #include "solver/GaussNewton.h"
 #include "solver/LevenbergMarquardt.h"
-
+#include "odometry/odometry.h"
 #endif

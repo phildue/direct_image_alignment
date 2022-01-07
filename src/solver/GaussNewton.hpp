@@ -36,6 +36,7 @@ namespace pd{namespace vision{
         _chi2.setZero();
         _stepSize.setZero();
         _x.setZero();
+        Eigen::Vector<double, Problem::nParameters> dx;
         for(_i = 0; _i < _maxIterations; _i++ )
         {
             TIMED_SCOPE(timerI,"solve ( " + std::to_string(_i) + " )");
@@ -52,6 +53,13 @@ namespace pd{namespace vision{
             LOG_PLOT_GN("ErrorDistribution") << std::make_shared<vis::Histogram>(r,"Residuals");
 
             _chi2(_i) = r.transpose() * W * r;
+            const double dChi2 = _i > 0 ? _chi2(_i)-_chi2(_i-1) : 0;
+            if (_i > 0 && dChi2 > 0)
+            {
+                SOLVER( INFO ) << _i << " > " << "CONVERGED. No improvement";
+                problem->updateX(-dx);
+                break;
+            }
             Mmxn J = Eigen::MatrixXd::Zero(r.rows(), Problem::nParameters);
             problem->computeJacobian(J);
             // For GN / LM we drop the second part of the Hessian
@@ -63,7 +71,7 @@ namespace pd{namespace vision{
 
             SOLVER(DEBUG) << _i << " > Grad.:\n" << gradient.transpose() ;
 
-            const Eigen::Vector<double, Eigen::Dynamic> dx = _alpha * H.ldlt().solve( gradient );
+            dx = _alpha * H.ldlt().solve( gradient );
 
             SOLVER(DEBUG) << _i <<" > x:\n" << problem->x().transpose() ;
             SOLVER(DEBUG) << _i <<" > dx:\n" << dx.transpose() ;
@@ -71,9 +79,8 @@ namespace pd{namespace vision{
             _x.row(_i) = problem->x();
             _stepSize(_i) = dx.norm();
 
-            const double dChi2 = _i > 0 ? _chi2(_i)-_chi2(_i-1) : 0;
-            SOLVER( INFO ) << "Iteration: " << _i << " chi2: " << _chi2(_i) << " dChi2: " << dChi2 << " stepSize: " << _stepSize(_i) << " Valid Points: " << r.rows();
-            if ( _i > 0 && (_stepSize(_i) < _minStepSize || std::abs(gradient.maxCoeff()) < _minGradient || std::abs(dChi2) < _minReduction))
+            SOLVER( INFO ) << "Iteration: " << _i << " chi2: " << _chi2(_i) << " dChi2: " << dChi2 << " stepSize: " << _stepSize(_i) << " Points: " << r.rows() << " x: " << problem->x().transpose();
+            if ( _i > 0 && (_stepSize(_i) < _minStepSize || std::abs(gradient.maxCoeff()) < _minGradient || std::abs(dChi2) < _minReduction) )
             { 
                 SOLVER( INFO ) << _i << " > " << _stepSize(_i) << "/" << _minStepSize << " CONVERGED. ";
                 break;
