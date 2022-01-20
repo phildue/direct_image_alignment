@@ -36,6 +36,7 @@ namespace pd{namespace vision{
                     
             }
         }
+        _J.conservativeResize(idxPixel, Eigen::NoChange);
 
         LOG_IMAGE_DEBUG("DTX") << _dTx;
         LOG_IMAGE_DEBUG("DTY") << _dTy;
@@ -100,6 +101,9 @@ namespace pd{namespace vision{
                 }
             }
         }
+        r.conservativeResize(idxPixel);
+        w.conservativeResize(idxPixel);
+
         LOG_IMAGE_DEBUG("ImageWarped") << IWxp;
         LOG_IMAGE_DEBUG("Residual") << rImg;
         LOG_IMAGE_DEBUG("Weights") << wImg;
