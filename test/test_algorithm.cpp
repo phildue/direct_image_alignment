@@ -77,3 +77,29 @@ TEST(AlgorithmTest,Normalize)
     EXPECT_NEAR(r.minCoeff(),0.0,0.0001);
 
 }
+
+TEST(AlgorithmTest, InsertionSort)
+{
+    std::vector<double> v = {4,2,1,2,8,9};
+
+    std::vector<double> vs;
+    for (const auto e : v)
+    {
+        algorithm::insertionSort(vs,e);
+    }
+    EXPECT_EQ(vs[0],1);
+    EXPECT_EQ(vs[1],2);
+    EXPECT_EQ(vs[2],2);
+    EXPECT_EQ(vs[3],4);
+    EXPECT_EQ(vs[4],8);
+    EXPECT_EQ(vs[5],9);
+
+}
+
+TEST(AlgorithmTest, InsertionSortSingle)
+{
+    std::vector<double> vs;
+    algorithm::insertionSort(vs,0.5);
+    EXPECT_EQ(vs[0],0.5);
+
+}

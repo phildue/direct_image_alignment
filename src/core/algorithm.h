@@ -65,6 +65,12 @@ namespace pd{ namespace vision{
     }
     template< class T, typename Derived>
     Eigen::Matrix<T, Eigen::Dynamic,Eigen::Dynamic> resize(const Eigen::MatrixBase<Derived>& mat, double scale) {
+
+        if(scale == 1.0)
+        {
+            return mat;
+        }
+
         const double scaleInv = 1.0/scale;
         Eigen::Matrix<T, Eigen::Dynamic,Eigen::Dynamic> res( static_cast<int>(mat.rows()*scale), static_cast<int>(mat.cols()*scale));
         for (int i = 0; i < res.rows(); i++)
@@ -119,10 +125,15 @@ namespace pd{ namespace vision{
         }
     }
 
-    
+    template<typename Derived>
+    void insertionSort (std::vector<Derived>& v, Derived e) 
+    {
+        auto it = std::find_if(v.begin(),v.end(),[&](Derived i){return e < i;});
+        v.insert(it,e);
+    }
 
-    double median( const Eigen::VectorXd& d);
-    double median(const std::vector<double>& v);
+    double median( const Eigen::VectorXd& d, bool isSorted = false);
+    double median(std::vector<double>& v, bool isSorted = false);
 
     double rmse(const Eigen::MatrixXi& patch1, const Eigen::MatrixXi& patch2);
     double sad(const Eigen::MatrixXi& patch1, const Eigen::MatrixXi& patch2);

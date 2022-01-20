@@ -6,41 +6,45 @@
 namespace pd{namespace vision{
 
     template<typename Warp>
-    LukasKanadeInverseCompositional<Warp>::LukasKanadeInverseCompositional (const Image& templ, const Image& image,std::shared_ptr<Warp> w0, std::shared_ptr<Loss> l)
+    LukasKanadeInverseCompositional<Warp>::LukasKanadeInverseCompositional (const Image& templ, const Image& image,std::shared_ptr<Warp> w0, std::shared_ptr<Loss> l, double minGradient)
     : _T(templ)
     , _Iref(image)
     , _w(w0)
     , _J(Eigen::MatrixXd::Zero(_Iref.rows()*_Iref.cols(),Warp::nParameters))
     , _l(l)
+    , _dTx(algorithm::gradX(templ))
+    , _dTy(algorithm::gradY(templ))
+    , _dTxy(MatD::Zero(_Iref.rows(),_Iref.cols()))
+    , _minGradient(minGradient)
     {
         Eigen::MatrixXd steepestDescent = Eigen::MatrixXd::Zero(_T.rows(),_T.cols());
-        const Eigen::MatrixXi dTx = algorithm::gradX(templ);
-        const Eigen::MatrixXi dTy = algorithm::gradY(templ);
 
         int idxPixel = 0;
         for (int v = 0; v < _T.rows(); v++)
         {
             for (int u = 0; u < _T.cols(); u++)
             {
-                
-                const Eigen::Matrix<double, 2,nParameters> Jwarp = _w->J(u,v);
-                        
-                _J.row(idxPixel) = (dTx(v,u) * Jwarp.row(0) + dTy(v,u) * Jwarp.row(1));
-                steepestDescent(v,u) = _J.row(idxPixel).norm();
-                idxPixel++;
+                _dTxy(v,u) = std::sqrt(_dTx(v,u)*_dTx(v,u)+_dTy(v,u)*_dTy(v,u));
+                if( _dTxy(v,u) >= _minGradient)
+                {
+                    const Eigen::Matrix<double, 2,nParameters> Jwarp = _w->J(u,v);
+                            
+                    _J.row(idxPixel) = (_dTx(v,u) * Jwarp.row(0) + _dTy(v,u) * Jwarp.row(1));
+                    steepestDescent(v,u) = _J.row(idxPixel).norm();
+                    idxPixel++;
+                }
                     
             }
         }
 
-        LOG_IMAGE_DEBUG("DTX") << dTx;
-        LOG_IMAGE_DEBUG("DTY") << dTy;
+        LOG_IMAGE_DEBUG("DTX") << _dTx;
+        LOG_IMAGE_DEBUG("DTY") << _dTy;
         LOG_IMAGE_DEBUG("SteepestDescent") << steepestDescent;
     }
 
     template<typename Warp>
     void LukasKanadeInverseCompositional<Warp>::computeResidual(Eigen::VectorXd& r, Eigen::VectorXd& w)
     {
-        TIMED_SCOPE(timerI,"computeResidual");
 
         r.conservativeResize(_T.rows()*_T.cols());
         w.conservativeResize(_T.rows()*_T.cols());
@@ -49,14 +53,16 @@ namespace pd{namespace vision{
         Eigen::MatrixXd wImg = Eigen::MatrixXd::Zero(_T.rows(),_T.cols());
         Image IWxp = Image::Zero(_Iref.rows(),_Iref.cols());
         std::vector<double> validRs;
+        w.setZero();
+        r.setZero();
         validRs.reserve(_T.rows()*_T.cols());
-        {
-            TIMED_SCOPE(timerI,"computeResidualLoop");
 
-            int idxPixel = 0;
-            for (int v = 0; v < _T.rows(); v++)
+        int idxPixel = 0;
+        for (int v = 0; v < _T.rows(); v++)
+        {
+            for (int u = 0; u < _T.cols(); u++)
             {
-                for (int u = 0; u < _T.cols(); u++)
+                if( _dTxy(v,u) >= _minGradient)
                 {
                     Eigen::Vector2d uvWarped = _w->apply(u,v);
                     if (1 < uvWarped.x() && uvWarped.x() < _Iref.cols() -1  &&
@@ -68,27 +74,22 @@ namespace pd{namespace vision{
                         rImg(v,u) = r(idxPixel);
                         wImg(v,u) = 1.0;
                         validRs.push_back(r(idxPixel));
-                    }else{
-                        w(idxPixel) = 0.0;
-                        r(idxPixel) = 0.0;
                     }
                     idxPixel++;
                 }
             }
         }
         const Eigen::Map<Eigen::VectorXd> rValid(validRs.data(),validRs.size());
-        double median = algorithm::median(rValid);
+        double median = algorithm::median(rValid,true);
         const auto stddev = (rValid.array() - median).array().abs().sum()/(rValid.rows() - 1);
         const Eigen::VectorXd rScaled = (r.array() - median)/stddev;
 
+        idxPixel = 0;
+        for (int v = 0; v < _T.rows(); v++)
         {
-            TIMED_SCOPE(timerI,"computeWeightsLoop");
-
-            int idxPixel = 0;
-            for (int v = 0; v < _T.rows(); v++)
+            for (int u = 0; u < _T.cols(); u++)
             {
-
-                for (int u = 0; u < _T.cols(); u++)
+                if( _dTxy(v,u) >= _minGradient)
                 {
                     if (wImg(v,u) > 0.0)
                     {
@@ -110,8 +111,6 @@ namespace pd{namespace vision{
     template<typename Warp>
     bool LukasKanadeInverseCompositional<Warp>::computeJacobian(Eigen::Matrix<double, -1,Warp::nParameters>& j)
     {
-        TIMED_SCOPE(timerI,"computeJacobian");
-
         j = _J;
         return true;
     }

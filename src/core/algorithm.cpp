@@ -103,27 +103,32 @@ namespace pd{ namespace vision{ namespace algorithm{
         return matImage;
     }
 
-    double median(const Eigen::VectorXd& d)
+    
+
+    double median(const Eigen::VectorXd& d, bool isSorted)
     {
+        //TODO do this without copy?
         std::vector<double> r;
         r.reserve (d.rows());
         for ( int i = 0; i < d.rows(); i++)
         {
                 r.push_back(d(i));
         }
-        return median(r);
+        return median(r,isSorted);
     }
 
-    double median(const std::vector<double>& v)
+    double median(std::vector<double>& v, bool isSorted)
     {
-        auto r = v;
-        std::sort( r.begin(), r.end() );
-        const int n = r.size();
+        if ( !isSorted )
+        {
+            std::sort( v.begin(), v.end() );
+        }
+        const int n = v.size();
         if (n % 2 == 0)
         {
-            return (r[n/2-1] + r[n/2+1])/2;
+            return (v[n/2-1] + v[n/2+1])/2;
         }else{
-            return r[n/2];
+            return v[n/2];
         }
     }
    

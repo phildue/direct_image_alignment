@@ -1,6 +1,6 @@
 #ifndef VSLAM_H__
 #define VSLAM_H__
-
+#include "core/types.h"
 #include "utils/Exceptions.h"
 #include "utils/Log.h"
 #include "utils/utils.h"

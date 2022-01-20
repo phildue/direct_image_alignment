@@ -7,11 +7,20 @@
 
 #include <Eigen/Dense>
 #include <sophus/se3.hpp>
-typedef Eigen::Matrix<std::uint8_t ,Eigen::Dynamic,Eigen::Dynamic> Image;
-typedef Eigen::Matrix<double ,Eigen::Dynamic,Eigen::Dynamic> DepthMap;
+namespace pd::vision{
+    typedef Eigen::Matrix<std::uint8_t ,Eigen::Dynamic,Eigen::Dynamic> Image;
+    typedef Eigen::Matrix<double ,Eigen::Dynamic,Eigen::Dynamic> DepthMap;
+    typedef std::uint64_t Timestamp;
+    typedef Sophus::SE3d SE3d;
+    typedef Eigen::Matrix<std::uint8_t ,Eigen::Dynamic,Eigen::Dynamic> MatUi8;
+    typedef Eigen::Matrix<int ,Eigen::Dynamic,Eigen::Dynamic> MatI;
+    typedef Eigen::Matrix<double ,Eigen::Dynamic,Eigen::Dynamic> MatD;
+    typedef Eigen::Matrix<float ,Eigen::Dynamic,Eigen::Dynamic> MatF;
 
-typedef std::uint64_t Timestamp;
-typedef Sophus::SE3d SE3d;
+
+
+}
+
 namespace Eigen{
     typedef Eigen::Matrix<double,6,1> Vector6d;
 }
