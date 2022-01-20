@@ -7,9 +7,7 @@
 #include <opencv2/imgproc.hpp>
 
 #include "Log.h"
-#include "core/Frame.h"
 #include "Exceptions.h"
-#include "core/Point3D.h"
 #include "core/algorithm.h"
 
 INITIALIZE_EASYLOGGINGPP

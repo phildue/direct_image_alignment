@@ -19,14 +19,8 @@ namespace pd{ namespace vision{
     namespace vis{
         namespace plt = matplotlibcpp;
         
-        cv::Mat drawFrame(std::shared_ptr<const Frame> frame);
-        cv::Mat drawFeatures(std::shared_ptr<const Frame> frame, int radius = 3, bool gradient = true);
-
         cv::Mat drawAsImage(const Eigen::MatrixXd& mat);
         //static void logJacobianImage(int iteration, const Eigen::MatrixXd& jacobian);
-
-        cv::Mat drawFeaturesWithPoints(std::shared_ptr<const Frame> frame, int radius = 3);
-        cv::Mat drawReprojection(std::shared_ptr<const Frame> frame0,std::shared_ptr<const Frame> frame1, int radius = 3);
 
         cv::Mat drawMat(const Image& mat);
  

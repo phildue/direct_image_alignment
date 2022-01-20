@@ -10,12 +10,8 @@ if(NOT TARGET pd::vslam)
 endif()
 
 pd_add_test(camera vslam)
-pd_add_test(frame vslam)
 
 pd_add_test(algorithm vslam)
-pd_add_test(feature_extraction vslam)
-pd_add_test(stereo_alignment vslam)
-pd_add_test(motion_prediction vslam)
 #pd_add_test(solver vslam)
 pd_add_test(lukas_kanade_flow vslam)
 pd_add_test(lukas_kanade_affine vslam)

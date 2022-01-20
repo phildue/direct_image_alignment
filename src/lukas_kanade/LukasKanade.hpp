@@ -1,7 +1,5 @@
 
 #include "LukasKanade.h"
-#include "solver/LevenbergMarquardt.h"
-#include "solver/GaussNewton.h"
 
 #include "utils/visuals.h"
 #include "core/algorithm.h"

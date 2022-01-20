@@ -8,34 +8,21 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_BINARY_DIR})
 
 include(Macros)
 set(sources
-		src/core/Frame.cpp
-		src/core/Feature2D.cpp
-		src/core/Point3D.cpp
                 src/core/Camera.cpp
 		src/core/algorithm.cpp
 		src/solver/Loss.cpp
 		src/utils/visuals.cpp
 		src/utils/Log.cpp
 		src/utils/utils.cpp
-		src/odometry/odometry.cpp
 		src/lukas_kanade/WarpOpticalFlow.cpp
 		src/lukas_kanade/WarpAffine.cpp
 		src/lukas_kanade/WarpSE3.cpp
-                src/system/StereoAlignment.cpp
-		src/feature_extraction/FeatureExtraction.cpp
-		src/feature_extraction/FeatureExtractionOpenCv.cpp
-		src/motion_prediction/MotionPrediction.cpp
 		${CMAKE_BINARY_DIR}/include/easylogging++.cc
 		)
 
 set(headers
-		src/core/Frame.h
-		src/core/Feature2D.h
-		src/core/Point3D.h
                 src/core/Camera.h
 		src/core/algorithm.h
-		src/solver/LevenbergMarquardt.h
-		src/solver/LevenbergMarquardt.hpp
 		src/solver/GaussNewton.hpp
 		src/solver/GaussNewton.h
 		src/solver/Loss.h
@@ -43,21 +30,14 @@ set(headers
 		src/lukas_kanade/LukasKanade.h
 		src/lukas_kanade/LukasKanadeInverseCompositional.hpp
 		src/lukas_kanade/LukasKanadeInverseCompositional.h
-		src/odometry/odometry.h
 		src/lukas_kanade/WarpOpticalFlow.h
 		src/lukas_kanade/WarpAffine.h
 		src/lukas_kanade/WarpSE3.h
 		src/solver/solver.h
-		src/feature_extraction/Descriptor.h
 		src/utils/Exceptions.h
 		src/utils/visuals.h
 		src/utils/Log.h
 		src/utils/utils.h
-		src/feature_extraction/FeatureExtraction.h
-		src/feature_extraction/FeatureExtractionOpenCv.h
-		src/feature_extraction/feature_extraction.h
-                src/system/StereoAlignment.h
-		src/motion_prediction/MotionPrediction.h
 		include/vslam/vslam.h
 		)
 
