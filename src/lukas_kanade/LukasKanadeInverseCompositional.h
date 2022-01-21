@@ -24,6 +24,9 @@ public:
 
     bool updateX(const Eigen::Matrix<double,Warp::nParameters,1>& dx);
 
+    void extendLeft(Eigen::MatrixXd& H);
+    void extendRight(Eigen::VectorXd& g);
+
     Eigen::Matrix<double,Warp::nParameters,1> x() const {return _w->x();}
 
 protected:
@@ -41,4 +44,13 @@ protected:
 
 }}
 #include "LukasKanadeInverseCompositional.hpp"
+#include "WarpAffine.h"
+#include "WarpOpticalFlow.h"
+#include "WarpSE3.h"
+namespace pd{namespace vision{
+
+typedef LukasKanadeInverseCompositional<WarpAffine> LukasKanadeInverseCompositionalAffine;
+typedef LukasKanadeInverseCompositional<WarpOpticalFlow> LukasKanadeInverseCompositionalOpticalFlow;
+typedef LukasKanadeInverseCompositional<WarpSE3> LukasKanadeInverseCompositionalSE3;
+}}
 #endif

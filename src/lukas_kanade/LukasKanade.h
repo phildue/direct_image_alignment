@@ -26,6 +26,8 @@ public:
     bool updateX(const Eigen::Matrix<double,Warp::nParameters,1>& dx);
 
     Eigen::Matrix<double,Warp::nParameters,1> x() const {return _w->x();}
+    void extendLeft(Eigen::MatrixXd& H);
+    void extendRight(Eigen::VectorXd& g);
 
 protected:
 

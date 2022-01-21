@@ -63,11 +63,14 @@ namespace pd{namespace vision{
             Mmxn J = Eigen::MatrixXd::Zero(r.rows(), Problem::nParameters);
             problem->computeJacobian(J);
             // For GN / LM we drop the second part of the Hessian
-            const Eigen::MatrixXd H  = (J.transpose() * W * J);
+            Eigen::MatrixXd H  = (J.transpose() * W * J);
+            problem->extendLeft(H);//User can provide additional conditions TODO find better name?
+
         
             SOLVER(DEBUG) << _i << " > H.:\n" << H;
         
-            const Eigen::VectorXd gradient = J.transpose() * W * r;
+            Eigen::VectorXd gradient = J.transpose() * W * r;
+            problem->extendRight(gradient);//User can provide additional conditions TODO find better name?
 
             SOLVER(DEBUG) << _i << " > Grad.:\n" << gradient.transpose() ;
 

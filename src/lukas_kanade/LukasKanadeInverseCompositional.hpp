@@ -127,4 +127,12 @@ namespace pd{namespace vision{
         _w->updateCompositional(-dx);
         return true;
     }
+
+    template<typename Warp>
+    void LukasKanadeInverseCompositional<Warp>::extendLeft(Eigen::MatrixXd& H)
+    {}
+    template<typename Warp>
+    void LukasKanadeInverseCompositional<Warp>::extendRight(Eigen::VectorXd& g)
+    {}
+
 }}

@@ -112,4 +112,12 @@ namespace pd{namespace vision{
         _w->updateAdditive(dx);
         return true;
     }
+
+
+    template<typename Warp>
+    void LukasKanade<Warp>::extendLeft(Eigen::MatrixXd& H)
+    {}
+    template<typename Warp>
+    void LukasKanade<Warp>::extendRight(Eigen::VectorXd& g)
+    {}
 }}
