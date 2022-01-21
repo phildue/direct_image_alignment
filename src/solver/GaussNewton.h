@@ -4,13 +4,13 @@
 
 #include <Eigen/Dense>
 
-#include "solver.h"
 #include "Loss.h"
 namespace pd{namespace vision{
 
       template<typename Problem>
-      class GaussNewton : public Solver<Problem>{
+      class GaussNewton {
         typedef Eigen::Matrix<double, Eigen::Dynamic, Problem::nParameters> Mmxn;
+        using Vn = Eigen::Matrix<double, Problem::nParameters, 1>;
  
         public:
         GaussNewton(
@@ -19,14 +19,17 @@ namespace pd{namespace vision{
                 int maxIterations
                 );
 
-        void solve(std::shared_ptr< Problem> problem) override;
+        void solve(std::shared_ptr< Problem> problem);
         const int& iteration() const {return _i;}
         const Eigen::VectorXd& chi2() const {return _chi2;}
         const Eigen::Matrix<double,Eigen::Dynamic,Problem::nParameters>& x() const {return _x;}
         const Eigen::VectorXd& stepSize() const {return _stepSize;}
 
         private:
-        const double _alpha, _minStepSize,_minGradient, _minReduction;
+        const double _alpha;
+        const double _minStepSize;
+        const double _minGradient;
+        const double _minReduction;
         const int _maxIterations;
         Eigen::VectorXd _chi2,_stepSize;
         Eigen::Matrix<double,Eigen::Dynamic,Problem::nParameters> _x;

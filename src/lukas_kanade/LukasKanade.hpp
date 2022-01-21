@@ -64,9 +64,9 @@ namespace pd{namespace vision{
                 idxPixel++;
             }
         }
-        LOG_IMAGE_DEBUG("ImageWarped") << IWxp;
-        LOG_IMAGE_DEBUG("Residual") << residuals;
-        LOG_IMAGE_DEBUG("Visibility") << visibilityImage;
+        LOG_IMG("ImageWarped") << IWxp;
+        LOG_IMG("Residual") << residuals;
+        LOG_IMG("Visibility") << visibilityImage;
     }
     //
     // J = Ixy*dW/dp
@@ -100,9 +100,9 @@ namespace pd{namespace vision{
             }
         }
 
-        LOG_IMAGE_DEBUG("Gradient_X_Warped") << dIxWp;
-        LOG_IMAGE_DEBUG("Gradient_Y_Warped") << dIyWp;
-        LOG_IMAGE_DEBUG("SteepestDescent") << steepestDescent;
+        LOG_IMG("Gradient_X_Warped") << dIxWp;
+        LOG_IMG("Gradient_Y_Warped") << dIyWp;
+        LOG_IMG("SteepestDescent") << steepestDescent;
         return true;
     }
 

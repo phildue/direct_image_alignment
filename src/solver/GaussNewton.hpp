@@ -6,7 +6,6 @@
 #include "utils/Exceptions.h"
 #include "core/algorithm.h"
 namespace pd{namespace vision{
-    #define LOG_PLOT_GN(name) Log::getPlotLog(name,Level::Debug)
 
     template<typename Problem>
     GaussNewton<Problem>::GaussNewton(
@@ -16,9 +15,10 @@ namespace pd{namespace vision{
             )
     :_alpha(alpha)
     ,_minStepSize(minStepSize)
-    ,_maxIterations(maxIterations)
     ,_minGradient(minStepSize)
     ,_minReduction(minStepSize)
+    ,_maxIterations(maxIterations)
+
     {
         Log::get("solver");
         _chi2 = Eigen::VectorXd::Zero(_maxIterations);
@@ -50,7 +50,7 @@ namespace pd{namespace vision{
             problem->computeResidual(r,w);
             const auto W = w.asDiagonal();
          
-            LOG_PLOT_GN("ErrorDistribution") << std::make_shared<vis::Histogram>(r,"Residuals");
+            LOG_PLT("ErrorDistribution") << std::make_shared<vis::Histogram>(r,"Residuals");
 
             _chi2(_i) = r.transpose() * W * r;
             const double dChi2 = _i > 0 ? _chi2(_i)-_chi2(_i-1) : 0;
@@ -95,7 +95,7 @@ namespace pd{namespace vision{
             }
 
         }
-        LOG_PLOT_GN("SolverGN") << std::make_shared<vis::PlotGaussNewton>(_i,_chi2,_stepSize);
+        LOG_PLT("SolverGN") << std::make_shared<vis::PlotGaussNewton>(_i,_chi2,_stepSize);
 
     }
 

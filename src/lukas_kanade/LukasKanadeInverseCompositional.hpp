@@ -38,9 +38,9 @@ namespace pd{namespace vision{
         }
         _J.conservativeResize(idxPixel, Eigen::NoChange);
 
-        LOG_IMAGE_DEBUG("DTX") << _dTx;
-        LOG_IMAGE_DEBUG("DTY") << _dTy;
-        LOG_IMAGE_DEBUG("SteepestDescent") << steepestDescent;
+        LOG_IMG("DTX") << _dTx;
+        LOG_IMG("DTY") << _dTy;
+        LOG_IMG("SteepestDescent") << steepestDescent;
     }
 
     template<typename Warp>
@@ -104,9 +104,9 @@ namespace pd{namespace vision{
         r.conservativeResize(idxPixel);
         w.conservativeResize(idxPixel);
 
-        LOG_IMAGE_DEBUG("ImageWarped") << IWxp;
-        LOG_IMAGE_DEBUG("Residual") << rImg;
-        LOG_IMAGE_DEBUG("Weights") << wImg;
+        LOG_IMG("ImageWarped") << IWxp;
+        LOG_IMG("Residual") << rImg;
+        LOG_IMG("Weights") << wImg;
     }
 
     //

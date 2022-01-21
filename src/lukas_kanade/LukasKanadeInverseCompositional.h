@@ -44,9 +44,7 @@ protected:
 
 }}
 #include "LukasKanadeInverseCompositional.hpp"
-#include "WarpAffine.h"
-#include "WarpOpticalFlow.h"
-#include "WarpSE3.h"
+#include "Warp.h"
 namespace pd{namespace vision{
 
 typedef LukasKanadeInverseCompositional<WarpAffine> LukasKanadeInverseCompositionalAffine;

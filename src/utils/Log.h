@@ -18,9 +18,9 @@
 #define SYSTEM(loglevel) CLOG(loglevel, "system")
 #define IMAGE_ALIGNMENT(loglevel) CLOG(loglevel, "image_alignment")
 #define SOLVER(loglevel) CLOG(loglevel, "solver")
-#define LOG_LOSS(loglevel) CLOG(loglevel, "loss")
 
-#define LOG_IMAGE_DEBUG(name) Log::getImageLog(name,Level::Debug)
+#define LOG_IMG(name) Log::getImageLog(name,Level::Debug)
+#define LOG_PLT(name) Log::getPlotLog(name,Level::Debug)
 
 
 namespace pd{ namespace vision{
