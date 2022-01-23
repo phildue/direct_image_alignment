@@ -11,4 +11,5 @@
 #include "lukas_kanade/LukasKanadeInverseCompositional.h"
 #include "solver/Loss.h"
 #include "solver/GaussNewton.h"
+#include "odometry/RgbdOdometry.h"
 #endif

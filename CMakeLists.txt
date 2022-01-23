@@ -14,9 +14,8 @@ set(sources
 		src/utils/visuals.cpp
 		src/utils/Log.cpp
 		src/utils/utils.cpp
-		src/lukas_kanade/WarpOpticalFlow.cpp
-		src/lukas_kanade/WarpAffine.cpp
-		src/lukas_kanade/WarpSE3.cpp
+		src/lukas_kanade/Warp.cpp
+		src/odometry/RgbdOdometry.cpp
 		${CMAKE_BINARY_DIR}/include/easylogging++.cc
 		)
 
@@ -30,14 +29,12 @@ set(headers
 		src/lukas_kanade/LukasKanade.h
 		src/lukas_kanade/LukasKanadeInverseCompositional.hpp
 		src/lukas_kanade/LukasKanadeInverseCompositional.h
-		src/lukas_kanade/WarpOpticalFlow.h
-		src/lukas_kanade/WarpAffine.h
-		src/lukas_kanade/WarpSE3.h
-		src/solver/solver.h
+		src/lukas_kanade/Warp.h
 		src/utils/Exceptions.h
 		src/utils/visuals.h
 		src/utils/Log.h
 		src/utils/utils.h
+		src/odometry/RgbdOdometry.h
 		include/vslam/vslam.h
 		)
 
