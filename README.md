@@ -3,7 +3,7 @@
 Collection of algorithms for visual slam
 
 
-* [RGBD Odometry](src/odometry/README.md)
-* [Lukas Kanade](src/lukas_kanade/README.md)
+* [RGBD Odometry](src/odometry)
+* [Lukas Kanade](src/lukas_kanade)
   
 
