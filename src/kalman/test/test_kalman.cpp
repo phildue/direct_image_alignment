@@ -10,24 +10,27 @@ using namespace testing;
 using namespace pd;
 using namespace pd::vision;
 
-class KalmanFilter2D : public KalmanFilter
+#define LOG_TEST(level) CLOG(level,"test")
+
+class KalmanFilter2D : public KalmanFilter<4,2>
 {
     ///state = [px py vx vy]
     ///measurement = [px py]
     public:
-    KalmanFilter2D()
-    : KalmanFilter(MatD::Zero(4,1),MatD::Zero(2,4),MatD::Identity(4,4),VecD::Zero(4),0U)
+    KalmanFilter2D(const Matd<4,1>& x0, std::uint64_t t0)
+    : KalmanFilter<4,2>(Eigen::Matrix<double,2,4>::Zero(),Eigen::MatrixXd::Identity(12,12),x0,t0)
     {
-        _C(0,0) = 1;
-        _C(1,1) = 1;
-        _x(2) = 0.1;
-        _x(3) = 0.1;
+        _H(0,0) = 1;
+        _H(1,1) = 1;
     
-        _P.noalias() = _P + MatD::Identity(4,4) * 10;
+        _Q(2,2) = 1.5;
+        _Q(3,3) = 1.5;
+        
+        Log::get("test");
     }
-    MatD A(std::uint64_t dt) const override
+    Matd<4,4> A(std::uint64_t dt) const override
     {
-        MatD M = MatD::Identity(4,4);
+        Matd<4,4> M = Matd<4,4>::Identity(4,4);
         M(0,2) = dt;
         M(1,3) = dt;
         return M;
@@ -36,7 +39,8 @@ class KalmanFilter2D : public KalmanFilter
 
 void plot(const std::vector<Eigen::Vector2d>& traj, std::string name)
 {
-    std::vector<double> x(traj.size()),y(traj.size());
+  
+    std::vector<double> x(traj.size()), y(traj.size());
     for (int i = 0; i < traj.size(); i++ )
     {
         x[i] = traj[i].x();
@@ -46,16 +50,25 @@ void plot(const std::vector<Eigen::Vector2d>& traj, std::string name)
 
 }
 
-TEST(KalmanFilterTest,Motion2DTest)
+TEST(KalmanFilterTest,Motion2DTestSanity)
 {
-    std::shared_ptr<KalmanFilter2D> kalman = std::make_shared<KalmanFilter2D>();
-
     Eigen::Vector2d velTrue;
     velTrue << 1,2;
+    Eigen::Vector2d accTrue;
+    accTrue << 0.1,0.4;
+    Eigen::Vector4d x0;
+    x0 << 0,0,1.0,2.0;
     const int dt = 1;
-    Eigen::Vector2d cov;
-    cov.x() = 1;
-    cov.y() = 1;
+    Eigen::Vector2d covTrue;
+    covTrue.x() = 15.5;
+    covTrue.y() = 15.5;
+
+    Eigen::Vector2d covAssum;
+    covAssum.x() = 10.1;
+    covAssum.y() = 10.1;
+
+    std::shared_ptr<KalmanFilter2D> kalman = std::make_shared<KalmanFilter2D>(x0,0U);
+  
     std::vector<Eigen::Vector2d> trajTrue(100);
     std::vector<Eigen::Vector2d> trajNoise(100);
     std::vector<Eigen::Vector2d> trajKalman(100);
@@ -65,23 +78,30 @@ TEST(KalmanFilterTest,Motion2DTest)
 
     for(int t = 1; t < 100; t+=dt)
     {
-        trajKalman[t] = kalman->predict(t);
+        auto pred = kalman->predict(t);
+        trajKalman[t](0) = pred.state(0);
+        trajKalman[t](1) = pred.state(1);
+        velTrue += (double)dt*accTrue;
         trajTrue[t] = trajTrue[t-1] + (double)dt * velTrue;
-        trajNoise[t] = trajTrue[t] + random::N(cov);
-        kalman->update(t, trajNoise[t], cov.asDiagonal());
 
-        std::cout << "Kalman: " << trajKalman[t].transpose();
-        std::cout << "True: " << trajKalman[t].transpose();
-        std::cout << "Noise: " << trajKalman[t].transpose();
+        ASSERT_NEAR(trajKalman[t].x(),trajKalman[t].x(),0.1);
+        ASSERT_NEAR(trajTrue[t].y(),trajTrue[t].y(),0.1);
+
+        trajNoise[t] = trajTrue[t] + random::N(covTrue.asDiagonal());
+        kalman->update(t, trajNoise[t], covAssum.asDiagonal());
+        LOG_TEST(DEBUG) << t << "----";
+        LOG_TEST(DEBUG) << "v: " << velTrue.transpose();
+        LOG_TEST(DEBUG) << "Kalman: " << trajKalman[t].transpose();
+        LOG_TEST(DEBUG) << "True: " << trajTrue[t].transpose();
+        LOG_TEST(DEBUG) << "Noise: " << trajNoise[t].transpose();
+        LOG_TEST(DEBUG) << "State:\n " << pred.state.transpose();
+        LOG_TEST(DEBUG) << "Uncertainty:\n " << pred.cov;
 
     }
 
     vis::plt::figure();
     plot(trajTrue,"True");
     plot(trajNoise,"Noise");
-    vis::plt::legend();
-    
-    vis::plt::figure();
     plot(trajKalman,"Kalman");
 
     vis::plt::legend();

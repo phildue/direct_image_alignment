@@ -4,25 +4,10 @@
 #include "solver/solver.h"
 namespace pd::vision{
 
-        class KalmanFilterMotion : public KalmanFilter
-        {
-        ///state = [vx,vy,vz, avx,avy,avz]
-        ///measurement = [vx,vy,vz, avx,avy,avz]
-        public:
-        KalmanFilterMotion()
-        : KalmanFilter(MatD::Zero(6,1),MatD::Zero(6,6),MatD::Identity(6,6),VecD::Zero(6),0U)
-        {
-                _P.noalias() = MatD::Identity(6,6) * 0.1;
-        }
-        MatD A(std::uint64_t dT) const override
-        {
-                return MatD::Identity(6,6);
-        }
-        };
 
         RgbdOdometryKalman::RgbdOdometryKalman(Camera::ShPtr camera, double minGradient, int nLevels, int maxIterations, double convergenceThreshold, double dampingFactor)
         : RgbdOdometry(camera,minGradient,nLevels,maxIterations,convergenceThreshold,dampingFactor)
-        , _kalman(std::make_shared<KalmanFilterMotion>())
+        , _kalman(std::make_shared<KalmanFilterSE3>(Matd<12,1>::Zero(),0U))
         {}
 
         SE3d RgbdOdometryKalman::estimate(const Image& fromRgb,const DepthMap& fromDepth, const Image& toRgb, std::uint64_t t)
@@ -30,9 +15,9 @@ namespace pd::vision{
                 Sophus::SE3d dPose;
                 auto l = std::make_shared<HuberLoss>(10);
 
-                Eigen::VectorXd xPred = _kalman->predict(t);
-                dPose = Sophus::SE3d::exp({xPred(0),xPred(1),xPred(2),xPred(3),xPred(4),xPred(5)});
-                const MatD& cov = _kalman->cov();
+                auto pred = _kalman->predict(t);
+                dPose = Sophus::SE3d::exp({pred.state(0),pred.state(1),pred.state(2),pred.state(3),pred.state(4),pred.state(5)});
+                const MatXd& cov = pred.cov;
                 //TODO include prediction as a prior
 
                 auto solver = std::make_shared<GaussNewton<LukasKanadeInverseCompositionalSE3>> ( 

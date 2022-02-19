@@ -14,7 +14,7 @@ class RgbdOdometryKalman : public RgbdOdometry{
         SE3d estimate(const Image& fromRgb,const DepthMap& fromDepth, const Image& toRgb, std::uint64_t t) override;
         private:
 
-        std::shared_ptr<KalmanFilter> _kalman;
+        std::shared_ptr<KalmanFilterSE3> _kalman;
         
 
 };

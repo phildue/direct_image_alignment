@@ -36,8 +36,8 @@ protected:
     const std::shared_ptr<Warp> _w;
     Eigen::Matrix<double,-1,Warp::nParameters> _J;
     const std::shared_ptr<Loss> _l;
-    const MatI _dTx,_dTy;
-    MatD _dTxy;
+    const MatXi _dTx,_dTy;
+    MatXd _dTxy;
     const double _minGradient;
 
 };

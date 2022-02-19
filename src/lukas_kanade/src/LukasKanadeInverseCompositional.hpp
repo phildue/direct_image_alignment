@@ -13,7 +13,7 @@ namespace pd{namespace vision{
     , _l(l)
     , _dTx(algorithm::gradX(templ))
     , _dTy(algorithm::gradY(templ))
-    , _dTxy(MatD::Zero(_Iref.rows(),_Iref.cols()))
+    , _dTxy(MatXd::Zero(_Iref.rows(),_Iref.cols()))
     , _minGradient(minGradient)
     {
         Eigen::MatrixXd steepestDescent = Eigen::MatrixXd::Zero(_T.rows(),_T.cols());
