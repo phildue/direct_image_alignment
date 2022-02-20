@@ -57,7 +57,7 @@ namespace pd{namespace vision{
     WarpOpticalFlow::WarpOpticalFlow(const Eigen::Vector2d& x)
     :_x(x){
         _w = toMat(_x);
-    };
+    }
     void WarpOpticalFlow::updateAdditive(const Eigen::Vector2d& dx)
     {
         _x.noalias() += dx;
@@ -78,7 +78,7 @@ namespace pd{namespace vision{
         Eigen::Vector2d wuv = uv + _x;
         return wuv;
     }
-    Eigen::Matrix<double,2,WarpOpticalFlow::nParameters> WarpOpticalFlow::J(int u, int v) const {
+    Eigen::Matrix<double,2,WarpOpticalFlow::nParameters> WarpOpticalFlow::J(int UNUSED(u), int UNUSED(v)) const {
         return Eigen::Matrix<double,2,nParameters>::Identity();
     }
     void WarpOpticalFlow::setX(const Eigen::Vector2d& x)

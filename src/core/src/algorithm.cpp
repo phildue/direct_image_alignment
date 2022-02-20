@@ -3,6 +3,7 @@
 //
 #include "Exceptions.h"
 #include "algorithm.h"
+#include "macros.h"
 namespace pd{ namespace vision{ namespace algorithm{
 
 
@@ -178,7 +179,7 @@ namespace random{
         Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> eigenSolver(cov);
         auto transform = eigenSolver.eigenvectors() * eigenSolver.eigenvalues().cwiseSqrt().asDiagonal();
 
-        return transform * Eigen::VectorXd{ cov.cols() }.unaryExpr([&](auto x) { return dist(eng); });
+        return transform * Eigen::VectorXd{ cov.cols() }.unaryExpr([&](auto UNUSED(x)) { return dist(eng); });
  
     }
 

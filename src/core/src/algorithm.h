@@ -162,6 +162,13 @@ namespace transforms{
 }
 
 namespace random{
+
+    template<int dim>
+    struct Gaussian{
+        Matd<dim,dim> cov;
+        Matd<dim,1> mean;
+    };
+
     double U(double min, double max);
     int sign();
     Eigen::VectorXd N(const Eigen::MatrixXd& cov);

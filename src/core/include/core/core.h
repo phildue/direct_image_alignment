@@ -4,4 +4,5 @@
 #include "Camera.h"
 #include "types.h"
 #include "Exceptions.h"
+#include "macros.h"
 #endif// VSLAM_CORE_H__

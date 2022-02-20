@@ -18,11 +18,8 @@ class KalmanFilter2D : public KalmanFilter<4,2>
     ///measurement = [px py]
     public:
     KalmanFilter2D(const Matd<4,1>& x0, std::uint64_t t0)
-    : KalmanFilter<4,2>(Eigen::Matrix<double,2,4>::Zero(),Eigen::MatrixXd::Identity(12,12),x0,t0)
+    : KalmanFilter<4,2>(Eigen::MatrixXd::Identity(4,4),x0,t0)
     {
-        _H(0,0) = 1;
-        _H(1,1) = 1;
-    
         _Q(2,2) = 1.5;
         _Q(3,3) = 1.5;
         
@@ -35,13 +32,20 @@ class KalmanFilter2D : public KalmanFilter<4,2>
         M(1,3) = dt;
         return M;
     }
+    Matd<2,4> H(std::uint64_t dt) const override
+    {
+        Matd<2,4> M = Matd<2,4>::Zero();
+        M(0,0) = 1;
+        M(1,1) = 1;
+        return M;
+    }
 };
 
 void plot(const std::vector<Eigen::Vector2d>& traj, std::string name)
 {
   
     std::vector<double> x(traj.size()), y(traj.size());
-    for (int i = 0; i < traj.size(); i++ )
+    for (size_t i = 0; i < traj.size(); i++ )
     {
         x[i] = traj[i].x();
         y[i] = traj[i].y();

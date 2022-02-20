@@ -95,10 +95,10 @@ Level Log::_showLevel = Level::Debug;
     }
 
     LogPlot::LogPlot(const std::string& name, bool block, bool show, bool save)
-    : _name(name)
-    , _block(block)
+    : _block(block)
     , _show(show)
     , _save(save)
+    , _name(name)
     {
        
     }

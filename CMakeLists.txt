@@ -18,6 +18,10 @@ add_subdirectory(src/odometry)
 add_library(vslam INTERFACE)
 add_library(pd::vslam ALIAS vslam)
 target_link_libraries(${PROJECT_NAME} INTERFACE core lukas_kanade solver utils kalman odometry)
+target_include_directories(${PROJECT_NAME} INTERFACE 
+$<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include/>
+$<INSTALL_INTERFACE:include/vslam>
+)
 
 # Add tests
 option(VSLAM_BUILD_TESTS "Enable to build tests" ON)
@@ -34,6 +38,11 @@ install(TARGETS ${PROJECT_NAME} core utils solver lukas_kanade kalman odometry
     ARCHIVE DESTINATION lib
     RUNTIME DESTINATION bin
     )
+install(DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/include/
+    DESTINATION include/
+    FILES_MATCHING # install only matched files
+    PATTERN "*.h" # select header files
+    )  
 
 install(EXPORT ${PROJECT_NAME}Targets
     DESTINATION lib/cmake/${PROJECT_NAME}

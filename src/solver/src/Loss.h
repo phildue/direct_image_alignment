@@ -1,18 +1,23 @@
 #ifndef VSLAM_LOSS_H__
 #define VSLAM_LOSS_H__
 
-#include <eigen3/Eigen/Dense>
+#include <memory>
 
+#include <eigen3/Eigen/Dense>
+#include "core/core.h"
 
 // computeWeights assigns weights corresponding to L'(r) the first order derivative of the loss function
 // There are many other weights based on the expected distribution of errors (e.g. t distribution)[Image Gradient-based Joint Direct Visual Odometry for Stereo Camera]
-
-// TODO: class should have compute(r) and computeDerivative(r) ..
 
 namespace pd{namespace vision{
 class Loss
 {
         public:
+        typedef std::shared_ptr<Loss> ShPtr;
+        typedef std::unique_ptr<Loss> UnPtr;
+        typedef std::shared_ptr<const Loss> ConstShPtr;
+        typedef std::unique_ptr<const Loss> ConstUnPtr;
+
          //l(r)
         virtual double compute(double r) const = 0;
         //dl/dr
@@ -30,7 +35,7 @@ class QuadraticLoss : public Loss
         //dl/dr
         double computeDerivative(double r) const override {return r;}
         //w(r) = dl/dr (r) * 1/r
-        double computeWeight(double r) const override {return 1.0;}
+        double computeWeight(double UNUSED(r)) const override {return 1.0;}
      
 };
 

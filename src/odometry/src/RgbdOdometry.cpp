@@ -1,7 +1,6 @@
 
 #include "RgbdOdometry.h"
-#include "lukas_kanade/lukas_kanade.h"
-#include "solver/solver.h"
+
 namespace pd::vision{
 
         RgbdOdometry::RgbdOdometry(Camera::ShPtr camera, double minGradient, int nLevels, int maxIterations, double convergenceThreshold, double dampingFactor)
@@ -11,17 +10,18 @@ namespace pd::vision{
         , _minGradient(minGradient)
         , _convergenceThreshold(convergenceThreshold)
         , _dampingFactor(dampingFactor)
-        {}
-
-        SE3d RgbdOdometry::estimate(const Image& fromRgb,const DepthMap& fromDepth, const Image& toRgb, std::uint64_t t)
-        {
-                Sophus::SE3d dPose;
-                auto l = std::make_shared<HuberLoss>(10);
-                auto solver = std::make_shared<GaussNewton<LukasKanadeInverseCompositionalSE3>> ( 
+        , _solver(std::make_unique<GaussNewton<LukasKanadeInverseCompositionalSE3>> ( 
                                 _dampingFactor,
                                 _convergenceThreshold,
-                                _maxIterations);
-                
+                                _maxIterations))
+        , _loss( std::make_unique<HuberLoss> ( 10 ))
+        {
+                Log::get("odometry");
+        }
+
+        SE3d RgbdOdometry::estimate(const Image& fromRgb,const DepthMap& fromDepth, const Image& toRgb, std::uint64_t t, const SE3d& p0) const
+        {
+                Sophus::SE3d dPose = p0;
                 for(int i = _nLevels; i > 0; i--)
                 {
                         TIMED_SCOPE(timerI,"align at level ( " + std::to_string(i) + " )");
@@ -36,13 +36,14 @@ namespace pd::vision{
                         auto lk = std::make_shared<LukasKanadeInverseCompositionalSE3> (
                                 templScaled,
                                 imageScaled,
-                                w,l,_minGradient);
+                                w,_loss,_minGradient);
 
-                        solver->solve(lk);
+                        _solver->solve(lk);
                         
                         dPose = w->pose().inverse();
                     
                 }
                 return dPose;
         }
+
 }

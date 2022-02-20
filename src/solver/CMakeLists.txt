@@ -31,3 +31,10 @@ if(VSLAM_BUILD_TESTS)
 
         pd_add_test(loss solver)
 endif()
+
+# Install
+install(DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/cfg/
+    DESTINATION share/vslam/cfg/
+    FILES_MATCHING # install only matched files
+    PATTERN "*" # select all files
+    )

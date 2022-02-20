@@ -13,6 +13,11 @@ namespace pd{namespace vision{
         using Vn = Eigen::Matrix<double, Problem::nParameters, 1>;
  
         public:
+        typedef std::shared_ptr<GaussNewton> ShPtr;
+        typedef std::unique_ptr<GaussNewton> UnPtr;
+        typedef std::shared_ptr<const GaussNewton> ConstShPtr;
+        typedef std::unique_ptr<const GaussNewton> ConstUnPtr;
+
         GaussNewton(
                 double alpha,
                 double minStepSize,

@@ -30,3 +30,10 @@ if(KALMAN_BUILD_TESTS)
 	find_package(GTest CONFIG REQUIRED)
         pd_add_test(kalman kalman)
 endif()
+
+# Install
+install(DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/cfg/
+    DESTINATION share/vslam/cfg/
+    FILES_MATCHING # install only matched files
+    PATTERN "*" # select all files
+    )

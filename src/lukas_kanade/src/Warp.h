@@ -31,7 +31,7 @@ class WarpOpticalFlow
     void updateAdditive(const Eigen::Vector2d& dx);
     void updateCompositional(const Eigen::Vector2d& dx);
     Eigen::Vector2d apply(int u, int v) const;
-    Eigen::Matrix<double,2,nParameters> J(int u, int v) const;
+    Eigen::Matrix<double,2,nParameters> J(int UNUSED(u), int UNUSED(v)) const;
     
     void setX(const Eigen::Vector2d& x);
     Eigen::Vector2d x() const {return _x;}
