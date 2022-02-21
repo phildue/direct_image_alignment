@@ -4,13 +4,13 @@ project(odometry VERSION 1.0.0)
 set(sources
         src/RgbdOdometry.cpp
         src/RgbdOdometryKalman.cpp
-        src/PlotSE3.cpp
+      #  src/PlotSE3.cpp
         )
 
 set(headers
         src/RgbdOdometry.h
         src/RgbdOdometryKalman.h
-        src/PlotSE3.h
+       # src/PlotSE3.h
         include/odometry/odometry.h
         )
 

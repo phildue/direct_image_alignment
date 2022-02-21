@@ -4,6 +4,7 @@
 #include "Exceptions.h"
 #include "algorithm.h"
 #include "macros.h"
+#include "Kernel2d.h"
 namespace pd{ namespace vision{ namespace algorithm{
 
 
@@ -65,28 +66,15 @@ namespace pd{ namespace vision{ namespace algorithm{
 
     Eigen::MatrixXi gradX(const Image& image)
     {
-        Eigen::MatrixXi ix = Eigen::MatrixXi::Zero(image.rows(),image.cols());
-        for (int i = 0; i < image.rows(); i++)
-        {
-            for(int j = 1; j < image.cols()-1; j++)
-            {
-                ix(i,j) = (int)((-(double)image(i,j - 1) + (double)image(i,j + 1))/2.0);
-            }
-        }
-        return ix;
+        Eigen::MatrixXi i = image.cast<int>();
+        return conv2d<int>(i,Kernel2d<int>::scharrX());
     }
 
     Eigen::MatrixXi gradY(const Image& image)
     {
-        Eigen::MatrixXi iy = Eigen::MatrixXi::Zero(image.rows(),image.cols());
-        for (int i = 1; i < image.rows()-1; i++)
-        {
-            for(int j = 0; j < image.cols(); j++)
-            {
-                iy(i,j) = (int) ((-(double)image(i-1,j) + (double)image(i+1,j))/2.0);
-            }
-        }
-        return iy;
+        Eigen::MatrixXi i = image.cast<int>();
+
+        return conv2d<int>(i,Kernel2d<int>::scharrY());
     }
 
     Sophus::SE3d computeRelativeTransform(const Sophus::SE3d& t0, const Sophus::SE3d& t1)

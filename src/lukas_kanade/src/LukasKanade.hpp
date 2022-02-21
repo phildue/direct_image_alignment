@@ -114,9 +114,9 @@ namespace pd{namespace vision{
 
 
     template<typename Warp>
-    void LukasKanade<Warp>::extendLeft(Eigen::MatrixXd& H)
+    void LukasKanade<Warp>::extendLeft(Eigen::MatrixXd& UNUSED(H))
     {}
     template<typename Warp>
-    void LukasKanade<Warp>::extendRight(Eigen::VectorXd& g)
+    void LukasKanade<Warp>::extendRight(Eigen::VectorXd& UNUSED(g))
     {}
 }}

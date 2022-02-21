@@ -131,6 +131,27 @@ namespace pd{ namespace vision{
         auto it = std::find_if(v.begin(),v.end(),[&](Derived i){return e < i;});
         v.insert(it,e);
     }
+    
+    //https://forum.kde.org/viewtopic.php?f=74&t=96407#
+    template< typename Derived>
+    Eigen::Matrix<Derived, Eigen::Dynamic,Eigen::Dynamic> conv2d(const Eigen::Matrix<Derived,-1,-1>& mat, const Eigen::Matrix<Derived,-1,-1> &kernel) {
+        
+        typedef int Idx;
+        //TODO is this the most efficient way? add padding
+        Eigen::Matrix<Derived, Eigen::Dynamic,Eigen::Dynamic> res( mat.rows(), mat.cols());
+        res.setZero();
+        const Idx kX_2 = (Idx)kernel.cols()/2;
+        const Idx kY_2 = (Idx)kernel.rows()/2;
+
+        for (Idx i = kX_2; i < res.rows() - kY_2; i++)
+        {
+            for (Idx j = kY_2; j < res.cols() - kX_2; j++)
+            {
+                res(i,j) = (mat.block(i - kY_2, j - kX_2, kernel.rows(), kernel.cols()).cwiseProduct(kernel)).sum();
+            }
+        }
+        return res/kernel.norm();
+    }
 
     double median( const Eigen::VectorXd& d, bool isSorted = false);
     double median(std::vector<double>& v, bool isSorted = false);

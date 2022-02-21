@@ -128,10 +128,10 @@ namespace pd{namespace vision{
     }
 
     template<typename Warp>
-    void LukasKanadeInverseCompositional<Warp>::extendLeft(Eigen::MatrixXd& H)
+    void LukasKanadeInverseCompositional<Warp>::extendLeft(Eigen::MatrixXd& UNUSED(H))
     {}
     template<typename Warp>
-    void LukasKanadeInverseCompositional<Warp>::extendRight(Eigen::VectorXd& g)
+    void LukasKanadeInverseCompositional<Warp>::extendRight(Eigen::VectorXd& UNUSED(g))
     {}
 
 }}
