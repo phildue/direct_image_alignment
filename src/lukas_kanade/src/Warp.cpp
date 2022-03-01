@@ -95,29 +95,33 @@ namespace pd{namespace vision{
         return w;
     }
 
-    WarpSE3::WarpSE3(const Eigen::Vector6d& x, const Eigen::MatrixXd& depth, std::shared_ptr<Camera> cam)
+
+    WarpSE3::WarpSE3(const Eigen::Vector6d& x, const Eigen::MatrixXd& depth, Camera::ConstShPtr camImg, Camera::ConstShPtr camTempl, const SE3d& templ2world)
     :_x(x)
-    ,_pose(Sophus::SE3d::exp(_x))
+    ,_world2img(Sophus::SE3d::exp(_x))
+    ,_templ2world(templ2world)
     ,_depth(depth)
-    ,_cam(cam)
+    ,_camImg(camImg)
+    ,_camTempl(camTempl)
     {
     }
+
     void WarpSE3::updateAdditive(const Eigen::Vector6d& dx)
     {
-        _pose = Sophus::SE3d::exp(dx) * _pose;
-        _x = _pose.log();
+        _world2img = Sophus::SE3d::exp(dx) * _world2img;
+        _x = _world2img.log();
     }
     void WarpSE3::updateCompositional(const Eigen::Vector6d& dx)
     {
         //TODO
-        _pose =  Sophus::SE3d::exp(dx)*_pose;
-        _x = _pose.log();
+        _world2img =  Sophus::SE3d::exp(dx)*_world2img;
+        _x = _world2img.log();
 
     }
     Eigen::Vector2d WarpSE3::apply(int u, int v) const { 
         if (std::isfinite(_depth(v,u)) && _depth(v,u) > 0)
         {
-            return _cam->camera2image( _pose * _cam->image2camera({u,v},_depth(v,u)));
+            return _camImg->camera2image( _world2img * _templ2world *_camTempl->image2camera({u,v},_depth(v,u)));
         }else{
             return {-1,-1};
         }
@@ -126,8 +130,8 @@ namespace pd{namespace vision{
         Eigen::Matrix<double,2,6> J = Eigen::Matrix<double,2,6>::Zero();
         if (std::isfinite(_depth(v,u)) && _depth(v,u) > 0)
         {
-            const Eigen::Vector3d pCcsRef = _cam->image2camera({u,v},_depth(v,u));
-            const Eigen::Matrix<double,2,6> j = _cam->J_xyz2uv(pCcsRef);  
+            const Eigen::Vector3d pCcsRef = _camTempl->image2camera({u,v},_depth(v,u));
+            const Eigen::Matrix<double,2,6> j = _camTempl->J_xyz2uv(pCcsRef);  
             return j;
         }else{
             return J;
@@ -136,20 +140,15 @@ namespace pd{namespace vision{
     void WarpSE3::setX(const Eigen::Vector6d& x)
     {
         _x = x;
-        _pose = Sophus::SE3d::exp(x);
+        _world2img = Sophus::SE3d::exp(x);
     }
     Eigen::Vector6d WarpSE3::x() const {return _x;}
     
-    const SE3d& WarpSE3::pose() const
+    SE3d WarpSE3::SE3() const
     {
-        return _pose;
+        return _world2img;
     }
 
-    WarpSE3 WarpSE3::resize(const WarpSE3& w, double scale)
-    {
-        auto camScaled = std::make_shared<Camera>(*w._cam);
-        camScaled->resize(scale);
-        return WarpSE3(w._x,algorithm::resize(w._depth,scale),camScaled);
-    }
+   
 
 }}

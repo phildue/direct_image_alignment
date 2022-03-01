@@ -9,9 +9,9 @@ class RgbdOdometryKalman {
         typedef std::shared_ptr<RgbdOdometryKalman> ShPtr;
         typedef std::shared_ptr<const RgbdOdometryKalman> ConstPtr;
 
-        RgbdOdometryKalman(Camera::ShPtr camera, double minGradient = 50, int nLevels = 4, int maxIterations = 20, double convergenceThreshold = 1e-4, double dampingFactor = 1.0);
+        RgbdOdometryKalman(double minGradient = 50, int nLevels = 4, int maxIterations = 20, double convergenceThreshold = 1e-4, double dampingFactor = 1.0);
 
-        SE3d estimate(const Image& fromRgb,const DepthMap& fromDepth, const Image& toRgb, std::uint64_t t) const;
+        PoseWithCovariance::UnPtr align(FrameRgbd::ConstShPtr from, FrameRgb::ConstShPtr to) const;
         private:
         const KalmanFilterSE3::UnPtr _filter;
         const RgbdOdometry::UnPtr _aligner;

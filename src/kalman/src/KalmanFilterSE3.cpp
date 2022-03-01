@@ -5,7 +5,7 @@
 * But try to estimate the velocity which we assume to be constant with some uncertainty (process noise)
 * Where we use the translation vector and the angle axis rotation as representation
 *
-* State x       [vx, vy, vz, avx, avy, avz]
+* State x       [px, py, pz, ax, ay, az, vx, vy, vz, avx, avy, avz]
 * Measurement z [dpx, dpy, dpz, dax, day, daz]
 *
 * H = [ dt, 0, 0, 0, 0, 0,
@@ -15,12 +15,13 @@
         0, 0, 0, 0, dt, 0,
         0, 0, 0, 0, 0, dt]
 
-* A = [ 1, 0, 0, 0, 0, 0, 
-        0, 1, 0, 0, 0, 0, 
-        0, 0, 1, 0, 0, 0,
-        0, 0, 0, 1, 0, 0,
-        0, 0, 0, 0, 1, 0,
-        0, 0, 0, 0, 0, 1]
+* A = [ 1, 0, 0, 0, 0, 0, dt, 0,  0,  0,  0,  0, 
+        0, 1, 0, 0, 0, 0, 0, dt,  0,  0,  0,  0,
+        0, 0, 1, 0, 0, 0, 0,  0, dt,  0,  0,  0,
+        0, 0, 0, 1, 0, 0, 0,  0,  0, dt,  0,  0,
+        0, 0, 0, 0, 1, 0, 0,  0,  0,  0, dt,  0,
+        0, 0, 0, 0, 0, 1, 0,  0,  0,  0,  0, dt,
+        ]
 *
 *
 *

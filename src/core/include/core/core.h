@@ -5,4 +5,6 @@
 #include "types.h"
 #include "Exceptions.h"
 #include "macros.h"
+#include "PoseWithCovariance.h"
+#include "Frame.h"
 #endif// VSLAM_CORE_H__

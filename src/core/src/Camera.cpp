@@ -51,7 +51,8 @@ namespace pd{
         Camera::Camera(double f, double cx, double cy)
         :Camera(f,f,cx,cy){}
 
-        Camera::Camera(double fx, double fy, double cx, double cy) {
+        Camera::Camera(double fx, double fy, double cx, double cy)
+         {
             _K << fx, 0, cx,
                0, fy, cy,
                0, 0, 1;

@@ -7,6 +7,8 @@
 
 #include <Eigen/Dense>
 #include <memory>
+
+#include "types.h"
 namespace pd{
     namespace vision {
 

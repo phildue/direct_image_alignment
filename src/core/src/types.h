@@ -36,6 +36,7 @@ namespace pd::vision{
     typedef Eigen::VectorXd VecXd;
     typedef Eigen::Vector2d Vec2d;
     typedef Eigen::Vector3d Vec3d;
+    typedef Eigen::Vector3d Vec4d;
     typedef Eigen::Vector6d Vec6d;
 
     typedef std::uint64_t Timestamp;

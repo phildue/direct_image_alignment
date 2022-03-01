@@ -4,12 +4,16 @@ project(core VERSION 1.0.0)
 set(sources
         src/Camera.cpp
         src/algorithm.cpp
+        src/PoseWithCovariance.cpp
         )
 
 set(headers
         src/Camera.h
         src/algorithm.h
         src/Exceptions.h
+        src/PoseWithCovariance.h
+        src/Frame.h
+
         include/core/core.h
         )
 pd_setup_lib(${PROJECT_NAME} ${PROJECT_VERSION} "${sources}" "${headers}" pd)
