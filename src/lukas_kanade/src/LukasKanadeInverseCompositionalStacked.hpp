@@ -41,6 +41,7 @@ namespace pd{namespace vision{
 
         std::vector<VecXd> rs(_frames.size()),ws(_frames.size());
         size_t nTotalRows = 0U;
+
         for ( size_t i = 0; i < _frames.size(); i++ )
         {
             VecXd rFrame, wFrame;

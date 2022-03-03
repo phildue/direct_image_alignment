@@ -19,18 +19,19 @@ namespace pd::vision
                 FrameRgb(const Image rgb, Camera::ConstShPtr cam, const Timestamp& t = 0U, const PoseWithCovariance& pose = {})
                 :_rgb(rgb),_cam(cam),_t(t),_pose(pose){}
 
-                const Image& rgb() const {return _rgb;}
-                const PoseWithCovariance& pose() const {return _pose;}
-                const Timestamp& t() const {return _t;}
-                Camera::ConstShPtr camera() const { return _cam; }
+                virtual const Image& rgb() const {return _rgb;}
+                virtual const PoseWithCovariance& pose() const {return _pose;}
+                virtual const Timestamp& t() const {return _t;}
+                virtual Camera::ConstShPtr camera() const { return _cam; }
+                virtual ~FrameRgb(){};
                 private:
                 Image _rgb;
                 Camera::ConstShPtr _cam;
                 Timestamp _t;
-                PoseWithCovariance _pose;
+                PoseWithCovariance _pose; //<< Pw = pose * Pf
         };
 
-        class FrameRgbd{
+        class FrameRgbd : public FrameRgb {
 
                 public:
 
@@ -40,19 +41,11 @@ namespace pd::vision
                 typedef std::unique_ptr<const FrameRgbd> ConstUnPtr;
                 
                 FrameRgbd(const Image rgb, const DepthMap& depth, Camera::ConstShPtr cam, const Timestamp& t = 0U, const PoseWithCovariance& pose = {})
-                :_rgb(rgb),_depth(depth),_cam(cam),_t(t),_pose(pose){}
+                :FrameRgb(rgb,cam,t,pose),_depth(depth){}
 
-                const Image& rgb() const {return _rgb;}
-                const PoseWithCovariance& pose() const {return _pose;}
-                const Timestamp& t() const {return _t;} 
-                const DepthMap& depth() const {return _depth;}
-                Camera::ConstShPtr camera() const { return _cam; }
+                virtual const DepthMap& depth() const {return _depth;}
                 private:
-                Image _rgb;
                 DepthMap _depth;
-                Camera::ConstShPtr _cam;
-                Timestamp _t;
-                PoseWithCovariance _pose;
 
         };
 } // namespace pd::vision

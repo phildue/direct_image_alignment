@@ -96,9 +96,9 @@ namespace pd{namespace vision{
     }
 
 
-    WarpSE3::WarpSE3(const Eigen::Vector6d& x, const Eigen::MatrixXd& depth, Camera::ConstShPtr camImg, Camera::ConstShPtr camTempl, const SE3d& templ2world)
-    :_x(x)
-    ,_world2img(Sophus::SE3d::exp(_x))
+    WarpSE3::WarpSE3(const SE3d& world2img, const Eigen::MatrixXd& depth, Camera::ConstShPtr camImg, Camera::ConstShPtr camTempl, const SE3d& templ2world)
+    :_x(world2img.log())
+    ,_world2img(world2img)
     ,_templ2world(templ2world)
     ,_depth(depth)
     ,_camImg(camImg)

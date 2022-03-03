@@ -16,7 +16,7 @@ namespace pd::vision{
 
         PoseWithCovariance::UnPtr RgbdOdometry::align(FrameRgbd::ConstShPtr from, FrameRgb::ConstShPtr to) const
         {
-;
+
                 //TODO use covariance
                 auto solver = std::make_unique<GaussNewton<LukasKanadeInverseCompositionalSE3>> ( 
                                 _dampingFactor,
@@ -34,9 +34,9 @@ namespace pd::vision{
                         auto depthScaled = algorithm::resize(from->depth(),s);
                         auto imageScaled = algorithm::resize(to->rgb(),s);
                         
-                        auto w = std::make_shared<WarpSE3>(pose.log(),depthScaled,
+                        auto w = std::make_shared<WarpSE3>(pose.inverse(),depthScaled,
                         Camera::resize(from->camera(),s),Camera::resize(to->camera(),s),
-                        from->pose().pose().inverse());
+                        from->pose().pose());
 
                         auto lk = std::make_shared<LukasKanadeInverseCompositionalSE3> (
                                 templScaled,
@@ -75,8 +75,9 @@ namespace pd::vision{
                         
                                 templs[j] = algorithm::resize(from[j]->rgb(),s);
                                 auto depthScaled = algorithm::resize(from[j]->depth(),s);
-                                warps[j] = std::make_shared<WarpSE3>(pose.log(), depthScaled,
-                                Camera::resize(from[j]->camera(),s), Camera::resize(to->camera(),s),from[j]->pose().pose().inverse());
+                                warps[j] = std::make_shared<WarpSE3>(pose.inverse(), depthScaled,
+                                Camera::resize(from[j]->camera(),s), Camera::resize(to->camera(),s),
+                                from[j]->pose().pose());
 
                                 
                         }

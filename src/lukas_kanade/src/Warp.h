@@ -51,7 +51,7 @@ class WarpSE3
 {
     public:
     inline constexpr static int nParameters = 6;
-    WarpSE3(const Eigen::Vector6d& x, const Eigen::MatrixXd& depth, Camera::ConstShPtr camImg, Camera::ConstShPtr camTempl, const SE3d& templ2world = {});
+    WarpSE3(const SE3d& world2img, const Eigen::MatrixXd& depth, Camera::ConstShPtr camImg, Camera::ConstShPtr camTempl, const SE3d& templ2world = {});
     void updateAdditive(const Eigen::Vector6d& dx);
     void updateCompositional(const Eigen::Vector6d& dx);
     Eigen::Vector2d apply(int u, int v) const ;

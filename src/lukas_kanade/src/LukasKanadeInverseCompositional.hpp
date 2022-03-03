@@ -17,7 +17,7 @@ namespace pd{namespace vision{
     , _minGradient(minGradient)
     {
         Eigen::MatrixXd steepestDescent = Eigen::MatrixXd::Zero(_T.rows(),_T.cols());
-
+        
         int idxPixel = 0;
         for (int v = 0; v < _T.rows(); v++)
         {
