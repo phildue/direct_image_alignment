@@ -17,7 +17,7 @@ namespace pd{namespace vision{
     ,_maxIterations(maxIterations)
 
     {
-        Log::get("solver");
+        Log::get("solver",SOLVER_CFG_DIR"/log/solver.conf");
         _chi2 = Eigen::VectorXd::Zero(_maxIterations);
         _stepSize = Eigen::VectorXd::Zero(_maxIterations);
         _x = Eigen::MatrixXd::Zero(_maxIterations,Problem::nParameters);

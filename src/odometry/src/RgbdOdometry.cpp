@@ -11,7 +11,7 @@ namespace pd::vision{
         , _dampingFactor(dampingFactor)
         , _loss( std::make_unique<HuberLoss> ( 10 ))
         {
-                Log::get("odometry");
+                Log::get("odometry",ODOMETRY_CFG_DIR"/log/odometry.conf");
         }
 
         PoseWithCovariance::UnPtr RgbdOdometry::align(FrameRgbd::ConstShPtr from, FrameRgb::ConstShPtr to) const
