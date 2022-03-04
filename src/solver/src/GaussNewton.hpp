@@ -49,7 +49,8 @@ namespace pd{namespace vision{
          
             LOG_PLT("ErrorDistribution") << std::make_shared<vis::Histogram>(r,"Residuals");
 
-            _chi2(_i) = r.transpose() * W * r;
+            _chi2(_i) = (r.transpose() * W * r);
+            _chi2(_i) /= r.rows();
             const double dChi2 = _i > 0 ? _chi2(_i)-_chi2(_i-1) : 0;
             if (_i > 0 && dChi2 > 0)
             {
@@ -70,6 +71,8 @@ namespace pd{namespace vision{
             problem->extendRight(gradient);//User can provide additional conditions TODO find better name?
 
             SOLVER(DEBUG) << _i << " > Grad.:\n" << gradient.transpose() ;
+            _H /= r.rows();
+            gradient /= r.rows();
 
             dx = _alpha * _H.ldlt().solve( gradient );
 

@@ -11,7 +11,7 @@ class RgbdOdometry{
         typedef std::shared_ptr<const RgbdOdometry> ConstShPtr;
         typedef std::unique_ptr<const RgbdOdometry> ConstUnPtr;
 
-        RgbdOdometry(double minGradient = 50, int nLevels = 4, int maxIterations = 20, double convergenceThreshold = 1e-4, double dampingFactor = 1.0);
+        RgbdOdometry(double minGradient = 0, int nLevels = 4, int maxIterations = 30, double convergenceThreshold = 1e-9, double dampingFactor = 1.0);
 
         PoseWithCovariance::UnPtr align(FrameRgbd::ConstShPtr from, FrameRgb::ConstShPtr to) const;
         PoseWithCovariance::UnPtr align(std::vector<FrameRgbd::ConstShPtr>& from,  FrameRgb::ConstShPtr to) const;

@@ -9,7 +9,7 @@ namespace pd::vision{
         , _minGradient(minGradient)
         , _convergenceThreshold(convergenceThreshold)
         , _dampingFactor(dampingFactor)
-        , _loss( std::make_unique<HuberLoss> ( 10 ))
+        , _loss( std::make_unique<TukeyLoss> ())
         {
                 Log::get("odometry",ODOMETRY_CFG_DIR"/log/odometry.conf");
         }
