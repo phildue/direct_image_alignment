@@ -18,7 +18,7 @@ class Loss
         typedef std::shared_ptr<const Loss> ConstShPtr;
         typedef std::unique_ptr<const Loss> ConstUnPtr;
 
-         //l(r)
+        //l(r)
         virtual double compute(double r) const = 0;
         //dl/dr
         virtual double computeDerivative(double r) const = 0;
