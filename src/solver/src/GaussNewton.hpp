@@ -82,7 +82,7 @@ namespace pd{namespace vision{
             _x.row(_i) = problem->x();
             _stepSize(_i) = dx.norm();
 
-            SOLVER( INFO ) << "Iteration: " << _i << " chi2: " << _chi2(_i) << " dChi2: " << dChi2 << " stepSize: " << _stepSize(_i) << " Points: " << r.rows() << " x: " << problem->x().transpose();
+            SOLVER( INFO ) << "Iteration: " << _i << " chi2: " << _chi2(_i) << " dChi2: " << dChi2 << " stepSize: " << _stepSize(_i) << " Points: " << r.rows() << " x: " << problem->x().transpose() << " dx: " << dx.transpose();
             if ( _i > 0 && (_stepSize(_i) < _minStepSize || std::abs(gradient.maxCoeff()) < _minGradient || std::abs(dChi2) < _minReduction) )
             { 
                 SOLVER( INFO ) << _i << " > " << _stepSize(_i) << "/" << _minStepSize << " CONVERGED. ";
