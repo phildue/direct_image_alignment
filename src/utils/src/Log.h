@@ -120,13 +120,13 @@ namespace pd{ namespace vision{
   
     class Log {
     public:
-    static std::shared_ptr<Log> get(const std::string& name,Level level = el::Level::Info);
+    static std::shared_ptr<Log> get(const std::string& name, const std::string& configFilePath, Level level = el::Level::Info);
     static std::shared_ptr<LogImage> getImageLog(const std::string& name, Level level = el::Level::Info);
     static std::shared_ptr<LogPlot> getPlotLog(const std::string& name, Level level);
     static Level _showLevel;
     static Level _blockLevel;
     
-    Log(const std::string& name);
+    Log(const std::string& name, const std::string& configFilePath);
 
      private:
 

@@ -3,15 +3,16 @@
 
 namespace pd::vision{
 
-        RgbdOdometry::RgbdOdometry(double minGradient, int nLevels, int maxIterations, double convergenceThreshold, double dampingFactor)
-        : _nLevels(nLevels)
+        RgbdOdometry::RgbdOdometry(double minGradient, int levelMax, int levelMin, int maxIterations, double convergenceThreshold, Loss::ShPtr loss, double dampingFactor)
+        : _levelMax(levelMax)
+        , _levelMin(levelMin)
         , _maxIterations(maxIterations)
         , _minGradient(minGradient)
         , _convergenceThreshold(convergenceThreshold)
         , _dampingFactor(dampingFactor)
-        , _loss( std::make_unique<HuberLoss> ( 10 ))
+        , _loss( loss ) 
         {
-                Log::get("odometry");
+                Log::get("odometry",ODOMETRY_CFG_DIR"/log/odometry.conf");
         }
 
         PoseWithCovariance::UnPtr RgbdOdometry::align(FrameRgbd::ConstShPtr from, FrameRgb::ConstShPtr to) const
@@ -24,7 +25,7 @@ namespace pd::vision{
                                 _maxIterations);
 
                 SE3d pose = to->pose().pose();
-                for(int i = _nLevels; i > 0; i--)
+                for(int i = _levelMax; i >= std::max(_levelMin, 1); i--)
                 {
                         TIMED_SCOPE(timerI,"align at level ( " + std::to_string(i) + " )");
 
@@ -59,7 +60,7 @@ namespace pd::vision{
               
                 //TODO use covariance
                 SE3d pose = to->pose().pose();
-                for(int i = _nLevels; i > 0; i--)
+                for(int i = _levelMax; i >= _levelMin; i--)
                 {
                         TIMED_SCOPE(timerI,"align at level ( " + std::to_string(i) + " )");
                        

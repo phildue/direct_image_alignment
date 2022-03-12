@@ -10,7 +10,7 @@ namespace pd::vision{
         :_filter(std::make_unique<KalmanFilterSE3>( Matd<6,6>::Identity() * 1.1, Matd<6,1>::Zero()))
         ,_aligner(std::make_unique<RgbdOdometry>(minGradient, nLevels, maxIterations, convergenceThreshold, dampingFactor ))
         {
-                Log::get("odometry");
+                Log::get("odometry",ODOMETRY_CFG_DIR"/log/odometry.conf");
 
         }
        

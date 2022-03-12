@@ -30,7 +30,9 @@ public:
     Eigen::Matrix<double,Warp::nParameters,1> x() const {return _w->x();}
 
 protected:
-
+    struct InterestPoint{
+            uint32_t u,v,idx;
+        };
     const Image _T;
     const Image _Iref;
     const std::shared_ptr<Warp> _w;
@@ -39,6 +41,7 @@ protected:
     const MatXi _dTx,_dTy;
     MatXd _dTxy;
     const double _minGradient;
+    std::vector<InterestPoint> _interestPoints;
 
 };
 

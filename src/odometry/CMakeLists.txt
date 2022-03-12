@@ -16,6 +16,10 @@ set(headers
 
 pd_setup_lib(${PROJECT_NAME} ${PROJECT_VERSION} "${sources}" "${headers}" pd)
 
+target_compile_definitions(${PROJECT_NAME} PUBLIC 
+$<BUILD_INTERFACE:ODOMETRY_CFG_DIR="${CMAKE_CURRENT_LIST_DIR}/cfg">
+$<INSTALL_INTERFACE:ODOMETRY_CFG_DIR="/share/vslam/cfg">)
+
 target_link_libraries(${PROJECT_NAME} kalman lukas_kanade utils core)
 
 target_link_libraries(${PROJECT_NAME} core utils solver)

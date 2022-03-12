@@ -44,9 +44,7 @@ target_link_libraries(${PROJECT_NAME} matplotlib_cpp::matplotlib_cpp)
 target_compile_definitions(${PROJECT_NAME} PUBLIC 
 $<BUILD_INTERFACE:LOG_DIR="${CMAKE_BINARY_DIR}/log">
 $<INSTALL_INTERFACE:LOG_DIR="/tmp/vslam/log">)
-target_compile_definitions(${PROJECT_NAME} PUBLIC 
-$<BUILD_INTERFACE:CFG_DIR="${CMAKE_CURRENT_LIST_DIR}/cfg/log">
-$<INSTALL_INTERFACE:CFG_DIR="/share/vslam/cfg/log">)
+
 
 install(DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/cfg/
     DESTINATION share/vslam/cfg/

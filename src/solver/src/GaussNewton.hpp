@@ -17,7 +17,7 @@ namespace pd{namespace vision{
     ,_maxIterations(maxIterations)
 
     {
-        Log::get("solver");
+        Log::get("solver",SOLVER_CFG_DIR"/log/solver.conf");
         _chi2 = Eigen::VectorXd::Zero(_maxIterations);
         _stepSize = Eigen::VectorXd::Zero(_maxIterations);
         _x = Eigen::MatrixXd::Zero(_maxIterations,Problem::nParameters);
@@ -49,7 +49,8 @@ namespace pd{namespace vision{
          
             LOG_PLT("ErrorDistribution") << std::make_shared<vis::Histogram>(r,"Residuals");
 
-            _chi2(_i) = r.transpose() * W * r;
+            _chi2(_i) = (r.transpose() * W * r);
+            _chi2(_i) /= r.rows();
             const double dChi2 = _i > 0 ? _chi2(_i)-_chi2(_i-1) : 0;
             if (_i > 0 && dChi2 > 0)
             {
@@ -70,6 +71,8 @@ namespace pd{namespace vision{
             problem->extendRight(gradient);//User can provide additional conditions TODO find better name?
 
             SOLVER(DEBUG) << _i << " > Grad.:\n" << gradient.transpose() ;
+            _H /= r.rows();
+            gradient /= r.rows();
 
             dx = _alpha * _H.ldlt().solve( gradient );
 
@@ -79,7 +82,7 @@ namespace pd{namespace vision{
             _x.row(_i) = problem->x();
             _stepSize(_i) = dx.norm();
 
-            SOLVER( INFO ) << "Iteration: " << _i << " chi2: " << _chi2(_i) << " dChi2: " << dChi2 << " stepSize: " << _stepSize(_i) << " Points: " << r.rows() << " x: " << problem->x().transpose();
+            SOLVER( INFO ) << "Iteration: " << _i << " chi2: " << _chi2(_i) << " dChi2: " << dChi2 << " stepSize: " << _stepSize(_i) << " Points: " << r.rows() << " x: " << problem->x().transpose() << " dx: " << dx.transpose();
             if ( _i > 0 && (_stepSize(_i) < _minStepSize || std::abs(gradient.maxCoeff()) < _minGradient || std::abs(dChi2) < _minReduction) )
             { 
                 SOLVER( INFO ) << _i << " > " << _stepSize(_i) << "/" << _minStepSize << " CONVERGED. ";

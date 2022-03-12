@@ -131,7 +131,7 @@ namespace pd{namespace vision{
         if (std::isfinite(_depth(v,u)) && _depth(v,u) > 0)
         {
             const Eigen::Vector3d pCcsRef = _camTempl->image2camera({u,v},_depth(v,u));
-            const Eigen::Matrix<double,2,6> j = _camTempl->J_xyz2uv(pCcsRef);  
+            const Eigen::Matrix<double,2,6> j = _camTempl->J_xyz2uv(pCcsRef); 
             return j;
         }else{
             return J;
