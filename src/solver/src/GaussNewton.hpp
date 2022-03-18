@@ -4,8 +4,8 @@
 #include "core/core.h"
 namespace pd::vslam::solver{
 
-    template<typename Problem>
-    GaussNewton<Problem>::GaussNewton(
+    template<int nParameters>
+    GaussNewton<nParameters>::GaussNewton(
             double alpha,
             double minStepSize,
             int maxIterations
@@ -20,22 +20,22 @@ namespace pd::vslam::solver{
         vision::Log::get("solver",SOLVER_CFG_DIR"/log/solver.conf");
         _chi2 = Eigen::VectorXd::Zero(_maxIterations);
         _stepSize = Eigen::VectorXd::Zero(_maxIterations);
-        _x = Eigen::MatrixXd::Zero(_maxIterations,Problem::nParameters);
+        _x = Eigen::MatrixXd::Zero(_maxIterations,nParameters);
         _i = 0;
     }
   
 
-    template<typename Problem>
-    void GaussNewton<Problem>::solve(std::shared_ptr< Problem> problem) {
+    template<int nParameters>
+    void GaussNewton<nParameters>::solve(std::shared_ptr< Problem<nParameters> > problem) {
         
-        SOLVER( INFO ) << "Solving Problem for " << Problem::nParameters << " parameters.";
+        SOLVER( INFO ) << "Solving Problem for " << nParameters << " parameters.";
         TIMED_FUNC(timerF);
         _chi2.setZero();
         _stepSize.setZero();
         _x.setZero();
-        Eigen::Vector<double, Problem::nParameters> dx;
-        Mmxn J = vision::MatXd::Zero(problem->nConstraints(),Problem::nParameters);
-        problem->computeJacobian(J);
+        Eigen::Vector<double, nParameters> dx;
+        Mmxn J = vision::MatXd::Zero(problem->nConstraints(),nParameters);
+        problem->computeJacobian(J,0U);
         Eigen::VectorXd r = vision::VecXd::Zero(problem->nConstraints()), w = vision::VecXd::Zero(problem->nConstraints());
         for(_i = 0; _i < _maxIterations; _i++ )
         {
@@ -46,7 +46,7 @@ namespace pd::vslam::solver{
             // This can be solved with cholesky decomposition (Ax = b)
             // Where A = (JWJ + lambda * I), x = dx, b = JWr
 
-            problem->computeResidual(r,w);
+            problem->computeResidual(r,w,0U);
             const auto W = w.asDiagonal();
          
             LOG_PLT("ErrorDistribution") << std::make_shared<vision::vis::Histogram>(r,"Residuals");
@@ -62,7 +62,7 @@ namespace pd::vslam::solver{
             }
             if(problem->newJacobian())
             {
-                problem->computeJacobian(J);
+                problem->computeJacobian(J,0U);
             }
             // For GN / LM we drop the second part of the Hessian
             _H  = (J.transpose() * W * J);
@@ -71,7 +71,7 @@ namespace pd::vslam::solver{
         
             SOLVER(DEBUG) << _i << " > H.:\n" << _H;
         
-            Eigen::VectorXd gradient = J.transpose() * W * r;
+            Eigen::Vector<double,nParameters> gradient = J.transpose() * W * r;
             problem->extendRight(gradient);//User can provide additional conditions TODO find better name?
 
             SOLVER(DEBUG) << _i << " > Grad.:\n" << gradient.transpose() ;

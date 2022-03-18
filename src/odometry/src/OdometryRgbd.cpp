@@ -3,13 +3,11 @@
 #define LOG_ODOM(level) CLOG(level,"odometry")
 namespace pd::vision{
 
-        OdometryRgbd::OdometryRgbd(double minGradient,  const std::vector<double>& levels, int maxIterations, double convergenceThreshold, vslam::solver::Loss::ShPtr loss, vslam::solver::Scaler::ShPtr scaler, Map::ConstShPtr map, double dampingFactor)
-        : _maxIterations(maxIterations)
-        , _minGradient(minGradient)
-        , _convergenceThreshold(convergenceThreshold)
-        , _dampingFactor(dampingFactor)
+        OdometryRgbd::OdometryRgbd(double minGradient,  const std::vector<double>& levels, vslam::solver::Solver<6>::ShPtr solver, vslam::solver::Loss::ShPtr loss, vslam::solver::Scaler::ShPtr scaler, Map::ConstShPtr map)
+        : _minGradient(minGradient)
         , _loss( loss ) 
         , _scaler ( scaler )
+        , _solver ( solver )
         , _levels(levels)
         , _lastFrame(nullptr)
         , _speed(std::make_shared<PoseWithCovariance>(SE3d(),MatXd::Identity(6,6)))
@@ -45,11 +43,6 @@ namespace pd::vision{
         {
 
                 //TODO use covariance
-                auto solver = std::make_unique<vslam::solver::GaussNewton<LukasKanadeInverseCompositionalSE3>> ( 
-                                _dampingFactor,
-                                _convergenceThreshold,
-                                _maxIterations);
-
                 SE3d pose = to->pose().pose();
                 for(const auto& level : _levels)
                 {
@@ -67,7 +60,7 @@ namespace pd::vision{
                         Camera::resize(from->camera(),s),Camera::resize(to->camera(),s),
                         from->pose().pose());
 
-                        auto lk = std::make_shared<LukasKanadeInverseCompositionalSE3> (
+                        vslam::solver::Problem<6>::ShPtr lk = std::make_shared<LukasKanadeInverseCompositionalSE3> (
                                 templScaled,
                                 dTx, dTy,
                                 imageScaled,
@@ -76,21 +69,16 @@ namespace pd::vision{
                                 _minGradient,
                                 _scaler);
 
-                        solver->solve(lk);
+                        _solver->solve(lk);
                         
                         pose = w->SE3().inverse();
                         LOG_ODOM(INFO) << "Aligned level: "<< s << " image size: ["<< templScaled.cols() << "," << templScaled.rows() <<"]";
                     
                 }
-                return std::make_unique<PoseWithCovariance>( pose, solver->cov() );
+                return std::make_unique<PoseWithCovariance>( pose, _solver->cov() );
         }
         PoseWithCovariance::UnPtr OdometryRgbd::align(const std::vector<FrameRgbd::ConstShPtr>& from,  FrameRgb::ConstShPtr to) const
         {
-                auto solver = (std::make_unique<vslam::solver::GaussNewton<LukasKanadeInverseCompositionalStackedSE3>> ( 
-                                _dampingFactor,
-                                _convergenceThreshold,
-                                _maxIterations));
-              
                 //TODO use covariance
                 SE3d pose = to->pose().pose();
                 for(const auto& level : _levels)
@@ -119,19 +107,19 @@ namespace pd::vision{
 
                                 
                         }
-                        auto lk = std::make_shared<LukasKanadeInverseCompositionalStackedSE3> (
+                        vslam::solver::Problem<6>::ShPtr lk = std::make_shared<LukasKanadeInverseCompositionalStackedSE3> (
                                         templs,
                                         dTxs,dTys,
                                         imageScaled,
                                         warps,_loss,_minGradient,_scaler);
 
-                        solver->solve(lk);
+                        _solver->solve(lk);
                         
                         pose = warps[0]->SE3().inverse();
                         
                     
                 }
-                return std::make_unique<PoseWithCovariance>( pose, solver->cov() );
+                return std::make_unique<PoseWithCovariance>( pose, _solver->cov() );
         }
 
 

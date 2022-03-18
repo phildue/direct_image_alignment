@@ -6,6 +6,7 @@ namespace pd{namespace vision{
 
     template<typename Warp>
     LukasKanadeInverseCompositionalStacked<Warp>::LukasKanadeInverseCompositionalStacked (const std::vector<Image>& templ,const std::vector<MatXi>& dTx, const std::vector<MatXi>& dTy, const Image& image,const std::vector<std::shared_ptr<Warp>>& w0, std::shared_ptr<vslam::solver::Loss> l, double minGradient,vslam::solver::Scaler::ShPtr scaler)
+    : vslam::solver::Problem<SE3d::DoF>()
     {
         if ( templ.size() != w0.size() )
         {
@@ -21,7 +22,7 @@ namespace pd{namespace vision{
     }
 
     template<typename Warp>
-    void LukasKanadeInverseCompositionalStacked<Warp>::computeResidual(Eigen::VectorXd& r, Eigen::VectorXd& w)
+    void LukasKanadeInverseCompositionalStacked<Warp>::computeResidual(Eigen::VectorXd& r, Eigen::VectorXd& w, size_t offset)
     {
         size_t idx = 0U;
         for ( size_t i = 0; i < _frames.size(); i++ )
@@ -35,32 +36,30 @@ namespace pd{namespace vision{
     // J = Ixy*dW/dp
     //
     template<typename Warp>
-    bool LukasKanadeInverseCompositionalStacked<Warp>::computeJacobian(Eigen::Matrix<double, -1,Warp::nParameters>& j)
+    void LukasKanadeInverseCompositionalStacked<Warp>::computeJacobian(Eigen::Matrix<double, -1,Warp::nParameters>& J, size_t offset)
     {
         size_t idx = 0U;
         for ( size_t i = 0; i < _frames.size(); i++ )
         {
-            _frames[i]->computeJacobian(j,idx);
+            _frames[i]->computeJacobian(J,idx);
             idx += _frames[i]->nConstraints();
         }
-        return true;
     }
 
     template<typename Warp>
-    bool LukasKanadeInverseCompositionalStacked<Warp>::updateX(const Eigen::Matrix<double,Warp::nParameters,1>& dx)
+    void LukasKanadeInverseCompositionalStacked<Warp>::updateX(const Eigen::Matrix<double,Warp::nParameters,1>& dx)
     {
         for ( auto& f : _frames )
         {
             f->updateX(dx);
         }
-        return true;
     }
 
     template<typename Warp>
-    void LukasKanadeInverseCompositionalStacked<Warp>::extendLeft(Eigen::MatrixXd& UNUSED(H))
+    void LukasKanadeInverseCompositionalStacked<Warp>::extendLeft(Eigen::Matrix<double,Warp::nParameters,Warp::nParameters>& UNUSED(JWJ))
     {}
     template<typename Warp>
-    void LukasKanadeInverseCompositionalStacked<Warp>::extendRight(Eigen::VectorXd& UNUSED(g))
+    void LukasKanadeInverseCompositionalStacked<Warp>::extendRight(Eigen::Vector<double,Warp::nParameters>& UNUSED(JWr))
     {}
 
 }}

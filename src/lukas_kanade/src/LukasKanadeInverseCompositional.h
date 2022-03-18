@@ -8,33 +8,26 @@ namespace pd{namespace vision{
 
 
 template<typename Warp>
-class LukasKanadeInverseCompositional{
+class LukasKanadeInverseCompositional : public vslam::solver::Problem<Warp::nParameters>{
 public:
     inline constexpr static int nParameters = Warp::nParameters;
     LukasKanadeInverseCompositional (const Image& templ, const MatXi dX, const MatXi dY, const Image& image, std::shared_ptr<Warp> w0, vslam::solver::Loss::ShPtr = std::make_shared<vslam::solver::QuadraticLoss>(), double minGradient = 0, vslam::solver::Scaler::ShPtr scaler = std::make_shared<vslam::solver::Scaler>());
 
     LukasKanadeInverseCompositional (const Image& templ, const Image& image, std::shared_ptr<Warp> w0, vslam::solver::Loss::ShPtr = std::make_shared<vslam::solver::QuadraticLoss>(), double minGradient = 0, vslam::solver::Scaler::ShPtr scaler = std::make_shared<vslam::solver::Scaler>());
     const std::shared_ptr<const Warp> warp();
-    size_t nConstraints() const { return _interestPoints.size();}
-    bool newJacobian() const {return false;}
-      //
-    // r = T(x) - I(W(x,p))
-    //
-    void computeResidual(Eigen::VectorXd& r, Eigen::VectorXd& w);
-    void computeResidual(Eigen::VectorXd& r, Eigen::VectorXd& w, size_t offset);
-    double computeResidual(size_t idx);
-    //
-    // J = Ixy*dW/dp
-    //
-    bool computeJacobian(Eigen::Matrix<double,-1,Warp::nParameters>& j) ;
-    bool computeJacobian(Eigen::Matrix<double,-1,Warp::nParameters>& J, size_t offset) ;
+    
+    size_t nConstraints() const override{ return _interestPoints.size();}
+    
+    bool newJacobian() const override{return false;}
+    void computeResidual(Eigen::VectorXd& r, Eigen::VectorXd& w, size_t offset) override;
+    void computeJacobian(Eigen::Matrix<double,-1,Warp::nParameters>& J, size_t offset) override;
 
-    bool updateX(const Eigen::Matrix<double,Warp::nParameters,1>& dx);
+    void updateX(const Eigen::Matrix<double,Warp::nParameters,1>& dx) override;
 
-    void extendLeft(Eigen::MatrixXd& H);
-    void extendRight(Eigen::VectorXd& g);
+    void extendLeft(Eigen::Matrix<double,Warp::nParameters,Warp::nParameters>& JWJ) override;
+    void extendRight(Eigen::Vector<double,Warp::nParameters>& JWr) override;
 
-    Eigen::Matrix<double,Warp::nParameters,1> x() const {return _w->x();}
+    Eigen::Matrix<double,Warp::nParameters,1> x() const override{return _w->x();}
 
 protected:
     struct InterestPoint{

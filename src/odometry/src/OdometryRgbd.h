@@ -16,11 +16,10 @@ class OdometryRgbd : public Odometry{
 
         OdometryRgbd(double minGradient,
          const std::vector<double>& levels,
-         int maxIterations, double convergenceThreshold,
+         vslam::solver::Solver<6>::ShPtr solver,
          vslam::solver::Loss::ShPtr loss,
          vslam::solver::Scaler::ShPtr scaler,
-         Map::ConstShPtr map,
-         double dampingFactor = 1.0
+         Map::ConstShPtr map
          );
 
         void update(FrameRgbd::ConstShPtr frame) override;
@@ -33,12 +32,10 @@ class OdometryRgbd : public Odometry{
         PoseWithCovariance::UnPtr align(FrameRgbd::ConstShPtr from, FrameRgb::ConstShPtr to) const;
         PoseWithCovariance::UnPtr align(const std::vector<FrameRgbd::ConstShPtr>& from,  FrameRgb::ConstShPtr to) const;
 
-        const int _maxIterations;
         const double _minGradient;
-        const double _convergenceThreshold;
-        const double _dampingFactor;
         const vslam::solver::Loss::ShPtr _loss;
         const vslam::solver::Scaler::ShPtr _scaler;
+        const vslam::solver::Solver<6>::ShPtr _solver;
         const std::vector< double > _levels;
         FrameRgbd::ConstShPtr _lastFrame;
         PoseWithCovariance::ConstShPtr _speed;
