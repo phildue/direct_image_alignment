@@ -2,14 +2,18 @@ cmake_minimum_required(VERSION 3.8)
 project(odometry VERSION 1.0.0)
 
 set(sources
-        src/RgbdOdometry.cpp
-        src/RgbdOdometryKalman.cpp
+        src/MotionPrediction.cpp
+        src/KeyFrameSelection.cpp
+        src/Odometry.cpp
+        src/OdometryRgbd.cpp
       #  src/PlotSE3.cpp
         )
 
 set(headers
-        src/RgbdOdometry.h
-        src/RgbdOdometryKalman.h
+        src/MotionPrediction.h
+        src/KeyFrameSelection.h
+        src/Odometry.h
+        src/OdometryRgbd.h
        # src/PlotSE3.h
         include/odometry/odometry.h
         )

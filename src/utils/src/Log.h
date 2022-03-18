@@ -21,8 +21,8 @@
 #define IMAGE_ALIGNMENT(loglevel) CLOG(loglevel, "image_alignment")
 #define SOLVER(loglevel) CLOG(loglevel, "solver")
 
-#define LOG_IMG(name) Log::getImageLog(name,Level::Debug)
-#define LOG_PLT(name) Log::getPlotLog(name,Level::Debug)
+#define LOG_IMG(name) pd::vision::Log::getImageLog(name,pd::vision::Level::Debug)
+#define LOG_PLT(name) pd::vision::Log::getPlotLog(name,pd::vision::Level::Debug)
 
 
 namespace pd{ namespace vision{

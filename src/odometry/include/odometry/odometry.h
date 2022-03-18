@@ -1,7 +1,9 @@
 #ifndef VSLAM_ODOMETRY_H__
 #define VSLAM_ODOMETRY_H__
 
-#include "RgbdOdometry.h"
-#include "RgbdOdometryKalman.h"
-
+#include "OdometryRgbd.h"
+#include "MotionPrediction.h"
+#include "KeyFrameSelection.h"
+#include "Odometry.h"
+#include "Map.h"
 #endif

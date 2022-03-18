@@ -26,7 +26,6 @@ namespace pd{
             Eigen::Vector3d image2ray(const Eigen::Vector2d &pImage) const;
             void resize(double s);
 
-            Eigen::Matrix<double,2,6> J_xyz2uv(const Eigen::Vector3d &pCamera, double scale = 1) const;
             const double& focalLength() const {return _K(0,0);}
             const double& fx() const {return _K(0,0);}
             const double& fy() const {return _K(1,1);}

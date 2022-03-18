@@ -6,18 +6,17 @@
 namespace pd{namespace vision{
 
     template<typename Warp>
-    LukasKanadeInverseCompositional<Warp>::LukasKanadeInverseCompositional (const Image& templ, const Image& image,std::shared_ptr<Warp> w0, std::shared_ptr<Loss> l, double minGradient)
+    LukasKanadeInverseCompositional<Warp>::LukasKanadeInverseCompositional (const Image& templ,const MatXi dTx, const MatXi dTy, const Image& image,std::shared_ptr<Warp> w0, std::shared_ptr<vslam::solver::Loss> l, double minGradient, vslam::solver::Scaler::ShPtr scaler)
     : _T(templ)
-    , _Iref(image)
+    , _I(image)
     , _w(w0)
-    , _J(Eigen::MatrixXd::Zero(_Iref.rows()*_Iref.cols(),Warp::nParameters))
     , _l(l)
-    , _dTx(algorithm::gradX(templ))
-    , _dTy(algorithm::gradY(templ))
-    , _dTxy(MatXd::Zero(_Iref.rows(),_Iref.cols()))
+    , _scaler(scaler)
+    , _dTx(dTx)
+    , _dTy(dTy)
+    , _dTxy(MatXd::Zero(_I.rows(),_I.cols()))
     , _minGradient(minGradient)
     {
-        Eigen::MatrixXd steepestDescent = Eigen::MatrixXd::Zero(_T.rows(),_T.cols());
         //TODO this could come from some external feature selector
         //TODO move dTx, dTy computation outside
         _interestPoints.reserve(_T.rows() *_T.cols());
@@ -34,75 +33,79 @@ namespace pd{namespace vision{
                     
             }
         }
-        _J.conservativeResize(_interestPoints.size(), Eigen::NoChange);
-        std::for_each(std::execution::par_unseq,_interestPoints.begin(),_interestPoints.end(),[&](auto kp)
-            {
-                const Eigen::Matrix<double, 2,nParameters> Jwarp = _w->J(kp.u,kp.v);
-                        
-                auto j = _dTx(kp.v, kp.u) * Jwarp.row(0) + _dTy(kp.v,kp.u) * Jwarp.row(1);
-                steepestDescent(kp.v,kp.u) = j.norm();
-                _J.row(kp.idx) = j;
-            }
-        );
-
-        LOG_IMG("DTX") << _dTx;
-        LOG_IMG("DTY") << _dTy;
-        LOG_IMG("SteepestDescent") << steepestDescent;
     }
+    template<typename Warp>
+    LukasKanadeInverseCompositional<Warp>::LukasKanadeInverseCompositional (const Image& templ, const Image& image,std::shared_ptr<Warp> w0, std::shared_ptr<vslam::solver::Loss> l, double minGradient, vslam::solver::Scaler::ShPtr scaler)
+    : LukasKanadeInverseCompositional<Warp> (templ, algorithm::gradX(templ), algorithm::gradY(templ), image, w0, l, minGradient, scaler){}
 
     template<typename Warp>
     void LukasKanadeInverseCompositional<Warp>::computeResidual(Eigen::VectorXd& r, Eigen::VectorXd& w)
     {
-
+        computeResidual(r,w,0);
+    }
+    template<typename Warp>
+    void LukasKanadeInverseCompositional<Warp>::computeResidual(Eigen::VectorXd& r, Eigen::VectorXd& w, size_t offset)
+    {
+        Image IWxp = Image::Zero(_I.rows(),_I.cols());
         Eigen::MatrixXd rImg = Eigen::MatrixXd::Zero(_T.rows(),_T.cols());
         Eigen::MatrixXd wImg = Eigen::MatrixXd::Zero(_T.rows(),_T.cols());
-        Image IWxp = Image::Zero(_Iref.rows(),_Iref.cols());
-        std::vector<double> validRs(_interestPoints.size());
-        
-        r.conservativeResize(_interestPoints.size());
-        w.conservativeResize(_interestPoints.size());
-
-        w.setZero();
-        r.setZero();
-
+      
         std::for_each(std::execution::par_unseq,_interestPoints.begin(),_interestPoints.end(),[&](auto kp)
             {
                 Eigen::Vector2d uvWarped = _w->apply(kp.u,kp.v);
-                if (1 < uvWarped.x() && uvWarped.x() < _Iref.cols() -1  &&
-                1 < uvWarped.y() && uvWarped.y() < _Iref.rows()-1)
+                if (1 < uvWarped.x() && uvWarped.x() < _I.cols() -1  &&
+                1 < uvWarped.y() && uvWarped.y() < _I.rows()-1)
                 {
                     // TODO just fill images and reshape at the end?
-                    IWxp(kp.v,kp.u) =  algorithm::bilinearInterpolation(_Iref,uvWarped.x(),uvWarped.y());
-                    r(kp.idx) = IWxp(kp.v,kp.u) - _T(kp.v,kp.u);
+                    IWxp(kp.v,kp.u) =  algorithm::bilinearInterpolation(_I,uvWarped.x(),uvWarped.y());
+                    r(offset + kp.idx) = IWxp(kp.v,kp.u) - _T(kp.v,kp.u);
                     rImg(kp.v,kp.u) = r(kp.idx);
                     wImg(kp.v,kp.u) = 1.0;
-                    validRs[kp.idx] = r(kp.idx);
                 }else{
-                    validRs[kp.idx] = std::numeric_limits<double>::quiet_NaN();
+                    r(offset + kp.idx) = std::numeric_limits<double>::quiet_NaN();
                 }
             }
         );
-        validRs.erase(std::remove_if(validRs.begin(),validRs.end(),[](auto vR){ return !std::isfinite(vR); }),validRs.end());
-
-        const Eigen::Map<Eigen::VectorXd> rValid(validRs.data(),validRs.size());
-        double median = algorithm::median(rValid);
-        const auto stddev = (rValid.array() - median).array().abs().sum()/(rValid.rows() - 1);
-        const Eigen::VectorXd rScaled = (r.array() - median)/stddev;
+       
+        const Eigen::VectorXd rScaled = _scaler->scale(r); 
 
         std::for_each(std::execution::par_unseq,_interestPoints.begin(),_interestPoints.end(),[&](auto kp)
         {
             if (wImg(kp.v,kp.u) > 0.0)
             {
-                w(kp.idx) = _l->computeWeight(rScaled(kp.idx));
+                w(offset + kp.idx) = _l->computeWeight(rScaled(offset + kp.idx));
                 wImg(kp.v,kp.u) = w(kp.idx);
             }
         }
         );
-
+        for(size_t i = 0; i < _interestPoints.size(); i++)
+        {
+            if(!std::isfinite(r(offset + i)))
+            {
+                r(offset + i) = 0.0;
+                w(offset + i) = 0.0;
+            }
+        }
        
         LOG_IMG("ImageWarped") << IWxp;
         LOG_IMG("Residual") << rImg;
         LOG_IMG("Weights") << wImg;
+
+    }
+
+    template<typename Warp>
+    double LukasKanadeInverseCompositional<Warp>::computeResidual(size_t idx)
+    {
+        const auto& kp = _interestPoints[idx];
+        Eigen::Vector2d uvWarped = _w->apply(kp.u,kp.v);
+        if (1 < uvWarped.x() && uvWarped.x() < _I.cols() -1  &&
+        1 < uvWarped.y() && uvWarped.y() < _I.rows()-1)
+        {
+            return algorithm::bilinearInterpolation(_I,uvWarped.x(),uvWarped.y()) - _T(kp.v,kp.u);
+            
+        }else{
+            return std::numeric_limits<double>::quiet_NaN();
+        }
     }
 
     //
@@ -111,11 +114,27 @@ namespace pd{namespace vision{
     template<typename Warp>
     bool LukasKanadeInverseCompositional<Warp>::computeJacobian(Eigen::Matrix<double, -1,Warp::nParameters>& j)
     {
-        j = _J;
+        computeJacobian(j,0U);
         return true;
     }
 
-    
+    template<typename Warp>
+    bool LukasKanadeInverseCompositional<Warp>::computeJacobian(Eigen::Matrix<double, -1,Warp::nParameters>& J, size_t offset)
+    {
+        Eigen::MatrixXd steepestDescent = Eigen::MatrixXd::Zero(_T.rows(),_T.cols());
+        std::for_each(std::execution::par_unseq,_interestPoints.begin(),_interestPoints.end(),[&](auto kp)
+            {
+                const Eigen::Matrix<double, 2,nParameters> Jwarp = _w->J(kp.u,kp.v);
+                        
+                auto j = _dTx(kp.v, kp.u) * Jwarp.row(0) + _dTy(kp.v,kp.u) * Jwarp.row(1);
+                steepestDescent(kp.v,kp.u) = j.norm();
+                J.row(offset + kp.idx) = j;
+            }
+        );
+
+        LOG_IMG("SteepestDescent") << steepestDescent;
+        return true;
+    }
 
     template<typename Warp>
     bool LukasKanadeInverseCompositional<Warp>::updateX(const Eigen::Matrix<double,Warp::nParameters,1>& dx)

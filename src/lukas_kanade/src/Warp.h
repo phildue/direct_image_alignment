@@ -43,10 +43,10 @@ class WarpOpticalFlow
     Eigen::Vector2d _x;
 };
 
-//t0X
-//
-//t1X
-
+/*
+Warp based on SE3 (T) transformation:
+uv_1 = p( T * p^-1( uv_0 ) )
+*/
 class WarpSE3
 {
     public:

@@ -3,9 +3,9 @@
 #include <memory>
 
 #include <Eigen/Dense>
-
+#include <core/core.h>
 #include "Loss.h"
-namespace pd{namespace vision{
+namespace pd::vslam::solver{
 
       template<typename Problem>
       class GaussNewton {
@@ -31,8 +31,8 @@ namespace pd{namespace vision{
         const Eigen::VectorXd& stepSize() const {return _stepSize;}
 
         // Source: https://stats.stackexchange.com/questions/93316/parameter-uncertainty-after-non-linear-least-squares-estimation
-        MatXd cov() const { return _H.inverse();}
-        MatXd covScaled() const { return _H.inverse() * _chi2(_i)/(_i - Problem::nParameters);}
+        vision::MatXd cov() const { return _H.inverse();}
+        vision::MatXd covScaled() const { return _H.inverse() * _chi2(_i)/(_i - Problem::nParameters);}
 
         private:
         const double _alpha;
@@ -43,10 +43,10 @@ namespace pd{namespace vision{
         Eigen::VectorXd _chi2,_stepSize;
         Eigen::Matrix<double,Eigen::Dynamic,Problem::nParameters> _x;
         int _i;
-        MatXd _H;
+        vision::MatXd _H;
 
     };
    
-}}
+}
 #include "GaussNewton.hpp"
 #endif

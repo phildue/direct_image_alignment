@@ -6,7 +6,7 @@
 namespace pd{namespace vision{
 
     template<typename Warp>
-    LukasKanade<Warp>::LukasKanade (const Image& templ, const Image& image,std::shared_ptr<Warp> w0, std::shared_ptr<Loss> l)
+    LukasKanade<Warp>::LukasKanade (const Image& templ, const Image& image,std::shared_ptr<Warp> w0, std::shared_ptr<vslam::solver::Loss> l)
     : _T(templ)
     , _Iref(image)
     , _dIx(algorithm::gradX(image))

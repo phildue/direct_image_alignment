@@ -3,11 +3,14 @@ project(solver VERSION 1.0.0)
 
 set(sources
         src/Loss.cpp
+        src/Scaler.cpp
+
         )
 
 set(headers
         src/GaussNewton.h
         src/GaussNewton.hpp
+        src/Scaler.h
         include/solver/solver.h
         )
 

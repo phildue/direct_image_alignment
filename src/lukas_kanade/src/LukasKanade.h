@@ -9,8 +9,9 @@ template<typename Warp>
 class LukasKanade{
 public:
     inline constexpr static int nParameters = Warp::nParameters;
-    LukasKanade (const Image& templ, const Image& image, std::shared_ptr<Warp> w0, std::shared_ptr<Loss> l = std::make_shared<QuadraticLoss>());
+    LukasKanade (const Image& templ, const Image& image, std::shared_ptr<Warp> w0, std::shared_ptr<vslam::solver::Loss> l = std::make_shared<vslam::solver::QuadraticLoss>());
     const std::shared_ptr<const Warp> warp();
+    bool newJacobian() const {return true;}
 
       //
     // r = T(x) - I(W(x,p))
@@ -36,7 +37,8 @@ protected:
     Eigen::MatrixXi _dIx;
     Eigen::MatrixXi _dIy;
     const std::shared_ptr<Warp> _w;
-    const std::shared_ptr<Loss> _l;
+    const std::shared_ptr<vslam::solver::Loss> _l;
+    const std::shared_ptr<vslam::solver::Scaler> _scaler;
 
 };
 

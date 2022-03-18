@@ -2,7 +2,7 @@
 
 #include "utils/utils.h"
 #include "core/core.h"
-namespace pd{namespace vision{
+namespace pd::vslam::solver{
 
     template<typename Problem>
     GaussNewton<Problem>::GaussNewton(
@@ -17,7 +17,7 @@ namespace pd{namespace vision{
     ,_maxIterations(maxIterations)
 
     {
-        Log::get("solver",SOLVER_CFG_DIR"/log/solver.conf");
+        vision::Log::get("solver",SOLVER_CFG_DIR"/log/solver.conf");
         _chi2 = Eigen::VectorXd::Zero(_maxIterations);
         _stepSize = Eigen::VectorXd::Zero(_maxIterations);
         _x = Eigen::MatrixXd::Zero(_maxIterations,Problem::nParameters);
@@ -34,6 +34,9 @@ namespace pd{namespace vision{
         _stepSize.setZero();
         _x.setZero();
         Eigen::Vector<double, Problem::nParameters> dx;
+        Mmxn J = vision::MatXd::Zero(problem->nConstraints(),Problem::nParameters);
+        problem->computeJacobian(J);
+        Eigen::VectorXd r = vision::VecXd::Zero(problem->nConstraints()), w = vision::VecXd::Zero(problem->nConstraints());
         for(_i = 0; _i < _maxIterations; _i++ )
         {
             TIMED_SCOPE(timerI,"solve ( " + std::to_string(_i) + " )");
@@ -43,11 +46,10 @@ namespace pd{namespace vision{
             // This can be solved with cholesky decomposition (Ax = b)
             // Where A = (JWJ + lambda * I), x = dx, b = JWr
 
-            Eigen::VectorXd r,w;
             problem->computeResidual(r,w);
             const auto W = w.asDiagonal();
          
-            LOG_PLT("ErrorDistribution") << std::make_shared<vis::Histogram>(r,"Residuals");
+            LOG_PLT("ErrorDistribution") << std::make_shared<vision::vis::Histogram>(r,"Residuals");
 
             _chi2(_i) = (r.transpose() * W * r);
             _chi2(_i) /= r.rows();
@@ -58,8 +60,10 @@ namespace pd{namespace vision{
                 problem->updateX(-dx);
                 break;
             }
-            Mmxn J = Eigen::MatrixXd::Zero(r.rows(), Problem::nParameters);
-            problem->computeJacobian(J);
+            if(problem->newJacobian())
+            {
+                problem->computeJacobian(J);
+            }
             // For GN / LM we drop the second part of the Hessian
             _H  = (J.transpose() * W * J);
             problem->extendLeft(_H);//User can provide additional conditions TODO find better name?
@@ -95,10 +99,8 @@ namespace pd{namespace vision{
             }
 
         }
-        LOG_PLT("SolverGN") << std::make_shared<vis::PlotGaussNewton>(_i,_chi2,_stepSize);
+        LOG_PLT("SolverGN") << std::make_shared<pd::vision::vis::PlotGaussNewton>(_i,_chi2,_stepSize);
 
     }
 
-
-
-}}
+}

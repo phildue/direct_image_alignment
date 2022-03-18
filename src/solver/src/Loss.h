@@ -9,7 +9,7 @@
 // computeWeights assigns weights corresponding to L'(r) the first order derivative of the loss function
 // There are many other weights based on the expected distribution of errors (e.g. t distribution)[Image Gradient-based Joint Direct Visual Odometry for Stereo Camera]
 
-namespace pd{namespace vision{
+namespace pd::vslam::solver{
 class Loss
 {
         public:
@@ -68,5 +68,19 @@ class HuberLoss : public Loss
 
 };
 
-}}
+class LossTDistribution : public Loss
+{
+        public:
+        LossTDistribution(double v = 5.0):_v(v){}
+        //w(r) = dl/dr (r) * 1/r
+        double computeWeight(double r) const override;
+        //dl/dr
+        double computeDerivative(double r) const override;
+        //l(r)
+        double compute(double r) const override;
+        private:
+        const double _v;
+};
+
+}
 #endif

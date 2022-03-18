@@ -5,22 +5,29 @@
 #include <memory>
 namespace pd{namespace vision{
 
+
+
 template<typename Warp>
 class LukasKanadeInverseCompositional{
 public:
     inline constexpr static int nParameters = Warp::nParameters;
-    LukasKanadeInverseCompositional (const Image& templ, const Image& image, std::shared_ptr<Warp> w0, std::shared_ptr<Loss> = std::make_shared<QuadraticLoss>(), double minGradient = 0);
-    const std::shared_ptr<const Warp> warp();
+    LukasKanadeInverseCompositional (const Image& templ, const MatXi dX, const MatXi dY, const Image& image, std::shared_ptr<Warp> w0, vslam::solver::Loss::ShPtr = std::make_shared<vslam::solver::QuadraticLoss>(), double minGradient = 0, vslam::solver::Scaler::ShPtr scaler = std::make_shared<vslam::solver::Scaler>());
 
+    LukasKanadeInverseCompositional (const Image& templ, const Image& image, std::shared_ptr<Warp> w0, vslam::solver::Loss::ShPtr = std::make_shared<vslam::solver::QuadraticLoss>(), double minGradient = 0, vslam::solver::Scaler::ShPtr scaler = std::make_shared<vslam::solver::Scaler>());
+    const std::shared_ptr<const Warp> warp();
+    size_t nConstraints() const { return _interestPoints.size();}
+    bool newJacobian() const {return false;}
       //
     // r = T(x) - I(W(x,p))
     //
     void computeResidual(Eigen::VectorXd& r, Eigen::VectorXd& w);
-   
+    void computeResidual(Eigen::VectorXd& r, Eigen::VectorXd& w, size_t offset);
+    double computeResidual(size_t idx);
     //
     // J = Ixy*dW/dp
     //
     bool computeJacobian(Eigen::Matrix<double,-1,Warp::nParameters>& j) ;
+    bool computeJacobian(Eigen::Matrix<double,-1,Warp::nParameters>& J, size_t offset) ;
 
     bool updateX(const Eigen::Matrix<double,Warp::nParameters,1>& dx);
 
@@ -34,10 +41,11 @@ protected:
             uint32_t u,v,idx;
         };
     const Image _T;
-    const Image _Iref;
+    const Image _I;
     const std::shared_ptr<Warp> _w;
-    Eigen::Matrix<double,-1,Warp::nParameters> _J;
-    const std::shared_ptr<Loss> _l;
+    const std::shared_ptr<vslam::solver::Loss> _l;
+    const std::shared_ptr<vslam::solver::Scaler> _scaler;
+
     const MatXi _dTx,_dTy;
     MatXd _dTxy;
     const double _minGradient;

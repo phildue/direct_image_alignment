@@ -2,7 +2,7 @@
 #include "core/core.h"
 #include "utils/utils.h"
 
-namespace pd{ namespace vision{
+namespace pd::vslam::solver{
 
 
     double TukeyLoss::compute(double r) const
@@ -82,6 +82,20 @@ namespace pd{ namespace vision{
                         return _c * std::abs(r) - 0.5 * r*r;
                 }
         }
+
+        double LossTDistribution::computeWeight(double r) const
+        {
+                return (_v + 1.0) / (_v + r*r);
+        }
+        double LossTDistribution::computeDerivative(double r) const
+        {
+                return 0.0; //TODO
+        }
+        double LossTDistribution::compute(double r) const
+        {
+                return 0.0; //TODO
+
+        }
    
      
-}}
+}

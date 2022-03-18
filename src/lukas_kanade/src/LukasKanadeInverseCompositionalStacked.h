@@ -16,9 +16,10 @@ class LukasKanadeInverseCompositionalStacked{
     
 public:
     inline constexpr static int nParameters = Warp::nParameters;
-    LukasKanadeInverseCompositionalStacked (const std::vector<Image>& templ, const Image& image,const std::vector<std::shared_ptr<Warp>>& w0, std::shared_ptr<Loss> = std::make_shared<QuadraticLoss>(), double minGradient = 0);
+    LukasKanadeInverseCompositionalStacked (const std::vector<Image>& templ, const std::vector<MatXi>& dTx, const std::vector<MatXi>& dTy, const Image& image,const std::vector<std::shared_ptr<Warp>>& w0, std::shared_ptr<vslam::solver::Loss> = std::make_shared<vslam::solver::QuadraticLoss>(), double minGradient = 0, vslam::solver::Scaler::ShPtr scaler = std::make_shared<vslam::solver::Scaler>());
     const std::shared_ptr<const Warp> warp();
-
+    bool newJacobian() const {return false;}
+    size_t nConstraints() const { return _nConstraints;}
       //
     // r = T(x) - I(W(x,p))
     //
@@ -37,8 +38,8 @@ public:
     Eigen::Matrix<double,Warp::nParameters,1> x() const {return _frames[0]->x();}
 
 protected:
-    Eigen::MatrixXd _J;
     std::vector<std::shared_ptr<LukasKanadeInverseCompositional<Warp>>> _frames;
+    size_t _nConstraints;
 
 };
 

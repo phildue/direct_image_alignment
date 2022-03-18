@@ -127,15 +127,36 @@ namespace pd{namespace vision{
         }
     }
     Eigen::Matrix<double,2,WarpSE3::nParameters> WarpSE3::J(int u, int v) const {
-        Eigen::Matrix<double,2,6> J = Eigen::Matrix<double,2,6>::Zero();
+        //A tutorial on SE(3) transformation parameterizations and on-manifold optimization 
+        //A.2. Projection of a point p.43
+        Eigen::Matrix<double,2,6> jac = Eigen::Matrix<double,2,6>::Zero();
         if (std::isfinite(_depth(v,u)) && _depth(v,u) > 0)
         {
-            const Eigen::Vector3d pCcsRef = _camTempl->image2camera({u,v},_depth(v,u));
-            const Eigen::Matrix<double,2,6> j = _camTempl->J_xyz2uv(pCcsRef); 
-            return j;
-        }else{
-            return J;
+            //TODO should this be pRef or pTarget?
+            const Eigen::Vector3d pRef = _camTempl->image2camera({u,v},_depth(v,u));
+            const double& x = pRef.x();
+            const double& y = pRef.y();
+            const double z_inv = 1./pRef.z();
+            const double z_inv_2 = z_inv*z_inv;
+
+            jac(0,0) = z_inv;              
+            jac(0,1) = 0.0;                 
+            jac(0,2) = -x*z_inv_2;           
+            jac(0,3) = -y*jac(0,2);            
+            jac(0,4) = (1.0 + x*jac(0,2));   
+            jac(0,5) = -y*z_inv;
+            jac.row(0) *= _camTempl->fx();             
+
+            jac(1,0) = 0.0;                 
+            jac(1,1) = z_inv;             
+            jac(1,2) = -y*z_inv_2;           
+            jac(1,3) = -(1.0 + y*jac(1,2));      
+            jac(1,4) = jac(0,3);            
+            jac(1,5) = x*z_inv;    
+            jac.row(1) *= _camTempl->fy();
         }
+        return jac;
+        
     }
     void WarpSE3::setX(const Eigen::Vector6d& x)
     {
