@@ -66,15 +66,13 @@ namespace pd{ namespace vision{ namespace algorithm{
 
     Eigen::MatrixXi gradX(const Image& image)
     {
-        Eigen::MatrixXi i = image.cast<int>();
-        return conv2d<int>(i,Kernel2d<int>::scharrX());
+        return conv2d(image.cast<double>(),Kernel2d<double>::scharrX()).cast<int>();
     }
 
     Eigen::MatrixXi gradY(const Image& image)
     {
-        Eigen::MatrixXi i = image.cast<int>();
 
-        return conv2d<int>(i,Kernel2d<int>::scharrY());
+        return conv2d(image.cast<double>(),Kernel2d<double>::scharrY()).cast<int>();
     }
 
     Sophus::SE3d computeRelativeTransform(const Sophus::SE3d& t0, const Sophus::SE3d& t1)
@@ -122,7 +120,37 @@ namespace pd{ namespace vision{ namespace algorithm{
     }
    
 
-
+Eigen::Matrix<double, Eigen::Dynamic,Eigen::Dynamic> conv2d(const Eigen::Matrix<double,-1,-1>& mat, const Eigen::Matrix<double,-1,-1> &kernel) {
+        
+        typedef int Idx;
+        //TODO is this the most efficient way? add padding
+        Eigen::Matrix<double, Eigen::Dynamic,Eigen::Dynamic> res( mat.rows(), mat.cols());
+        res.setZero();
+        const Idx kX_2 = (Idx)std::floor((double)kernel.cols()/2.0);
+        const Idx kY_2 = (Idx)std::floor((double)kernel.rows()/2.0);
+        for (Idx i = kY_2; i < res.rows() - kY_2; i++)
+        {
+            for (Idx j = kX_2; j < res.cols() - kX_2; j++)
+            {
+                double sum = 0.0;
+                double norm = 0.0;
+                for(Idx ki = 0; ki < kernel.rows(); ki++)
+                {
+                    for(Idx kj = 0; kj < kernel.cols(); kj++)
+                    {
+                        Idx idxY = i - kY_2 + ki;
+                        Idx idxX = j - kX_2 + kj;
+                        double kv = kernel(ki,kj);
+                        double mv = mat(idxY,idxX);
+                        sum += (double)kv*(double)mv;
+                        norm += std::abs((double)kv);
+                    }
+                }           
+                res(i,j) = (sum / norm);
+            }
+        }
+        return res;
+    }
    
 }
 namespace transforms{
@@ -146,6 +174,15 @@ namespace transforms{
 
     }
 
+    Eigen::Quaterniond euler2quaternion( double rx, double ry, double rz )
+    {
+        Eigen::AngleAxisd rxa(rx, Eigen::Vector3d::UnitX());
+        Eigen::AngleAxisd rya(ry, Eigen::Vector3d::UnitY());
+        Eigen::AngleAxisd rza(rz, Eigen::Vector3d::UnitZ());
+
+        Eigen::Quaterniond q = rza * rya * rxa;
+        return q;
+    }
 
 }
 

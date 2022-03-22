@@ -64,5 +64,12 @@ endif()
 option(VSLAM_BUILD_TESTS "Enable to build tests" ON)
 if(VSLAM_BUILD_TESTS)
 	enable_testing()
-	add_subdirectory(test)
+        find_package(GTest CONFIG REQUIRED)
+
+        pd_add_test(log ${PROJECT_NAME})
+        pd_add_test(plot ${PROJECT_NAME})
+        
+        target_compile_definitions(logTest PUBLIC TEST_RESOURCE="${CMAKE_CURRENT_LIST_DIR}/test/resource")
+        target_compile_definitions(plotTest PUBLIC TEST_RESOURCE="${CMAKE_CURRENT_LIST_DIR}/test/resource")
+
 endif()

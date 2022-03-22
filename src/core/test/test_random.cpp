@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "vslam/vslam.h"
+#include "core/core.h"
 using namespace testing;
 using namespace pd;
 using namespace pd::vision;

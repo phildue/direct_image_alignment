@@ -119,7 +119,13 @@ namespace pd{namespace vision{
 
     }
     Eigen::Vector2d WarpSE3::apply(int u, int v) const { 
-        if (std::isfinite(_depth(v,u)) && _depth(v,u) > 0)
+        /* Since exclude pixels that are close to not having depth since we do bilinear interpolation later*/
+        if (std::isfinite(_depth(v,u)) && _depth(v,u) > 0 &&
+        std::isfinite(_depth(v+1,u+1)) && _depth(v+1,u+1) > 0  &&
+        std::isfinite(_depth(v+1,u-1)) && _depth(v+1,u-1) > 0  &&
+        std::isfinite(_depth(v-1,u+1)) && _depth(v-1,u+1) > 0  &&
+        std::isfinite(_depth(v-1,u-1)) && _depth(v-1,u-1) > 0
+        )
         {
             return _camImg->camera2image( _world2img * _templ2world *_camTempl->image2camera({u,v},_depth(v,u)));
         }else{

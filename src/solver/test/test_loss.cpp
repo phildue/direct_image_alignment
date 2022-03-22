@@ -3,11 +3,12 @@
 //
 
 #include <gtest/gtest.h>
-#include "solver/Loss.h"
-#include "utils/visuals.h"
+#include <utils/utils.h>
+#include "Loss.h"
 using namespace testing;
 using namespace pd;
 using namespace pd::vision;
+using namespace pd::vslam::solver;
 #define VISUALIZE true
 TEST(LossTest,TukeyLoss)
 {

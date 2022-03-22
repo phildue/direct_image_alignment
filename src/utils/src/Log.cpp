@@ -18,7 +18,7 @@ std::map<std::string, std::map<Level,std::shared_ptr<Log>>> Log::_logs = {};
 std::map<std::string, std::map<Level,std::shared_ptr<LogPlot>>> Log::_logsPlot = {};
 std::map<std::string, std::map<Level,std::shared_ptr<LogImage>>> Log::_logsImage = {};
 Level Log::_blockLevel = Level::Unknown;
-Level Log::_showLevel = Level::Debug;
+Level Log::_showLevel = Level::Unknown;
        
     std::shared_ptr<Log> Log::get(const std::string& name,const std::string& confFilePath, Level level)
     {

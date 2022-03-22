@@ -46,6 +46,7 @@ macro(pd_add_test unit lib)
 	add_executable(${unit}Test
 			test/test_${unit}.cpp
 			)
+    target_compile_features(${unit}Test PUBLIC cxx_std_17)
 
 	target_link_libraries(${unit}Test
 			PRIVATE

@@ -9,7 +9,7 @@
 #include <algorithm>
 #include <random>
 #include "types.h"
-
+#include "Kernel2d.h"
 namespace pd{ namespace vision{ 
     namespace algorithm{
 
@@ -65,7 +65,7 @@ namespace pd{ namespace vision{
     }
     template< class T, typename Derived>
     Eigen::Matrix<T, Eigen::Dynamic,Eigen::Dynamic> resize(const Eigen::MatrixBase<Derived>& mat, double scale) {
-
+        //TODO interpolation function as parameter
         if(scale == 1.0)
         {
             return mat;
@@ -82,6 +82,8 @@ namespace pd{ namespace vision{
         }
         return res;
     }
+
+
 
     template <typename Derived,typename Derived1>
     void warpAffine(const Eigen::MatrixBase<Derived>& img, const Eigen::Matrix<Derived1,3,3>& warp, Eigen::MatrixBase<Derived>& imgWarped)
@@ -133,29 +135,41 @@ namespace pd{ namespace vision{
     }
     
     //https://forum.kde.org/viewtopic.php?f=74&t=96407#
+    Eigen::Matrix<double, Eigen::Dynamic,Eigen::Dynamic> conv2d(const Eigen::Matrix<double,-1,-1>& mat, const Eigen::Matrix<double,-1,-1> &kernel);
+    double median( const Eigen::VectorXd& d, bool isSorted = false);
+    double median(std::vector<double>& v, bool isSorted = false);
+
     template< typename Derived>
-    Eigen::Matrix<Derived, Eigen::Dynamic,Eigen::Dynamic> conv2d(const Eigen::Matrix<Derived,-1,-1>& mat, const Eigen::Matrix<Derived,-1,-1> &kernel) {
+    Eigen::Matrix<Derived, Eigen::Dynamic,Eigen::Dynamic> medianBlur(const Eigen::Matrix<Derived,-1,-1>& mat, int sizeX, int sizeY) {
         
         typedef int Idx;
         //TODO is this the most efficient way? add padding
         Eigen::Matrix<Derived, Eigen::Dynamic,Eigen::Dynamic> res( mat.rows(), mat.cols());
         res.setZero();
-        const Idx kX_2 = (Idx)kernel.cols()/2;
-        const Idx kY_2 = (Idx)kernel.rows()/2;
+        const Idx kX_2 = (Idx)sizeX/2;
+        const Idx kY_2 = (Idx)sizeY/2;
 
-        for (Idx i = kX_2; i < res.rows() - kY_2; i++)
+        for (Idx i = kY_2; i < res.rows() - kY_2; i++)
         {
-            for (Idx j = kY_2; j < res.cols() - kX_2; j++)
+            for (Idx j = kX_2; j < res.cols() - kX_2; j++)
             {
-                res(i,j) = (mat.block(i - kY_2, j - kX_2, kernel.rows(), kernel.cols()).cwiseProduct(kernel)).sum();
+                std::vector<double> values;
+                values.reserve(sizeX*sizeY);
+                for(Idx ki = i - kY_2; ki <= i - kY_2 + sizeY; ki++)
+                {
+                    for(Idx kj = j - kX_2; kj <= j - kX_2 + sizeX; kj++)
+                    {
+                        values.push_back ((double)mat(ki,kj));
+                    }
+                }
+                res(i,j) = (Derived)median(values);
             }
         }
-        return res/kernel.norm();
+        return res;
     }
 
-    double median( const Eigen::VectorXd& d, bool isSorted = false);
-    double median(std::vector<double>& v, bool isSorted = false);
 
+  
     double rmse(const Eigen::MatrixXi& patch1, const Eigen::MatrixXi& patch2);
     double sad(const Eigen::MatrixXi& patch1, const Eigen::MatrixXi& patch2);
     Image resize(const Image& mat,double scale);
@@ -179,6 +193,7 @@ namespace transforms{
     Eigen::MatrixXd createdTransformMatrix2D(double x, double y, double angle);
     double deg2rad(double deg);
     double rad2deg(double rad);
+    Eigen::Quaterniond euler2quaternion( double rx, double ry, double rz );
 
 }
 

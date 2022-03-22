@@ -10,13 +10,13 @@ class Map{
         typedef std::shared_ptr<const Map> ConstShPtr;
         typedef std::unique_ptr<const Map> ConstUnPtr;
 
-        virtual void update(FrameRgbd::ConstShPtr frame) {};
-        virtual void updateKf(FrameRgbd::ConstShPtr frame){ _lastKeyFrame = frame;};
+        virtual void update(RgbdPyramid::ConstShPtr UNUSED(frame)) {};
+        virtual void updateKf(RgbdPyramid::ConstShPtr frame){ _lastKeyFrame = frame;};
         
-        FrameRgbd::ConstShPtr lastKf() const { return _lastKeyFrame;}
+        RgbdPyramid::ConstShPtr lastKf() const { return _lastKeyFrame;}
 
         private:
-        FrameRgbd::ConstShPtr _lastKeyFrame = nullptr;
+        RgbdPyramid::ConstShPtr _lastKeyFrame = nullptr;
 };
 
 }

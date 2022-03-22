@@ -5,6 +5,7 @@ set(sources
         src/Camera.cpp
         src/algorithm.cpp
         src/PoseWithCovariance.cpp
+        src/Frame.cpp
         )
 
 set(headers
@@ -37,5 +38,5 @@ if(VSLAM_BUILD_TESTS)
         pd_add_test(algorithm core)
         pd_add_test(camera core)
         pd_add_test(random core)
-        
+     
 endif()

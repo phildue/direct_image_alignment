@@ -3,8 +3,8 @@
 //
 
 #include <gtest/gtest.h>
-#include "utils/visuals.h"
-#include "utils/Exceptions.h"
+#include <core/core.h>
+#include "visuals.h"
 using namespace testing;
 using namespace pd;
 using namespace pd::vision;

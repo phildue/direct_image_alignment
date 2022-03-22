@@ -5,7 +5,7 @@ set(sources
         src/MotionPrediction.cpp
         src/KeyFrameSelection.cpp
         src/Odometry.cpp
-        src/OdometryRgbd.cpp
+        src/SE3Alignment.cpp
       #  src/PlotSE3.cpp
         )
 
@@ -13,7 +13,7 @@ set(headers
         src/MotionPrediction.h
         src/KeyFrameSelection.h
         src/Odometry.h
-        src/OdometryRgbd.h
+        src/SE3Alignment.h
        # src/PlotSE3.h
         include/odometry/odometry.h
         )
@@ -42,5 +42,12 @@ target_link_libraries(${PROJECT_NAME} Sophus::Sophus)
 option(VSLAM_BUILD_TESTS "Enable to build tests" ON)
 if(VSLAM_BUILD_TESTS)
 	enable_testing()
-	add_subdirectory(test)
+        find_package(GTest CONFIG REQUIRED)
+
+        pd_add_test(frame ${PROJECT_NAME})
+        pd_add_test(odometry_rgbd ${PROJECT_NAME})
+
+        target_compile_definitions(frameTest PUBLIC TEST_RESOURCE="${CMAKE_CURRENT_LIST_DIR}/test/resource")
+        target_compile_definitions(odometry_rgbdTest PUBLIC TEST_RESOURCE="${CMAKE_CURRENT_LIST_DIR}/test/resource")
+
 endif()

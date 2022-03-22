@@ -3,5 +3,4 @@
 #include "GaussNewton.h"
 #include "Loss.h"
 #include "Scaler.h"
-#include "Problem.h"
 #endif

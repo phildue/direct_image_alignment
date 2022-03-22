@@ -3,7 +3,7 @@
 //
 
 #include <gtest/gtest.h>
-#include "vslam/vslam.h"
+#include "core/core.h"
 using namespace testing;
 using namespace pd;
 using namespace pd::vision;
@@ -94,7 +94,7 @@ TEST_F(CameraTest,ProjectingInvalid)
         EXPECT_TRUE(std::isnan(pImage.y()));
     }
 }
-
+/*TODO MOVE TO WARP
 TEST_F(CameraTest,JacobianXYZ2UV)
 {
     const double f = 10;
@@ -119,3 +119,4 @@ TEST_F(CameraTest,JacobianXYZ2UV)
     }
 
 }
+*/

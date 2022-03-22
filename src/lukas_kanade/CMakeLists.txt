@@ -31,6 +31,9 @@ target_link_libraries(${PROJECT_NAME} Eigen3::Eigen3)
 
 find_package(Sophus REQUIRED)
 target_link_libraries(${PROJECT_NAME} Sophus::Sophus)
+find_package(TBB REQUIRED)
+
+target_link_libraries(${PROJECT_NAME} TBB::tbb)
 
 
 # Add tests
@@ -39,11 +42,11 @@ if(VSLAM_BUILD_TESTS)
 	enable_testing()
         find_package(GTest CONFIG REQUIRED)
 
-        pd_add_test(lukas_kanade_flow lukas_kanade)
-        pd_add_test(lukas_kanade_affine lukas_kanade)
-        pd_add_test(lukas_kanade_se3 lukas_kanade)
+        #pd_add_test(lukas_kanade_flow ${PROJECT_NAME})
+        #pd_add_test(lukas_kanade_affine ${PROJECT_NAME})
+        #pd_add_test(lukas_kanade_se3 ${PROJECT_NAME})
         
-        target_compile_definitions(lukas_kanade_affineTest PUBLIC TEST_RESOURCE="${CMAKE_CURRENT_LIST_DIR}/test/resource")
-        target_compile_definitions(lukas_kanade_flowTest PUBLIC TEST_RESOURCE="${CMAKE_CURRENT_LIST_DIR}/test/resource")
-        target_compile_definitions(lukas_kanade_se3Test PUBLIC TEST_RESOURCE="${CMAKE_CURRENT_LIST_DIR}/test/resource")
+        #target_compile_definitions(lukas_kanade_affineTest PUBLIC TEST_RESOURCE="${CMAKE_CURRENT_LIST_DIR}/test/resource")
+        #target_compile_definitions(lukas_kanade_flowTest PUBLIC TEST_RESOURCE="${CMAKE_CURRENT_LIST_DIR}/test/resource")
+        #target_compile_definitions(lukas_kanade_se3Test PUBLIC TEST_RESOURCE="${CMAKE_CURRENT_LIST_DIR}/test/resource")
 endif()

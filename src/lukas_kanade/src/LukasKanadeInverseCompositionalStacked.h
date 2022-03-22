@@ -15,24 +15,16 @@ template<typename Warp>
 class LukasKanadeInverseCompositionalStacked : public vslam::solver::Problem<Warp::nParameters>{
     
 public:
-    LukasKanadeInverseCompositionalStacked (const std::vector<Image>& templ, const std::vector<MatXi>& dTx, const std::vector<MatXi>& dTy, const Image& image,const std::vector<std::shared_ptr<Warp>>& w0, std::shared_ptr<vslam::solver::Loss> = std::make_shared<vslam::solver::QuadraticLoss>(), double minGradient = 0, vslam::solver::Scaler::ShPtr scaler = std::make_shared<vslam::solver::Scaler>());
-    const std::shared_ptr<const Warp> warp();
-    bool newJacobian() const override {return false;}
-    size_t nConstraints() const override { return _nConstraints;}
-    void computeResidual(Eigen::VectorXd& r, Eigen::VectorXd& w, size_t offset = 0) override;
-   
-    void computeJacobian(Eigen::Matrix<double,-1,Warp::nParameters>& j, size_t offset = 0) override;
+    LukasKanadeInverseCompositionalStacked (const std::vector<std::shared_ptr<LukasKanadeInverseCompositional<Warp>>>& frames);
+    std::shared_ptr<const Warp> warp() { return _frames[0]->warp();}
 
     void updateX(const Eigen::Matrix<double,Warp::nParameters,1>& dx) override;
 
-    void extendLeft(Eigen::Matrix<double,Warp::nParameters,Warp::nParameters>& JWJ) override;
-    void extendRight(Eigen::Vector<double,Warp::nParameters>& JWr) override;
-
     Eigen::Matrix<double,Warp::nParameters,1> x() const override{return _frames[0]->x();}
+    typename vslam::solver::NormalEquations<Warp::nParameters>::ConstShPtr computeNormalEquations() override;
 
 protected:
     std::vector<std::shared_ptr<LukasKanadeInverseCompositional<Warp>>> _frames;
-    size_t _nConstraints;
 
 };
 
