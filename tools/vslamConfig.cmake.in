@@ -11,5 +11,8 @@ find_dependency(Eigen3 3.4 REQUIRED)
 find_dependency(Sophus REQUIRED)
 find_dependency(easyloggingpp REQUIRED)
 find_dependency(matplotlib_cpp REQUIRED)
+find_dependency(TBB REQUIRED)
+find_dependency(PCL REQUIRED)
+
 
 include(${CMAKE_CURRENT_LIST_DIR}/vslamTargets.cmake)

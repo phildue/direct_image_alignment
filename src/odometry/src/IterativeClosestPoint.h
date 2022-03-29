@@ -1,0 +1,33 @@
+#ifndef VSLAM_ICP_H__
+#define VSLAM_ICP_H__
+
+#include "core/core.h"
+#include <pcl/io/ply_io.h>
+#include <pcl/point_types.h>
+#include <pcl/registration/icp.h>
+#include <pcl/visualization/pcl_visualizer.h>
+#include <pcl/console/time.h>   // TicToc
+
+namespace pd::vision{
+class IterativeClosestPoint {
+        public:
+        typedef std::shared_ptr<IterativeClosestPoint> ShPtr;
+        typedef std::unique_ptr<IterativeClosestPoint> UnPtr;
+        typedef std::shared_ptr<const IterativeClosestPoint> ConstShPtr;
+        typedef std::unique_ptr<const IterativeClosestPoint> ConstUnPtr;
+
+        IterativeClosestPoint(int maxIterations ):_maxIterations(maxIterations){
+                Log::get("odometry",ODOMETRY_CFG_DIR"/log/odometry.conf");
+
+        };
+
+        PoseWithCovariance::UnPtr align(RgbdPyramid::ConstShPtr from, RgbdPyramid::ConstShPtr to) const;
+
+   
+        protected:
+        int _maxIterations;
+
+};
+}
+#endif// VSLAM_ICP_H__
+
