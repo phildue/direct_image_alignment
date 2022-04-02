@@ -46,6 +46,7 @@ namespace pd::vslam::solver{
               typedef std::unique_ptr<const Problem> ConstUnPtr;
             
               virtual void updateX(const Eigen::Vector<double,nParameters>& dx) = 0;
+              virtual void setX(const Eigen::Vector<double,nParameters>& x) = 0;
               virtual Eigen::Vector<double,nParameters> x() const = 0;
               virtual typename NormalEquations<nParameters>::ConstShPtr computeNormalEquations() = 0;
       };

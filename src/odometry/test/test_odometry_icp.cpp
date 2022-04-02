@@ -18,7 +18,7 @@ class TestIcp: public Test{
     public:
     TestIcp()
     {
-        _aligner = std::make_shared<IterativeClosestPoint>(100);
+        _aligner = std::make_shared<IterativeClosestPoint>(0,10);
         
         // tum depth format: https://vision.in.tum.de/data/datasets/rgbd-dataset/file_formats
         _depth = utils::loadDepth(TEST_RESOURCE"/depth.png")/5000.0;
@@ -52,14 +52,13 @@ class TestIcp: public Test{
 
 TEST_F(TestIcp, TestOnSyntheticDataTranslation)
 {
-    SE3d refPose(transforms::euler2quaternion(0,0,0),{0,0,0});
     for (size_t i = 1; i < _noise.size(); i++)
     {
         size_t ri = _noise.size() -i ;
-        SE3d initialPose(transforms::euler2quaternion(0,0,0),{_noise[ri][0],_noise[ri][1],_noise[ri][2]});
+        SE3d refPose(transforms::euler2quaternion(0,0,0),{_noise[ri][0],_noise[ri][1],_noise[ri][2]});
         //SE3d initialPose(transforms::euler2quaternion(0.03,0.03,0.03),{0.03,0.05,0.03});
-        auto fRef = std::make_shared<RgbdPyramid>(_img,_depth,_cam,3,0,PoseWithCovariance(refPose,MatXd::Identity(6,6)));
-        auto fCur = std::make_shared<RgbdPyramid>(_img,_depth,_cam,3,1,PoseWithCovariance(initialPose * refPose,MatXd::Identity(6,6)));
+        auto fRef = std::make_shared<FrameRgbd>(_img,_depth,_cam,3,0,PoseWithCovariance(refPose,MatXd::Identity(6,6)));
+        auto fCur = std::make_shared<FrameRgbd>(_img,_depth,_cam,3,1,PoseWithCovariance(SE3d(),MatXd::Identity(6,6)));
     
         auto result = _aligner->align(fRef,fCur)->pose().log();
         auto angleAxis = result.tail(3);
@@ -81,9 +80,8 @@ TEST_F(TestIcp, TestOnSyntheticDataTranslationAbsolute)
         size_t ri = _noise.size() -i ;
         SE3d initialPose(transforms::euler2quaternion(0,0,0),{_noise[ri][0],_noise[ri][1],_noise[ri][2]});
         //SE3d initialPose(transforms::euler2quaternion(0.03,0.03,0.03),{0.03,0.05,0.03});
-        auto fRef = std::make_shared<RgbdPyramid>(_img,_depth,_cam,3,0,PoseWithCovariance(refPose,MatXd::Identity(6,6)));
-        auto fCur = std::make_shared<RgbdPyramid>(_img,_depth,_cam,3,1,PoseWithCovariance(initialPose * refPose,MatXd::Identity(6,6)));
-    
+        auto fRef = std::make_shared<FrameRgbd>(_img,_depth,_cam,3,0,PoseWithCovariance(refPose,MatXd::Identity(6,6)));
+        auto fCur = std::make_shared<FrameRgbd>(_img,_depth,_cam,3,1,PoseWithCovariance(initialPose * refPose,MatXd::Identity(6,6)));
         auto result = _aligner->align(fRef,fCur)->pose().log();
         auto angleAxis = result.tail(3);
         const double eps = 0.01;
@@ -103,8 +101,8 @@ TEST_F(TestIcp, TestOnSyntheticDataRotation)
         size_t ri = _noise.size() -i ;
         SE3d initialPose(transforms::euler2quaternion(_noise[ri][3],_noise[ri][4],_noise[ri][5]),{0,0,0});
         //SE3d initialPose(transforms::euler2quaternion(0.03,0.03,0.03),{0.03,0.05,0.03});
-        auto fRef = std::make_shared<RgbdPyramid>(_img,_depth,_cam,3,0);
-        auto fCur = std::make_shared<RgbdPyramid>(_img,_depth,_cam,3,1,PoseWithCovariance(initialPose,MatXd::Identity(6,6)));
+        auto fRef = std::make_shared<FrameRgbd>(_img,_depth,_cam,3);
+        auto fCur = std::make_shared<FrameRgbd>(_img,_depth,_cam,3,1,PoseWithCovariance(initialPose,MatXd::Identity(6,6)));
     
         auto result = _aligner->align(fRef,fCur)->pose().log();
         auto angleAxis = result.tail(3);
@@ -126,8 +124,8 @@ TEST_F(TestIcp, TestOnSyntheticData)
         size_t ri = _noise.size() -i ;
         SE3d initialPose(transforms::euler2quaternion(_noise[ri][3],_noise[ri][4],_noise[ri][5]),{_noise[ri][0],_noise[ri][1],_noise[ri][2]});
         //SE3d initialPose(transforms::euler2quaternion(0.03,0.03,0.03),{0.03,0.05,0.03});
-        auto fRef = std::make_shared<RgbdPyramid>(_img,_depth,_cam,3,0);
-        auto fCur = std::make_shared<RgbdPyramid>(_img,_depth,_cam,3,1,PoseWithCovariance(initialPose,MatXd::Identity(6,6)));
+        auto fRef = std::make_shared<FrameRgbd>(_img,_depth,_cam,3);
+        auto fCur = std::make_shared<FrameRgbd>(_img,_depth,_cam,3,1,PoseWithCovariance(initialPose,MatXd::Identity(6,6)));
     
         auto result = _aligner->align(fRef,fCur)->pose().log();
         auto angleAxis = result.tail(3);

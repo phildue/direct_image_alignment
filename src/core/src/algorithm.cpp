@@ -181,6 +181,7 @@ namespace transforms{
         Eigen::AngleAxisd rza(rz, Eigen::Vector3d::UnitZ());
 
         Eigen::Quaterniond q = rza * rya * rxa;
+        q.normalize();
         return q;
     }
 

@@ -21,6 +21,8 @@ public:
     void updateX(const Eigen::Matrix<double,Warp::nParameters,1>& dx) override;
 
     Eigen::Matrix<double,Warp::nParameters,1> x() const override{return _frames[0]->x();}
+    void setX(const Eigen::Matrix<double,Warp::nParameters,1>& x) override;
+
     typename vslam::solver::NormalEquations<Warp::nParameters>::ConstShPtr computeNormalEquations() override;
 
 protected:

@@ -5,6 +5,8 @@
 #include <solver/solver.h>
 #include "SE3Alignment.h"
 #include "Map.h"
+#include "IterativeClosestPoint.h"
+
 namespace pd::vision{
 class Odometry{
         public:
@@ -13,7 +15,7 @@ class Odometry{
         typedef std::shared_ptr<const Odometry> ConstShPtr;
         typedef std::unique_ptr<const Odometry> ConstUnPtr;
 
-        virtual void update(RgbdPyramid::ConstShPtr frame) = 0;
+        virtual void update(FrameRgbd::ConstShPtr frame) = 0;
         
         virtual PoseWithCovariance::ConstShPtr pose() const = 0;
         virtual PoseWithCovariance::ConstShPtr speed() const = 0;
@@ -36,21 +38,40 @@ class OdometryRgbd : public Odometry{
          Map::ConstShPtr map
          );
 
-        void update(RgbdPyramid::ConstShPtr frame) override;
+        void update(FrameRgbd::ConstShPtr frame) override;
         
-        PoseWithCovariance::ConstShPtr pose() const override { return std::make_shared<const PoseWithCovariance>(_lastFrame->pose());}
+        PoseWithCovariance::ConstShPtr pose() const override { return _pose;}
         PoseWithCovariance::ConstShPtr speed() const override { return _speed;}
         protected:
      
         const SE3Alignment::ConstShPtr _aligner;
         const Map::ConstShPtr _map;
         const bool _includeKeyFrame;
-        RgbdPyramid::ConstShPtr _lastFrame;
         PoseWithCovariance::ConstShPtr _speed;
-
+        PoseWithCovariance::ConstShPtr _pose;
 
 };
+class OdometryIcp : public Odometry{
+        public:
+        typedef std::shared_ptr<OdometryIcp> ShPtr;
+        typedef std::unique_ptr<OdometryIcp> UnPtr;
+        typedef std::shared_ptr<const OdometryIcp> ConstShPtr;
+        typedef std::unique_ptr<const OdometryIcp> ConstUnPtr;
 
+        OdometryIcp(int level, int maxIterations, Map::ConstShPtr map);
+
+        void update(FrameRgbd::ConstShPtr frame) override;
+        
+        PoseWithCovariance::ConstShPtr pose() const override { return _pose;}
+        PoseWithCovariance::ConstShPtr speed() const override { return _speed;}
+        protected:
+     
+        const IterativeClosestPoint::ConstShPtr _aligner;
+        PoseWithCovariance::ConstShPtr _speed;
+        PoseWithCovariance::ConstShPtr _pose;
+        const Map::ConstShPtr _map;
+
+};
 
 }
 #endif// VSLAM_ODOMETRY

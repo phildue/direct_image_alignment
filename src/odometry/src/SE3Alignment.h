@@ -18,8 +18,8 @@ class SE3Alignment {
          vslam::solver::Scaler::ShPtr scaler
          );
 
-        PoseWithCovariance::UnPtr align(RgbdPyramid::ConstShPtr from, RgbdPyramid::ConstShPtr to) const;
-        PoseWithCovariance::UnPtr align(const std::vector<RgbdPyramid::ConstShPtr>& from,  RgbdPyramid::ConstShPtr to) const;
+        PoseWithCovariance::UnPtr align(FrameRgbd::ConstShPtr from, FrameRgbd::ConstShPtr to) const;
+        PoseWithCovariance::UnPtr align(const std::vector<FrameRgbd::ConstShPtr>& from,  FrameRgbd::ConstShPtr to) const;
 
    
         protected:
@@ -28,6 +28,7 @@ class SE3Alignment {
         const vslam::solver::Loss::ShPtr _loss;
         const vslam::solver::Scaler::ShPtr _scaler;
         const vslam::solver::Solver<6>::ShPtr _solver;
+        const bool _includePrior;
 
 };
 }

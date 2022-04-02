@@ -41,13 +41,25 @@ void Histogram::plot() const
     }
     for(int i = 0; i < _h.rows(); i++)
     {
-        bins[ (int)((_h(i) - minH) / binSize)]++;
+        if(std::isfinite(_h(i)))
+        {
+            auto idx = (int)std::floor(((_h(i) - minH) / binSize));
+            if (idx < _nBins)
+            {
+                bins[ idx ]++;
+            }
+        }
     }
-    plt::figure();
-    plt::title(_title.c_str());
-    std::vector<double> hv(_h.data(),_h.data()+_h.rows());
-    plt::hist(hv);
-   // plt::xticks(ticks,ticksS);
+    for(int i = 0; i < _nBins; i++)
+    {
+       std::cout << minH + i * binSize << " :" << bins[i] << std::endl;
+    }
+    //plt::figure();
+    //plt::title(_title.c_str());
+    //std::vector<double> hv(_h.data(),_h.data()+_h.rows());
+    //plt::hist(hv);
+    //plt::bar(bins);
+    //plt::xticks(ticks,ticksS);
 }
 
 void PlotLevenbergMarquardt::plot() const

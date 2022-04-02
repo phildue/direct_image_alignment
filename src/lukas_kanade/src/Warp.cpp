@@ -67,7 +67,7 @@ namespace pd{namespace vision{
     void WarpOpticalFlow::updateCompositional(const Eigen::Vector2d& dx)
     {
         //TODO
-        _w = toMat(dx) * _w;
+        _w = _w * toMat(dx);
         _x(0) = _w(0,2);
         _x(1) = _w(1,2);
 
@@ -96,84 +96,100 @@ namespace pd{namespace vision{
     }
 
 
-    WarpSE3::WarpSE3(const SE3d& world2img, const Eigen::MatrixXd& depth, Camera::ConstShPtr camImg, Camera::ConstShPtr camTempl, const SE3d& templ2world)
-    :_x(world2img.log())
-    ,_world2img(world2img)
-    ,_templ2world(templ2world)
-    ,_depth(depth)
-    ,_camImg(camImg)
-    ,_camTempl(camTempl)
+    WarpSE3::WarpSE3(const SE3d& poseCur, const Eigen::MatrixXd& depth, Camera::ConstShPtr camCur, Camera::ConstShPtr camRef, const SE3d& poseRef)
+    :_se3(poseCur.inverse() * poseRef)
+    ,_poseRef(poseRef)
+    ,_width(depth.cols())
+    ,_camCur(camCur)
+    ,_camRef(camRef)
+    ,_pcl(depth.rows()*depth.cols())
     {
+        _x = _se3.log();
+        //TODO move pcl to frame so its only computed once
+        for(int v = 0; v < depth.rows(); v++)
+        {
+            for(int u = 0; u < depth.cols(); u++)
+            {
+                 /* Exclude pixels that are close to not having depth since we do bilinear interpolation later*/
+                 if (std::isfinite(depth(v,u)) && depth(v,u) > 0 &&
+                    std::isfinite(depth(v+1,u+1)) && depth(v+1,u+1) > 0  &&
+                    std::isfinite(depth(v+1,u-1)) && depth(v+1,u-1) > 0  &&
+                    std::isfinite(depth(v-1,u+1)) && depth(v-1,u+1) > 0  &&
+                    std::isfinite(depth(v-1,u-1)) && depth(v-1,u-1) > 0
+                    )//TODO move to actual interpolation?
+                {
+                    _pcl[v * _width + u] = _camRef->image2camera({u,v},depth(v,u));
+                }else{
+                    _pcl[v * _width + u] = Eigen::Vector3d::Zero();
+                }
+            }
+        }
     }
-
+    WarpSE3::WarpSE3(const SE3d& poseCur, const std::vector<Vec3d>& pcl,size_t width, Camera::ConstShPtr camCur, Camera::ConstShPtr camRef, const SE3d& poseRef)
+    :_se3(poseCur.inverse() * poseRef)
+    ,_poseRef(poseRef)
+    ,_width(width)
+    ,_camCur(camCur)
+    ,_camRef(camRef)
+    ,_pcl(pcl)
+    {}
     void WarpSE3::updateAdditive(const Eigen::Vector6d& dx)
     {
-        _world2img = Sophus::SE3d::exp(dx) * _world2img;
-        _x = _world2img.log();
+        _se3 = _se3 * Sophus::SE3d::exp(dx);
+        _x = _se3.log();
     }
     void WarpSE3::updateCompositional(const Eigen::Vector6d& dx)
     {
         //TODO
-        _world2img =  Sophus::SE3d::exp(dx)*_world2img;
-        _x = _world2img.log();
+        _se3 = _se3 * Sophus::SE3d::exp(dx);
+        _x = _se3.log();
 
     }
     Eigen::Vector2d WarpSE3::apply(int u, int v) const { 
-        /* Since exclude pixels that are close to not having depth since we do bilinear interpolation later*/
-        if (std::isfinite(_depth(v,u)) && _depth(v,u) > 0 &&
-        std::isfinite(_depth(v+1,u+1)) && _depth(v+1,u+1) > 0  &&
-        std::isfinite(_depth(v+1,u-1)) && _depth(v+1,u-1) > 0  &&
-        std::isfinite(_depth(v-1,u+1)) && _depth(v-1,u+1) > 0  &&
-        std::isfinite(_depth(v-1,u-1)) && _depth(v-1,u-1) > 0
-        )
-        {
-            return _camImg->camera2image( _world2img * _templ2world *_camTempl->image2camera({u,v},_depth(v,u)));
-        }else{
-            return {-1,-1};
-        }
+        auto& p = _pcl[ v * _width + u];
+        return p.z() > 0 ? _camCur->camera2image( _se3 * p) : Eigen::Vector2d(-1.0,-1.0);
     }
     Eigen::Matrix<double,2,WarpSE3::nParameters> WarpSE3::J(int u, int v) const {
-        //A tutorial on SE(3) transformation parameterizations and on-manifold optimization 
-        //A.2. Projection of a point p.43
+        /*A tutorial on SE(3) transformation parameterizations and on-manifold optimization 
+        A.2. Projection of a point p.43
+        Jacobian of uv = K * T_SE3 * p3d
+        with respect to tx,ty,tz,rx,ry,rz the parameters of the lie algebra element of T_SE3
+        */
         Eigen::Matrix<double,2,6> jac = Eigen::Matrix<double,2,6>::Zero();
-        if (std::isfinite(_depth(v,u)) && _depth(v,u) > 0)
-        {
-            //TODO should this be pRef or pTarget?
-            const Eigen::Vector3d pRef = _camTempl->image2camera({u,v},_depth(v,u));
-            const double& x = pRef.x();
-            const double& y = pRef.y();
-            const double z_inv = 1./pRef.z();
-            const double z_inv_2 = z_inv*z_inv;
+        const Eigen::Vector3d& p = _pcl[v * _width + u];
+        const double& x = p.x();
+        const double& y = p.y();
+        const double z_inv = 1./p.z();
+        const double z_inv_2 = z_inv*z_inv;
 
-            jac(0,0) = z_inv;              
-            jac(0,1) = 0.0;                 
-            jac(0,2) = -x*z_inv_2;           
-            jac(0,3) = -y*jac(0,2);            
-            jac(0,4) = (1.0 + x*jac(0,2));   
-            jac(0,5) = -y*z_inv;
-            jac.row(0) *= _camTempl->fx();             
+        jac(0,0) = z_inv;              
+        jac(0,1) = 0.0;                 
+        jac(0,2) = -x*z_inv_2;           
+        jac(0,3) = -y*jac(0,2);            
+        jac(0,4) = (1.0 + x*jac(0,2));   
+        jac(0,5) = -y*z_inv;
+        jac.row(0) *= _camRef->fx();             
 
-            jac(1,0) = 0.0;                 
-            jac(1,1) = z_inv;             
-            jac(1,2) = -y*z_inv_2;           
-            jac(1,3) = -(1.0 + y*jac(1,2));      
-            jac(1,4) = jac(0,3);            
-            jac(1,5) = x*z_inv;    
-            jac.row(1) *= _camTempl->fy();
-        }
+        jac(1,0) = 0.0;                 
+        jac(1,1) = z_inv;             
+        jac(1,2) = -y*z_inv_2;           
+        jac(1,3) = -(1.0 + y*jac(1,2));      
+        jac(1,4) = jac(0,3);            
+        jac(1,5) = x*z_inv;    
+        jac.row(1) *= _camRef->fy();
         return jac;
         
     }
     void WarpSE3::setX(const Eigen::Vector6d& x)
     {
         _x = x;
-        _world2img = Sophus::SE3d::exp(x);
+        _se3 = Sophus::SE3d::exp(x);
     }
     Eigen::Vector6d WarpSE3::x() const {return _x;}
     
-    SE3d WarpSE3::SE3() const
+    SE3d WarpSE3::poseCur() const
     {
-        return _world2img;
+        return _se3.inverse() * _poseRef;
     }
 
    

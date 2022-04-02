@@ -13,7 +13,7 @@ class CameraTest : public Test
 public:
     Eigen::MatrixX3d _points3D;
     const int _nPoints = 8;
-    const double precision = std::numeric_limits<double>::epsilon()*100;
+    const double precision = 1e-7;
 
     CameraTest()
     {
@@ -67,9 +67,9 @@ TEST_F(CameraTest,ForwardBackwardProjection)
 
         Eigen::Vector3d p3dBack = camera->image2camera(pImage,p3d.z());
 
-        EXPECT_NEAR(p3d.x(),p3d.x(),precision) << "Back-projection failed for point: [" << i << "] -> " << pImage << " | " << p3d;
-        EXPECT_NEAR(p3d.y(),p3d.y(),precision) << "Back-projection failed for point: [" << i << "] -> " << pImage << " | " << p3d;
-        EXPECT_NEAR(p3d.z(),p3d.z(),precision) << "Back-projection failed for point: [" << i << "] -> " << pImage << " | " << p3d;
+        EXPECT_NEAR(p3d.x(),p3dBack.x(),precision) << "Back-projection failed for point: [" << i << "] -> " << pImage << " | " << p3d;
+        EXPECT_NEAR(p3d.y(),p3dBack.y(),precision) << "Back-projection failed for point: [" << i << "] -> " << pImage << " | " << p3d;
+        EXPECT_NEAR(p3d.z(),p3dBack.z(),precision) << "Back-projection failed for point: [" << i << "] -> " << pImage << " | " << p3d;
 
     }
 
@@ -93,6 +93,26 @@ TEST_F(CameraTest,ProjectingInvalid)
         EXPECT_TRUE(std::isnan(pImage.x()));
         EXPECT_TRUE(std::isnan(pImage.y()));
     }
+}
+
+TEST_F(CameraTest,Reprojection)
+{
+    const double f = 1;
+    const double cx = 320;
+    const double cy = 240;
+    auto camera0 = std::make_shared<Camera>(f,cx,cy);
+    auto camera1 = std::make_shared<Camera>(f,cx,cy);
+    SE3d poseCam1(transforms::euler2quaternion(0.0,0.0,0.0),{0.5,0.0,0.0});
+    for (int i = 0; i < _points3D.rows(); i++)
+    {
+        const auto& p3d = _points3D.row(i);
+        auto pImage = camera0->camera2image(p3d);
+        auto pImage1 = camera1->camera2image(poseCam1.inverse() * camera0->image2camera(pImage));
+
+        EXPECT_NEAR(pImage1.x(),pImage.x() - poseCam1.translation().x(),precision) << "Projection failed for point: [" << i << "] -> " << p3d;
+
+    }
+
 }
 /*TODO MOVE TO WARP
 TEST_F(CameraTest,JacobianXYZ2UV)

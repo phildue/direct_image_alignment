@@ -17,6 +17,7 @@ namespace pd{
             using ConstShPtr = std::shared_ptr<const Camera>;
             using ShPtr = std::shared_ptr<Camera>;
             using Ptr = std::unique_ptr<Camera>;
+            typedef std::vector<ConstShPtr> ConstShPtrVec;
 
             Camera(double f, double cx, double cy);
             Camera(double fx, double fy, double cx, double cy);

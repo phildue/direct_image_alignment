@@ -23,13 +23,13 @@ class MedianScaler : public Scaler{
 
 class ScalerTDistribution : public Scaler{
         public:
-        ScalerTDistribution(double v):_v(v){}
+        ScalerTDistribution(double v = 5.0):_v(v){}
         vision::VecXd scale(const vision::VecXd& r) override;
         private:
         const double _v = 5.0; //Experimentally, Robust Odometry Estimation From Rgbd Cameras
         double _sigma = 1.0;
         uint64_t _maxIterations = 20;
-        double _minStepSize = 1e7;
+        double _minStepSize = 1e-7;
 };
 } // namespace pd::vslam::solver
 

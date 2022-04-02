@@ -32,7 +32,6 @@ namespace pd::vslam::solver{
         _chi2.setZero();
         _stepSize.setZero();
         _x.setZero();
-        Eigen::Vector<double,nParameters> dx;
         for(_i = 0; _i < _maxIterations; _i++ )
         {
             TIMED_SCOPE(timerI,"solve ( " + std::to_string(_i) + " )");
@@ -48,20 +47,20 @@ namespace pd::vslam::solver{
             if (_i > 0 && dChi2 > 0)
             {
                 SOLVER( INFO ) << _i << " > " << "CONVERGED. No improvement";
-                problem->updateX(-dx);
+                problem->setX(_x.row(_i-1));
                 break;
             }
             //TODO normalization necessary?
-            const auto A = ne->A/ne->nConstraints;
-            const auto b = ne->b/ne->nConstraints;
-            dx = A.ldlt().solve(b);
+            const auto A = ne->A;
+            const auto b = ne->b;
+            const auto dx = A.ldlt().solve(b);
             _H  = ne->A;
             problem->updateX(dx);
             _x.row(_i) = problem->x();
             _stepSize(_i) = dx.norm();
 
             SOLVER( INFO ) << "Iteration: " << _i << " chi2: " << _chi2(_i) << " dChi2: " << dChi2 << " stepSize: " << _stepSize(_i) 
-            << " Points: " << ne->nConstraints << " x: " << problem->x().transpose() << " dx: " << dx.transpose();
+            << " Points: " << ne->nConstraints << "\nx: " << problem->x().transpose() << "\ndx: " << dx.transpose();
             if ( _i > 0 && (_stepSize(_i) < _minStepSize || std::abs(ne->b.maxCoeff()) < _minGradient || std::abs(dChi2) < _minReduction) )
             { 
                 SOLVER( INFO ) << _i << " > " << _stepSize(_i) << "/" << _minStepSize << " CONVERGED. ";

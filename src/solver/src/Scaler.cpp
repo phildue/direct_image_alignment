@@ -1,3 +1,4 @@
+#include <utils/utils.h>
 #include "Scaler.h"
 using namespace pd::vision;
 namespace pd::vslam::solver
@@ -7,14 +8,13 @@ namespace pd::vslam::solver
         rs.reserve(r.rows());
         for (int i = 0; i < r.rows(); i++)
         {
-            if(std::isfinite(r(i)))
-            {
-                algorithm::insertionSort(rs,r(i));
-            }
+            algorithm::insertionSort(rs,r(i));
         }
+
         const double med = algorithm::median(rs,true);
         const Eigen::Map<Eigen::VectorXd> rv(rs.data(),rs.size());
         const double std = (rv.array() - med).array().abs().sum()/(rv.rows() - 1);
+        LOG_PLT("MedianScaler") << std::make_shared<vis::Histogram>(rv,"ErrorDistribution",30);
 
         return (r.array() - med)/std; 
         
@@ -30,10 +30,7 @@ namespace pd::vslam::solver
             double sum = 0.0;
             for (int i = 0; i < r.rows(); i++)
             {
-                if(std::isfinite(r(i)))
-                {
-                    sum += r(i)*r(i) * (_v+1)/(_v+r(i)/_sigma);
-                }
+                sum += r(i)*r(i) * (_v+1)/(_v+r(i)/_sigma);
             }
             const double sigma_i = std::sqrt(sum/(double)r.rows());
             stepSize = std::abs(_sigma - sigma_i);

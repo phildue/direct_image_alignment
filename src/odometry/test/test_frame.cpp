@@ -15,7 +15,7 @@ TEST(FrameTest,CreatePyramid)
     auto depth = utils::loadImage(TEST_RESOURCE"/depth.png").cast<double>();
     auto img = utils::loadImage(TEST_RESOURCE"/rgb.png");
     auto cam = std::make_shared<Camera>(1,img.cols()/2,img.rows()/2);
-    auto f = std::make_shared<pd::vision::RgbdPyramid>(img,depth,cam,3,0);
+    auto f = std::make_shared<pd::vision::FrameRgbd>(img,depth,cam,3,0);
     for(size_t i = 0; i < f->nLevels(); i++)
     {
         cv::imshow("Image",vis::drawMat(f->intensity(i)));

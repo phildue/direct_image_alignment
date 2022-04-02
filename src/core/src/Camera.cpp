@@ -9,7 +9,7 @@ namespace pd{
         Eigen::Vector2d Camera::camera2image(const Eigen::Vector3d &pWorld) const {
             if (pWorld.z() <= 0)
             {
-                return {std::numeric_limits<double>::quiet_NaN(),std::numeric_limits<double>::signaling_NaN()};
+                return {-1,-1};
             }
             Eigen::Vector3d pProj = _K * pWorld;
             return {pProj.x()/pProj.z(), pProj.y()/pProj.z()};

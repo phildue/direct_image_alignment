@@ -1,3 +1,4 @@
+#include <execution>
 
 #include "utils/utils.h"
 #include "core/core.h"
@@ -15,26 +16,17 @@ namespace pd{namespace vision{
     {
         std::for_each(_frames.begin(),_frames.end(),[&dx](auto f){f->updateX(dx);});
     }
-
+    template<typename Warp>
+    void LukasKanadeInverseCompositionalStacked<Warp>::setX(const Eigen::Matrix<double,Warp::nParameters,1>& x)
+    {
+        std::for_each(_frames.begin(),_frames.end(),[&x](auto f){f->setX(x);});
+    }
     template<typename Warp>
     typename vslam::solver::NormalEquations<Warp::nParameters>::ConstShPtr LukasKanadeInverseCompositionalStacked<Warp>::computeNormalEquations() 
     {
         auto ne = std::make_shared<vslam::solver::NormalEquations<Warp::nParameters>>();
-        ne->A.setZero();
-        ne->b.setZero();
-        ne->chi2 = 0;
-        ne->nConstraints = 0;
-        for(size_t i = 0; i < _frames.size(); i++)
-        {
-            auto ne_i = _frames[i]->computeNormalEquations();
-            ne->A.noalias() +=  ne_i->A;
-            ne->b.noalias() +=  ne_i->b;
-            ne->chi2 +=  ne_i->chi2;
-            ne->nConstraints +=  ne_i->nConstraints;
-        
-        }
+        std::for_each(std::execution::par_unseq,_frames.begin(),_frames.end(),[&](auto f){ne->combine(*f->computeNormalEquations());});
         return ne;
-
     }
    
 }}

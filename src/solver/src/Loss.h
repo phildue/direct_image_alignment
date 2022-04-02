@@ -55,7 +55,7 @@ class TukeyLoss : public Loss
 class HuberLoss : public Loss
 {
         public:
-        HuberLoss(double c)
+        HuberLoss(double c = 1.345f)
         :_c(c)
         {}
         const double _c;

@@ -44,30 +44,31 @@ class WarpOpticalFlow
 };
 
 /*
-Warp based on SE3 (T) transformation:
-uv_1 = p( T * p^-1( uv_0 ) )
+Warp based reprojection with SE3 (T) transformation:
+uv_1 = p( T * p^-1( uv_0, Z(uv_0) ) )
 */
 class WarpSE3
 {
     public:
     inline constexpr static int nParameters = 6;
-    WarpSE3(const SE3d& world2img, const Eigen::MatrixXd& depth, Camera::ConstShPtr camImg, Camera::ConstShPtr camTempl, const SE3d& templ2world = {});
+    WarpSE3(const SE3d& poseCur, const Eigen::MatrixXd& depth, Camera::ConstShPtr camRef, Camera::ConstShPtr camCur, const SE3d& poseRef = {});
+    WarpSE3(const SE3d& poseCur, const std::vector<Vec3d>& pcl, size_t width, Camera::ConstShPtr camRef, Camera::ConstShPtr camCur, const SE3d& poseRef = {});
     void updateAdditive(const Eigen::Vector6d& dx);
     void updateCompositional(const Eigen::Vector6d& dx);
-    Eigen::Vector2d apply(int u, int v) const ;
 
+    Eigen::Vector2d apply(int u, int v) const ;
     Eigen::Matrix<double,2,nParameters> J(int u, int v) const;
+
     void setX(const Eigen::Vector6d& x);
     Eigen::Vector6d x() const;
-    SE3d SE3() const;
-    const DepthMap& depth() const { return _depth;}
+    SE3d poseCur() const;
 
     private:
-    
     Eigen::Vector6d _x;
-    SE3d _world2img,_templ2world;
-    const Eigen::MatrixXd _depth;
-    const std::shared_ptr<const Camera> _camImg, _camTempl;
+    SE3d _se3,_poseRef;
+    const int _width;
+    const std::shared_ptr<const Camera> _camCur, _camRef;
+    std::vector<Eigen::Vector3d> _pcl;
 };
 
 }}

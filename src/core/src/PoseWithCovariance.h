@@ -12,7 +12,7 @@ class PoseWithCovariance{
         typedef std::shared_ptr<const PoseWithCovariance> ConstShPtr;
         typedef std::unique_ptr<const PoseWithCovariance> ConstUnPtr;
 
-        PoseWithCovariance( const Vec6d& x = Vec6d::Zero(), const Matd<6,6>& cov = Matd<6,6>::Zero()):_x(x),_cov(cov){}
+        PoseWithCovariance( const Vec6d& x = Vec6d::Zero(), const Matd<6,6>& cov = Matd<6,6>::Identity()):_x(x),_cov(cov){}
         //PoseWithCovariance( const Vec3d& t, const Vec4d& q, const Matd<6,6>& cov):_x(SE3d(q,t).log()),_cov(cov){}
         PoseWithCovariance( const SE3d& pose, const Matd<6,6>& cov):_x(pose.log()),_cov(cov){}
        

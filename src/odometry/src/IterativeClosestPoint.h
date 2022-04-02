@@ -16,15 +16,18 @@ class IterativeClosestPoint {
         typedef std::shared_ptr<const IterativeClosestPoint> ConstShPtr;
         typedef std::unique_ptr<const IterativeClosestPoint> ConstUnPtr;
 
-        IterativeClosestPoint(int maxIterations ):_maxIterations(maxIterations){
+        IterativeClosestPoint(size_t level, int maxIterations )
+        :_level(level)
+        ,_maxIterations(maxIterations){
                 Log::get("odometry",ODOMETRY_CFG_DIR"/log/odometry.conf");
 
         };
 
-        PoseWithCovariance::UnPtr align(RgbdPyramid::ConstShPtr from, RgbdPyramid::ConstShPtr to) const;
+        PoseWithCovariance::UnPtr align(FrameRgbd::ConstShPtr from, FrameRgbd::ConstShPtr to) const;
 
    
         protected:
+        size_t _level;
         int _maxIterations;
 
 };
