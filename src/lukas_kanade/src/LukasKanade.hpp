@@ -6,117 +6,121 @@
 namespace pd{namespace vision{
 
     template<typename Warp>
-    LukasKanade<Warp>::LukasKanade (const Image& templ, const Image& image,std::shared_ptr<Warp> w0, std::shared_ptr<vslam::solver::Loss> l)
+    LukasKanade<Warp>::LukasKanade (const Image& templ, const MatXi& dIdx, const MatXi& dIdy, const Image& image,
+     std::shared_ptr<Warp> w0,
+     vslam::solver::Loss::ShPtr l,
+     double minGradient,
+     std::shared_ptr<const vslam::solver::Prior<Warp::nParameters>> prior)
     : _T(templ)
+    , _dIdx(dIdx)
+    , _dIdy(dIdy)
     , _Iref(image)
-    , _dIx(algorithm::gradX(image))
-    , _dIy(algorithm::gradY(image))
     , _w(w0)
-    , _l(l)
-    {}
-
-    template<typename Warp>
-    void LukasKanade<Warp>::computeResidual(Eigen::VectorXd& r, Eigen::VectorXd& w)
+    , _loss(l)
+    , _minGradient(minGradient)
+    , _prior(prior)
     {
-        r.conservativeResize(_T.rows()*_T.cols());
-        w.conservativeResize(_T.rows()*_T.cols());
-
-        Eigen::MatrixXd residuals = Eigen::MatrixXd::Zero(_T.rows(),_T.cols());
-        Eigen::MatrixXd visibilityImage = Eigen::MatrixXd::Zero(_T.rows(),_T.cols());
-        Image IWxp = Image::Zero(_Iref.rows(),_Iref.cols());
-        int idxPixel = 0;
-        std::vector<double> validRs;
-        validRs.reserve(_T.rows()*_T.cols());
-        for (int v = 0; v < _T.rows(); v++)
+         //TODO this could come from some external feature selector
+        _interestPoints.reserve(_T.rows() *_T.cols());
+        for (int32_t v = 0; v < _T.rows(); v++)
         {
-            for (int u = 0; u < _T.cols(); u++)
+            for (int32_t u = 0; u < _T.cols(); u++)
             {
-                Eigen::Vector2d uvWarped = _w->apply(u,v);
-                if (!std::isinf(uvWarped.norm()) && !std::isnan(uvWarped.norm()) &&
-                    1 < uvWarped.x() && uvWarped.x() < _Iref.cols() -1  &&
-                   1 < uvWarped.y() && uvWarped.y() < _Iref.rows()-1)
+                if( std::sqrt(_dIdx(v,u)*_dIdx(v,u)+_dIdy(v,u)*_dIdy(v,u)) >= _minGradient)
                 {
-                    IWxp(v,u) =  algorithm::bilinearInterpolation(_Iref,uvWarped.x(),uvWarped.y());
-                    residuals(v,u) = _T(v,u) - IWxp(v,u);
-                    visibilityImage(v,u) = 1.0;
-                    r(idxPixel) = residuals(v,u);
-                    validRs.push_back(r(idxPixel));
-                }else{
-                    w(idxPixel) = 0.0;
-                    r(idxPixel) = 0.0;
-                }
-                idxPixel++;
-            }
-        }
-        const double median = algorithm::median(validRs);
-        const Eigen::VectorXd rScaled = median != 0 ? (r.array() - median).array()/median : r;
-        idxPixel = 0;
-        for (int v = 0; v < _T.rows(); v++)
-        {
-            for (int u = 0; u < _T.cols(); u++)
-            {
-                if (visibilityImage(v,u) > 0.0)
-                {
-                    w(idxPixel) = _l->computeWeight(rScaled(idxPixel));
-                    visibilityImage(v,u) = w(idxPixel);
-                }
-                idxPixel++;
-            }
-        }
-        LOG_IMG("ImageWarped") << IWxp;
-        LOG_IMG("Residual") << residuals;
-        LOG_IMG("Visibility") << visibilityImage;
-    }
-    //
-    // J = Ixy*dW/dp
-    //
-    template<typename Warp>
-    bool LukasKanade<Warp>::computeJacobian(Eigen::Matrix<double, -1,Warp::nParameters>& j)
-    {
-        Eigen::MatrixXd steepestDescent = Eigen::MatrixXd::Zero(_T.rows(),_T.cols());
-        j.setZero();
-        Eigen::MatrixXi dIxWp = Eigen::MatrixXi::Zero(_Iref.rows(),_Iref.cols());
-        Eigen::MatrixXi dIyWp = Eigen::MatrixXi::Zero(_Iref.rows(),_Iref.cols());
-
-        int idxPixel = 0;
-        for (int v = 0; v < _T.rows(); v++)
-        {
-            for (int u = 0; u < _T.cols(); u++)
-            {
-                Eigen::Vector2d uvWarped = _w->apply(u,v);
-                if (1 < uvWarped.x() && uvWarped.x() < _Iref.cols() -1  &&
-                   1 < uvWarped.y() && uvWarped.y() < _Iref.rows()-1)
-                {
-                    dIxWp(v,u) = algorithm::bilinearInterpolation(_dIx,uvWarped.x(),uvWarped.y());
-                    dIyWp(v,u) = algorithm::bilinearInterpolation(_dIy,uvWarped.x(),uvWarped.y());
-
-                    const Eigen::Matrix<double, 2,nParameters> Jwarp = _w->J(u,v);
-                            
-                    j.row(idxPixel++) = (dIxWp(v,u) * Jwarp.row(0) + dIyWp(v,u) * Jwarp.row(1));
-                    steepestDescent(v,u) = j.row(idxPixel).norm();
+                    _interestPoints.push_back({u,v});
                 }
                     
             }
         }
 
+    }
+
+    template<typename Warp>
+    void LukasKanade<Warp>::updateX(const Eigen::Matrix<double,Warp::nParameters,1>& dx)
+    {
+        _w->updateAdditive(dx);
+    }
+
+    template<typename Warp>
+    typename vslam::solver::NormalEquations<Warp::nParameters>::ConstShPtr LukasKanade<Warp>::computeNormalEquations() 
+    {
+
+        Eigen::MatrixXd steepestDescent = Eigen::MatrixXd::Zero(_T.rows(),_T.cols());
+        Eigen::MatrixXi dIxWp = Eigen::MatrixXi::Zero(_Iref.rows(),_Iref.cols());
+        Eigen::MatrixXi dIyWp = Eigen::MatrixXi::Zero(_Iref.rows(),_Iref.cols());
+        Eigen::MatrixXd J = Eigen::MatrixXd::Zero(_Iref.rows()*_Iref.cols(),Warp::nParameters);
+
+        std::for_each(_interestPoints.begin(),_interestPoints.end(),[&](auto kp){
+            Eigen::Vector2d uvWarped = _w->apply(kp.x(),kp.y());
+            if (1 < uvWarped.x() && uvWarped.x() < _Iref.cols() -1  &&
+                1 < uvWarped.y() && uvWarped.y() < _Iref.rows()-1)
+            {
+                dIxWp(kp.y(),kp.x()) = algorithm::bilinearInterpolation(_dIdx,uvWarped.x(),uvWarped.y());
+                dIyWp(kp.y(),kp.x()) = algorithm::bilinearInterpolation(_dIdy,uvWarped.x(),uvWarped.y());
+
+                const Eigen::Matrix<double, 2,nParameters> Jwarp = _w->J(kp.x(),kp.y());
+                        
+                J.row(kp.y() * _Iref.cols() + kp.x()) = (dIxWp(kp.y(),kp.x()) * Jwarp.row(0) + dIyWp(kp.y(),kp.x()) * Jwarp.row(1));
+                steepestDescent(kp.y(),kp.x()) = J.row(kp.y() * _Iref.cols() + kp.x()).norm();
+            }
+        });
         LOG_IMG("Gradient_X_Warped") << dIxWp;
         LOG_IMG("Gradient_Y_Warped") << dIyWp;
         LOG_IMG("SteepestDescent") << steepestDescent;
-        return true;
+
+        Image IWxp = Image::Zero(_Iref.rows(),_Iref.cols());
+        std::vector<Eigen::Vector2i> interestPointsVisible(_interestPoints.size());
+        auto it = std::copy_if(std::execution::par_unseq,_interestPoints.begin(),_interestPoints.end(),interestPointsVisible.begin(),
+        [&](auto kp) {
+                Eigen::Vector2d uvI = _w->apply(kp.x(),kp.y());
+                const bool visible = 1 < uvI.x() && uvI.x() < _Iref.cols() - 1 && 1 < uvI.y() && uvI.y() < _Iref.rows() - 1 && std::isfinite(uvI.x());
+                if (visible){
+                    IWxp(kp.y(),kp.x()) =  algorithm::bilinearInterpolation(_Iref,uvI.x(),uvI.y());
+                }
+                return visible;
+            }
+        );
+        interestPointsVisible.resize(std::distance(interestPointsVisible.begin(),it));
+
+        if(interestPointsVisible.empty()) { throw std::runtime_error("No valid interest points!"); }
+        
+        const MatXd R = _T.cast<double>() - IWxp.cast<double>();
+        
+        std::vector<double> r(interestPointsVisible.size());
+        std::transform(std::execution::unseq,interestPointsVisible.begin(),interestPointsVisible.end(),r.begin(),[&](auto kp){
+            return R(kp.y(),kp.x());
+        });
+
+        if(_loss){  _loss->computeScale(Eigen::Map<Eigen::VectorXd> (r.data(),r.size()));}
+   
+        auto ne = std::make_shared<vslam::solver::NormalEquations<Warp::nParameters>>();
+        Eigen::MatrixXd W = Eigen::MatrixXd::Zero(_T.rows(),_T.cols());
+        std::for_each(std::execution::unseq,interestPointsVisible.begin(),interestPointsVisible.end(),
+        [&](auto kp)
+        {
+            W(kp.y(),kp.x()) = _loss ? _loss->computeWeight( R(kp.y(),kp.x())) : 1.0;
+
+            if(!std::isfinite(J.row(kp.y() * _T.cols() + kp.x()).norm()) || !std::isfinite(R(kp.y(),kp.x())) || !std::isfinite(W(kp.y(),kp.x())))
+            {
+                std::stringstream ss;
+                ss << "NaN during LK with: R = " << R(kp.y(),kp.x()) << " W = "<< W(kp.y(),kp.x()) << " J = " << J.row(kp.y() * _T.cols() + kp.x()) << " at: " << kp.transpose();
+                throw std::runtime_error(ss.str());
+            }
+            ne->addConstraint(J.row(kp.y() * _T.cols() + kp.x()),R(kp.y(),kp.x()),W(kp.y(),kp.x()));
+        });
+        ne->A.noalias() = ne->A / (double)ne->nConstraints;
+        ne->b.noalias() = ne->b / (double)ne->nConstraints;
+
+        if (_prior){ _prior->apply(ne,_w->x()); }
+
+        LOG_IMG("ImageWarped") << IWxp;
+        LOG_IMG("Residual") << R;
+        LOG_IMG("Weights") << W;
+
+        return ne;
+
+
     }
-
-    template<typename Warp>
-    bool LukasKanade<Warp>::updateX(const Eigen::Matrix<double,Warp::nParameters,1>& dx)
-    {
-        _w->updateAdditive(dx);
-        return true;
-    }
-
-
-    template<typename Warp>
-    void LukasKanade<Warp>::extendLeft(Eigen::MatrixXd& UNUSED(H))
-    {}
-    template<typename Warp>
-    void LukasKanade<Warp>::extendRight(Eigen::VectorXd& UNUSED(g))
-    {}
+    
 }}
