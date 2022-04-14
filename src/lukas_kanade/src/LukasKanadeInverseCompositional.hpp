@@ -6,15 +6,16 @@
 namespace pd{namespace vision{
 
     template<typename Warp>
-    LukasKanadeInverseCompositional<Warp>::LukasKanadeInverseCompositional (const Image& templ, const MatXi& dTx, const MatXi& dTy,
-     const Image& image,std::shared_ptr<Warp> w0, std::shared_ptr<vslam::solver::Loss> l,
-      double minGradient, vslam::solver::Scaler::ShPtr scaler, std::shared_ptr<const vslam::solver::Prior<Warp::nParameters>> prior)
+    LukasKanadeInverseCompositional<Warp>::LukasKanadeInverseCompositional (const Image& templ, const MatXd& dTx, const MatXd& dTy, const Image& image,
+     std::shared_ptr<Warp> w0,
+     vslam::solver::Loss::ShPtr l,
+     double minGradient ,
+     std::shared_ptr<const vslam::solver::Prior<Warp::nParameters>> prior)
     : vslam::solver::Problem<Warp::nParameters>()
     , _T(templ)
     , _I(image)
     , _w(w0)
     , _loss(l)
-    , _scaler(scaler)
     , _prior(prior)
     , _minGradient(minGradient)
     {
@@ -49,8 +50,8 @@ namespace pd{namespace vision{
         LOG_IMG("SteepestDescent") << steepestDescent;
     }
     template<typename Warp>
-    LukasKanadeInverseCompositional<Warp>::LukasKanadeInverseCompositional (const Image& templ, const Image& image,std::shared_ptr<Warp> w0, std::shared_ptr<vslam::solver::Loss> l, double minGradient, vslam::solver::Scaler::ShPtr scaler,std::shared_ptr<const vslam::solver::Prior<Warp::nParameters>> prior)
-    : LukasKanadeInverseCompositional<Warp> (templ, algorithm::gradX(templ), algorithm::gradY(templ), image, w0, l, minGradient, scaler,prior){}
+    LukasKanadeInverseCompositional<Warp>::LukasKanadeInverseCompositional (const Image& templ, const Image& image,std::shared_ptr<Warp> w0, std::shared_ptr<vslam::solver::Loss> l, double minGradient, std::shared_ptr<const vslam::solver::Prior<Warp::nParameters>> prior)
+    : LukasKanadeInverseCompositional<Warp> (templ, algorithm::gradX(templ), algorithm::gradY(templ), image, w0, l, minGradient,prior){}
 
 
 

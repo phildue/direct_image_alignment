@@ -6,7 +6,6 @@ namespace pd::vslam::solver{
 
     template<int nParameters>
     GaussNewton<nParameters>::GaussNewton(
-            double alpha,
             double minStepSize,
             int maxIterations
             )

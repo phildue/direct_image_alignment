@@ -6,6 +6,8 @@
 #include "SE3Alignment.h"
 #include "Map.h"
 #include "IterativeClosestPoint.h"
+#include "RgbdAlignmentOpenCv.h"
+#include "IterativeClosestPointOcv.h"
 
 namespace pd::vision{
 class Odometry{
@@ -23,6 +25,7 @@ class Odometry{
         static ShPtr make();
 
 };
+
 
 class OdometryRgbd : public Odometry{
         public:
@@ -44,7 +47,7 @@ class OdometryRgbd : public Odometry{
         PoseWithCovariance::ConstShPtr speed() const override { return _speed;}
         protected:
      
-        const SE3Alignment::ConstShPtr _aligner;
+        const RgbdAlignmentOpenCv::ConstShPtr _aligner;
         const Map::ConstShPtr _map;
         const bool _includeKeyFrame;
         PoseWithCovariance::ConstShPtr _speed;

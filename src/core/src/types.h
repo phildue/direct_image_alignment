@@ -26,6 +26,8 @@ namespace pd::vision{
     typedef std::vector<MatXi> MatXiVec;
 
     typedef Eigen::Matrix<double ,Eigen::Dynamic,Eigen::Dynamic> MatXd;
+    typedef std::vector<MatXd> MatXdVec;
+
     typedef Eigen::Matrix<float ,Eigen::Dynamic,Eigen::Dynamic> MatXf;
     typedef Eigen::Matrix<double ,3,3> Mat3d;
     typedef Eigen::Matrix<double ,2,2> Mat2d;

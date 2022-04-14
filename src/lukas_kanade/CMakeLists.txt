@@ -44,6 +44,9 @@ if(VSLAM_BUILD_TESTS)
 
         pd_add_test(lukas_kanade_flow ${PROJECT_NAME})
         target_compile_definitions(lukas_kanade_flowTest PUBLIC TEST_RESOURCE="${CMAKE_CURRENT_LIST_DIR}/test/resource")
+        pd_add_test(warp ${PROJECT_NAME})
+        target_compile_definitions(warpTest PUBLIC TEST_RESOURCE="${CMAKE_CURRENT_LIST_DIR}/test/resource")
+     
         #pd_add_test(lukas_kanade_affine ${PROJECT_NAME})
         #pd_add_test(lukas_kanade_se3 ${PROJECT_NAME})
         

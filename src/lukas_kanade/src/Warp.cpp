@@ -97,7 +97,7 @@ namespace pd{namespace vision{
 
 
     WarpSE3::WarpSE3(const SE3d& poseCur, const Eigen::MatrixXd& depth, Camera::ConstShPtr camCur, Camera::ConstShPtr camRef, const SE3d& poseRef)
-    :_se3(poseCur.inverse() * poseRef)
+    :_se3(poseCur * poseRef.inverse())
     ,_poseRef(poseRef)
     ,_width(depth.cols())
     ,_camCur(camCur)
@@ -126,7 +126,7 @@ namespace pd{namespace vision{
         }
     }
     WarpSE3::WarpSE3(const SE3d& poseCur, const std::vector<Vec3d>& pcl,size_t width, Camera::ConstShPtr camCur, Camera::ConstShPtr camRef, const SE3d& poseRef)
-    :_se3(poseCur.inverse() * poseRef)
+    :_se3(poseCur * poseRef.inverse())
     ,_poseRef(poseRef)
     ,_width(width)
     ,_camCur(camCur)
@@ -147,7 +147,7 @@ namespace pd{namespace vision{
     }
     Eigen::Vector2d WarpSE3::apply(int u, int v) const { 
         auto& p = _pcl[ v * _width + u];
-        return p.z() > 0 ? _camCur->camera2image( _se3 * p) : Eigen::Vector2d(-1.0,-1.0);
+        return p.z() > 0.0 ? _camCur->camera2image( _se3 * p) : Eigen::Vector2d(std::numeric_limits<double>::quiet_NaN(),std::numeric_limits<double>::quiet_NaN());
     }
     Eigen::Matrix<double,2,WarpSE3::nParameters> WarpSE3::J(int u, int v) const {
         /*A tutorial on SE(3) transformation parameterizations and on-manifold optimization 
@@ -155,8 +155,11 @@ namespace pd{namespace vision{
         Jacobian of uv = K * T_SE3 * p3d
         with respect to tx,ty,tz,rx,ry,rz the parameters of the lie algebra element of T_SE3
         */
-        Eigen::Matrix<double,2,6> jac = Eigen::Matrix<double,2,6>::Zero();
+        Eigen::Matrix<double,2,6> jac;
+        jac.setConstant(std::numeric_limits<double>::quiet_NaN());
         const Eigen::Vector3d& p = _pcl[v * _width + u];
+        if (p.z() <= 0.0 ) { return jac;} 
+
         const double& x = p.x();
         const double& y = p.y();
         const double z_inv = 1./p.z();
@@ -165,21 +168,61 @@ namespace pd{namespace vision{
         jac(0,0) = z_inv;              
         jac(0,1) = 0.0;                 
         jac(0,2) = -x*z_inv_2;           
-        jac(0,3) = -y*jac(0,2);            
-        jac(0,4) = (1.0 + x*jac(0,2));   
+        jac(0,3) = y*jac(0,2);            
+        jac(0,4) = 1.0 - x*jac(0,2);   
         jac(0,5) = -y*z_inv;
-        jac.row(0) *= _camRef->fx();             
+        
 
         jac(1,0) = 0.0;                 
         jac(1,1) = z_inv;             
         jac(1,2) = -y*z_inv_2;           
-        jac(1,3) = -(1.0 + y*jac(1,2));      
-        jac(1,4) = jac(0,3);            
+        jac(1,3) = -1.0 + y*jac(1,2);      
+        jac(1,4) = -jac(0,3);            
         jac(1,5) = x*z_inv;    
+        jac.row(0) *= _camRef->fx();     
         jac.row(1) *= _camRef->fy();
         return jac;
         
     }
+
+    Image WarpSE3::apply(const Image& img) const
+    {
+        Image warped = Image::Zero(img.rows(),img.cols());  
+        for(int i = 0; i < warped.rows(); i++)
+        {
+            for(int j = 0; j < warped.cols(); j++)
+            {
+                 Eigen::Vector2d uvI = apply(j,i);
+                if (1 < uvI.x() && uvI.x() < img.cols() - 1  &&
+                    1 < uvI.y() && uvI.y() < img.rows() - 1)
+                {
+                    warped(i,j) =  algorithm::bilinearInterpolation(img,uvI.x(),uvI.y());
+                }
+            }
+        }
+        return warped;
+    }
+
+    DepthMap WarpSE3::apply(const DepthMap& img) const
+    {
+        DepthMap warped = DepthMap::Zero(img.rows(),img.cols());  
+        for(int i = 0; i < warped.rows(); i++)
+        {
+            for(int j = 0; j < warped.cols(); j++)
+            {
+                Eigen::Vector2d uvI = apply(j,i);
+                if (1 < uvI.x() && uvI.x() < img.cols() - 1  &&
+                    1 < uvI.y() && uvI.y() < img.rows() - 1 
+                    )
+                { //TODO check for invalid
+                    warped(i,j) =  algorithm::bilinearInterpolation(img,uvI.x(),uvI.y());
+                }
+            }
+        }
+        return warped;
+    }
+
+
     void WarpSE3::setX(const Eigen::Vector6d& x)
     {
         _x = x;
@@ -189,7 +232,7 @@ namespace pd{namespace vision{
     
     SE3d WarpSE3::poseCur() const
     {
-        return _se3.inverse() * _poseRef;
+        return _se3 * _poseRef;
     }
 
    

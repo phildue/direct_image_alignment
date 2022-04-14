@@ -6,7 +6,7 @@
 namespace pd{namespace vision{
 
     template<typename Warp>
-    LukasKanade<Warp>::LukasKanade (const Image& templ, const MatXi& dIdx, const MatXi& dIdy, const Image& image,
+    LukasKanade<Warp>::LukasKanade (const Image& templ, const MatXd& dIdx, const MatXd& dIdy, const Image& image,
      std::shared_ptr<Warp> w0,
      vslam::solver::Loss::ShPtr l,
      double minGradient,
@@ -47,8 +47,8 @@ namespace pd{namespace vision{
     {
 
         Eigen::MatrixXd steepestDescent = Eigen::MatrixXd::Zero(_T.rows(),_T.cols());
-        Eigen::MatrixXi dIxWp = Eigen::MatrixXi::Zero(_Iref.rows(),_Iref.cols());
-        Eigen::MatrixXi dIyWp = Eigen::MatrixXi::Zero(_Iref.rows(),_Iref.cols());
+        Eigen::MatrixXd dIxWp = Eigen::MatrixXd::Zero(_Iref.rows(),_Iref.cols());
+        Eigen::MatrixXd dIyWp = Eigen::MatrixXd::Zero(_Iref.rows(),_Iref.cols());
         Eigen::MatrixXd J = Eigen::MatrixXd::Zero(_Iref.rows()*_Iref.cols(),Warp::nParameters);
 
         std::for_each(_interestPoints.begin(),_interestPoints.end(),[&](auto kp){

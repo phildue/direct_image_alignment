@@ -1,5 +1,6 @@
 
 #include "SE3Alignment.h"
+
 #define LOG_ODOM(level) CLOG(level,"odometry")
 using namespace pd::vslam::solver;
 namespace pd::vision{
@@ -53,13 +54,13 @@ namespace pd::vision{
                         LOG_IMG("Template") << from->intensity(level);
                         LOG_IMG("Depth") << from->depth(level);
                         
-                        auto w = std::make_shared<WarpSE3>(pose,from->depth(level),
+                        auto w = std::make_shared<WarpSE3>(pose,from->pcl(level,false),from->width(level),
                         from->camera(level),to->camera(level),from->pose().pose());
 
                         vslam::solver::Problem<6>::ShPtr lk = std::make_shared<LukasKanadeInverseCompositionalSE3> (
                                 from->intensity(level),from->dIx(level), from->dIy(level),
                                 to->intensity(level),
-                                w, _loss,_minGradient,_scaler, prior );
+                                w, _loss,_minGradient, prior );
 
                         _solver->solve(lk);
                         
@@ -86,7 +87,7 @@ namespace pd::vision{
                                 vslam::solver::Problem<6>::ShPtr lk = std::make_shared<LukasKanadeInverseCompositionalSE3> (
                                 f->intensity(level),f->dIx(level), f->dIy(level),
                                 to->intensity(level),
-                                w, _loss,_minGradient,_scaler, prior );
+                                w, _loss,_minGradient, prior );
 
                  
 

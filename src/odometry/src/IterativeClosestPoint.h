@@ -2,6 +2,7 @@
 #define VSLAM_ICP_H__
 
 #include "core/core.h"
+#include "AlignmentSE3.h"
 #include <pcl/io/ply_io.h>
 #include <pcl/point_types.h>
 #include <pcl/registration/icp.h>
@@ -9,7 +10,7 @@
 #include <pcl/console/time.h>   // TicToc
 
 namespace pd::vision{
-class IterativeClosestPoint {
+class IterativeClosestPoint : public AlignmentSE3{
         public:
         typedef std::shared_ptr<IterativeClosestPoint> ShPtr;
         typedef std::unique_ptr<IterativeClosestPoint> UnPtr;
@@ -23,7 +24,7 @@ class IterativeClosestPoint {
 
         };
 
-        PoseWithCovariance::UnPtr align(FrameRgbd::ConstShPtr from, FrameRgbd::ConstShPtr to) const;
+        PoseWithCovariance::UnPtr align(FrameRgbd::ConstShPtr from, FrameRgbd::ConstShPtr to) const override;
 
    
         protected:

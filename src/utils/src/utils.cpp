@@ -61,7 +61,7 @@ namespace pd{ namespace vision {
 
             Eigen::MatrixXd img;
             cv::cv2eigen(mat,img);
-            return img;
+            return img.array().isNaN().select(0,img);
 
         }
         std::map<Timestamp,SE3d> utils::loadTrajectory(const fs::path& path)

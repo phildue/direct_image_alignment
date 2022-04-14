@@ -19,7 +19,7 @@ class PoseWithCovariance{
         SE3d pose() const {return SE3d::exp(_x);}
         Matd<6,6> cov() const {return _cov;}
         Vec6d mean() const { return _x; }
-        
+        PoseWithCovariance inverse() const {return PoseWithCovariance(SE3d::exp(_x).inverse().log(),_cov);}
         private:
         Vec6d _x;
         Matd<6,6> _cov;

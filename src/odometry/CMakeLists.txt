@@ -6,9 +6,10 @@ set(sources
         src/KeyFrameSelection.cpp
         src/Odometry.cpp
         src/IterativeClosestPoint.cpp
+        src/IterativeClosestPointOcv.cpp
         src/SE3Alignment.cpp
         src/RgbdAlignmentOpenCv.cpp
-        src/PoseGraph.cpp
+        src/Trajectory.cpp
       #  src/PlotSE3.cpp
         )
 
@@ -17,9 +18,10 @@ set(headers
         src/KeyFrameSelection.h
         src/Odometry.h
         src/IterativeClosestPoint.h
+        src/IterativeClosestPointOcv.h
         src/SE3Alignment.h
         src/RgbdAlignmentOpenCv.h
-        src/PoseGraph.h
+        src/Trajectory.h
        # src/PlotSE3.h
         include/odometry/odometry.h
         )
@@ -66,7 +68,7 @@ if(VSLAM_BUILD_TESTS)
         pd_add_test(odometry_rgbd_cv ${PROJECT_NAME})
         target_compile_definitions(odometry_rgbd_cvTest PUBLIC TEST_RESOURCE="${CMAKE_CURRENT_LIST_DIR}/test/resource")
 
-        pd_add_test(pose_graph ${PROJECT_NAME})
-        target_compile_definitions(pose_graphTest PUBLIC TEST_RESOURCE="${CMAKE_CURRENT_LIST_DIR}/test/resource")
+        pd_add_test(trajectory ${PROJECT_NAME})
+        target_compile_definitions(trajectoryTest PUBLIC TEST_RESOURCE="${CMAKE_CURRENT_LIST_DIR}/test/resource")
 
 endif()

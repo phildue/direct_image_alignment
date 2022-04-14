@@ -34,12 +34,14 @@ namespace pd::vision{
                                 }
                         }
                 }
+                
                 pcl::IterativeClosestPoint<pcl::PointXYZ, pcl::PointXYZ> icp;
                 icp.setMaximumIterations (_maxIterations);
                 icp.setInputSource (cloudFrom);
                 icp.setInputTarget (cloudTo);
                 pcl::PointCloud<pcl::PointXYZ>::Ptr cloudAligned (new pcl::PointCloud<pcl::PointXYZ>);
-                icp.align (*cloudAligned);
+                const auto guess = algorithm::computeRelativeTransform(from->pose().pose(),to->pose().pose()).inverse().matrix();
+                icp.align (*cloudAligned,guess.cast<float>());
 
                 /*
                 // Visualization
@@ -88,7 +90,7 @@ namespace pd::vision{
                 if (icp.hasConverged ())
                 {
                         LOG_ODOM(INFO) << "ICP has converged, score is: " << icp.getFitnessScore ();
-                        return std::make_unique<PoseWithCovariance>(SE3d(icp.getFinalTransformation ().cast<double>()).inverse() * to->pose().pose(),MatXd::Identity(6,6));
+                        return std::make_unique<PoseWithCovariance>(SE3d(icp.getFinalTransformation ().cast<double>()).inverse() * from->pose().pose(),MatXd::Identity(6,6));
                 }
                 else
                 {

@@ -4,8 +4,9 @@
 #include "core/core.h"
 #include "lukas_kanade/lukas_kanade.h"
 #include "solver/solver.h"
+#include "AlignmentSE3.h"
 namespace pd::vision{
-class SE3Alignment {
+class SE3Alignment : public AlignmentSE3{
         public:
         typedef std::shared_ptr<SE3Alignment> ShPtr;
         typedef std::unique_ptr<SE3Alignment> UnPtr;
@@ -18,7 +19,7 @@ class SE3Alignment {
          vslam::solver::Scaler::ShPtr scaler
          );
 
-        PoseWithCovariance::UnPtr align(FrameRgbd::ConstShPtr from, FrameRgbd::ConstShPtr to) const;
+        PoseWithCovariance::UnPtr align(FrameRgbd::ConstShPtr from, FrameRgbd::ConstShPtr to) const override;
         PoseWithCovariance::UnPtr align(const std::vector<FrameRgbd::ConstShPtr>& from,  FrameRgbd::ConstShPtr to) const;
 
    

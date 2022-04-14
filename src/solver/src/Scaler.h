@@ -13,12 +13,28 @@ class Scaler{
         typedef std::unique_ptr<const Scaler> ConstUnPtr;
 
         virtual vision::VecXd scale(const vision::VecXd& r) {return r;};
+        virtual void compute(const vision::VecXd& UNUSED(r)){};
+        virtual double scale(double UNUSED(r)) {return 1.0;};
 
 };
 
 class MedianScaler : public Scaler{
         public:
         vision::VecXd scale(const vision::VecXd& r) override;
+        double scale(double r) override { return (r - _median)/_std;}
+        void compute(const vision::VecXd& r) override;
+        private:
+        double _median = 0.0;
+        double _std = 1.0;
+};
+class MeanScaler : public Scaler{
+        public:
+        vision::VecXd scale(const vision::VecXd& r) override;
+        double scale(double r) override { return (r - _mean)/_std;}
+        void compute(const vision::VecXd& r) override;
+        private:
+        double _mean = 0.0;
+        double _std = 1.0;
 };
 
 class ScalerTDistribution : public Scaler{

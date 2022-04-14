@@ -28,8 +28,8 @@ if (NOT OpenCV_FOUND)
 endif ()
 message(STATUS "Found OpenCV version ${OpenCV_VERSION}")
 target_include_directories(${PROJECT_NAME} PUBLIC ${OpenCV_INCLUDE_DIRS})
-
 target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBRARIES})
+
 find_package(Eigen3 3.4 REQUIRED)
 target_link_libraries(${PROJECT_NAME} Eigen3::Eigen3)
 

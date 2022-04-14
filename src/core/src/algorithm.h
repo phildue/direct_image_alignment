@@ -4,10 +4,12 @@
 
 #ifndef DIRECT_IMAGE_ALIGNMENT_ALGORITHM_H
 #define DIRECT_IMAGE_ALIGNMENT_ALGORITHM_H
-
-#include <Eigen/Dense>
 #include <algorithm>
 #include <random>
+#include <functional>
+
+#include <Eigen/Dense>
+
 #include "types.h"
 #include "Kernel2d.h"
 namespace pd{ namespace vision{ 
@@ -140,7 +142,7 @@ namespace pd{ namespace vision{
     double median(std::vector<double>& v, bool isSorted = false);
 
     template< typename Derived>
-    Eigen::Matrix<Derived, Eigen::Dynamic,Eigen::Dynamic> medianBlur(const Eigen::Matrix<Derived,-1,-1>& mat, int sizeX, int sizeY) {
+    Eigen::Matrix<Derived, Eigen::Dynamic,Eigen::Dynamic> medianBlur(const Eigen::Matrix<Derived,-1,-1>& mat, int sizeX, int sizeY, std::function<bool(Derived)> mask) {
         
         typedef int Idx;
         //TODO is this the most efficient way? add padding
@@ -159,10 +161,11 @@ namespace pd{ namespace vision{
                 {
                     for(Idx kj = j - kX_2; kj <= j - kX_2 + sizeX; kj++)
                     {
-                        values.push_back ((double)mat(ki,kj));
+                        auto v = (double)mat(ki,kj);
+                        if(!mask(v)){ values.push_back (v);}
                     }
                 }
-                res(i,j) = (Derived)median(values);
+                res(i,j) = values.size() > 0 ? (Derived)median(values) : 0.0;
             }
         }
         return res;

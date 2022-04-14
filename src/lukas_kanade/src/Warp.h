@@ -59,6 +59,9 @@ class WarpSE3
     Eigen::Vector2d apply(int u, int v) const ;
     Eigen::Matrix<double,2,nParameters> J(int u, int v) const;
 
+    Image apply(const Image& img) const ;
+    DepthMap apply(const DepthMap& img) const ;
+
     void setX(const Eigen::Vector6d& x);
     Eigen::Vector6d x() const;
     SE3d poseCur() const;

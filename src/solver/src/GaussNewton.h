@@ -79,14 +79,9 @@ namespace pd::vslam::solver{
         typedef std::unique_ptr<const GaussNewton> ConstUnPtr;
 
         GaussNewton(
-                double alpha,
                 double minStepSize,
                 int maxIterations
                 );
-        GaussNewton(
-                double minStepSize,
-                int maxIterations
-                ):GaussNewton(0.0,minStepSize,maxIterations){}
         void solve(std::shared_ptr< Problem<nParameters> > problem) override;
         const int& iteration() const {return _i;}
         const Eigen::VectorXd& chi2() const {return _chi2;}

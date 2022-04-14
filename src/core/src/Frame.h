@@ -22,8 +22,8 @@ namespace pd::vision
                 FrameRgb(const Image& intensity, Camera::ConstShPtr cam, size_t nLevels = 1, const Timestamp& t = 0U, const PoseWithCovariance& pose = {});
 
                 const Image& intensity(size_t level = 0) const {return _intensity.at(level);}
-                const MatXi& dIx(size_t level = 0) const { return _dIx.at(level);}
-                const MatXi& dIy(size_t level = 0) const { return _dIy.at(level);}
+                const MatXd& dIx(size_t level = 0) const { return _dIx.at(level);}
+                const MatXd& dIy(size_t level = 0) const { return _dIy.at(level);}
 
                 const PoseWithCovariance& pose() const {return _pose;}
                 
@@ -32,17 +32,21 @@ namespace pd::vision
                 size_t width(size_t level = 0) const {return _intensity.at(level).cols();}
                 size_t height(size_t level = 0) const {return _intensity.at(level).rows();}
                 size_t nLevels() const { return _intensity.size();}
-                
+                Eigen::Vector2d camera2image(const Eigen::Vector3d &pCamera, size_t level = 0) const;
+                Eigen::Vector3d image2camera(const Eigen::Vector2d &pImage, double depth = 1.0, size_t level = 0) const;
+                Eigen::Vector2d world2image(const Eigen::Vector3d &pWorld, size_t level = 0) const;
+                Eigen::Vector3d image2world(const Eigen::Vector2d &pImage, double depth = 1.0, size_t level = 0) const;
+          
                 void set(const PoseWithCovariance& pose){_pose = pose;}
 
 
                 virtual ~FrameRgb(){};
                 private:
                 ImageVec _intensity;
-                MatXiVec _dIx,_dIy;
+                MatXdVec _dIx,_dIy;
                 Camera::ConstShPtrVec _cam;
                 Timestamp _t;
-                PoseWithCovariance _pose; //<< Pw = pose * Pf
+                PoseWithCovariance _pose; //<< Pf = pose * Pw
         };
 
         class FrameRgbd : public FrameRgb {
@@ -56,9 +60,11 @@ namespace pd::vision
                 
                 FrameRgbd(const Image& rgb, const DepthMap& depth, Camera::ConstShPtr cam, size_t nLevels = 1, const Timestamp& t = 0U, const PoseWithCovariance& pose = {});
 
-                const DepthMap& depth(size_t level) const {return _depth.at(level);}
-                const Vec3d& p3d(int v, int u, size_t level = 0) const {return _pcl.at(level)[v * width() + u];}
+                const DepthMap& depth(size_t level = 0) const {return _depth.at(level);}
+                const Vec3d& p3d(int v, int u, size_t level = 0) const {return _pcl.at(level)[v * width(level) + u];}
+                Vec3d p3dWorld(int v, int u, size_t level = 0) const {return pose().pose().inverse() * _pcl.at(level)[v * width() + u];}
                 std::vector<Vec3d> pcl (size_t level = 0, bool removeInvalid = false) const;
+                std::vector<Vec3d> pclWorld (size_t level = 0, bool removeInvalid = false) const;
 
                 virtual ~FrameRgbd(){};
                 private:

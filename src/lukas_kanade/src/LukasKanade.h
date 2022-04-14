@@ -9,7 +9,7 @@ template<typename Warp>
 class LukasKanade : public vslam::solver::Problem<Warp::nParameters>{
 public:
     inline constexpr static int nParameters = Warp::nParameters;
-    LukasKanade (const Image& templ, const MatXi& dX, const MatXi& dY, const Image& image,
+    LukasKanade (const Image& templ, const MatXd& dX, const MatXd& dY, const Image& image,
      std::shared_ptr<Warp> w0,
      vslam::solver::Loss::ShPtr = std::make_shared<vslam::solver::QuadraticLoss>(),
      double minGradient = 0,
@@ -28,8 +28,8 @@ protected:
 
     const Image _T;
     const Image _Iref;
-    Eigen::MatrixXi _dIdx;
-    Eigen::MatrixXi _dIdy;
+    Eigen::MatrixXd _dIdx;
+    Eigen::MatrixXd _dIdy;
     const std::shared_ptr<Warp> _w;
     const std::shared_ptr<vslam::solver::Loss> _loss;
     const double _minGradient;
