@@ -3,60 +3,63 @@
 //
 
 #include <gtest/gtest.h>
-#include "utils/Exceptions.h"
-#include "utils/Log.h"
 #include "utils/utils.h"
-#include "utils/visuals.h"
-#include "core/algorithm.h"
-#include "core/types.h"
-#include "lukas_kanade/LukasKanade.h"
-#include "solver/Loss.h"
+#include "core/core.h"
+#include "solver/solver.h"
+#include "lukas_kanade/lukas_kanade.h"
 
 using namespace testing;
 using namespace pd;
 using namespace pd::vision;
+using namespace pd::vslam::solver;
 
+#define VISUALIZE true
 
-class LukasKanadeOpticalFlowTest : public TestWithParam<int>{
+class LukasKanadeOpticalFlowTest : public Test{
     public:
     Image img0,img1;
     Eigen::Matrix3d A;
-    Eigen::Vector2d x;
+    int _nRuns = 20;
+    int _nFailed = 0;
     LukasKanadeOpticalFlowTest()
     {
         img0 = utils::loadImage(TEST_RESOURCE"/person.jpg",50,50,true);
         A = Eigen::Matrix3d::Identity();
         img1 = img0;
         algorithm::warpAffine(img0,A,img1);
-        x << random::U(1,2)*random::sign(),random::U(1,2)*random::sign();
     
     }
 };
 
-TEST_P(LukasKanadeOpticalFlowTest,LukasKanadeOpticalFlow)
+TEST_F(LukasKanadeOpticalFlowTest,LukasKanadeOpticalFlow)
 {
 
-    auto mat0 = vis::drawMat(img0);
-    auto mat1 = vis::drawMat(img1);
+    for (int i = 0; i < _nRuns; i++)
+    {
+        Eigen::Vector2d x;
+        x << random::U(5,6)*random::sign(),random::U(5,6)*random::sign();
+        auto w = std::make_shared<WarpOpticalFlow>(x);
+        auto gn = std::make_shared<GaussNewton<LukasKanadeInverseCompositionalOpticalFlow::nParameters>> ( 1e-7,100);
+        auto lk = std::make_shared<LukasKanadeInverseCompositionalOpticalFlow> (img1,img0,w);
+        if (VISUALIZE)
+        {
+            LOG_IMG("ImageWarped")->_show = true;
+            LOG_IMG("Depth")->_show = true;
+            LOG_IMG("Residual")->_show = true;
+            LOG_IMG("Image")->_show = true;
+            LOG_IMG("Depth")->_show = true;
+            LOG_IMG("Weights")->_show = true;
+        }
+        
+        ASSERT_GT(w->x().norm(), 1.0) << "Noise should be greater than that.";
 
-    Log::getImageLog("I")->append(mat0);
-    Log::getImageLog("T")->append(mat1);
+        gn->solve(lk);
+        
+        if (w->x().norm() > 1.0){_nFailed++;}
+    }
 
-    auto w = std::make_shared<WarpOpticalFlow>(x);
-    auto gn = std::make_shared<GaussNewton<LukasKanadeOpticalFlow>> ( 
-                0.1,
-                1e-3,
-                100);
-    auto lk = std::make_shared<LukasKanadeOpticalFlow> (img1,img0,w);
-  
-   
-    ASSERT_GT(w->x().norm(), 0.5);
-
-    gn->solve(lk);
-    
-    EXPECT_LE(w->x().norm(), 0.5);
-   
+    EXPECT_LE((double)_nFailed/(double)_nRuns,0.05) << "Majority of test cases should pass.";
+     
 }
-INSTANTIATE_TEST_CASE_P(Instantiation, LukasKanadeOpticalFlowTest, ::testing::Range(1, 11));
 
 

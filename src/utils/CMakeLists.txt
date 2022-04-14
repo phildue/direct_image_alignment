@@ -28,8 +28,8 @@ if (NOT OpenCV_FOUND)
 endif ()
 message(STATUS "Found OpenCV version ${OpenCV_VERSION}")
 target_include_directories(${PROJECT_NAME} PUBLIC ${OpenCV_INCLUDE_DIRS})
-
 target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBRARIES})
+
 find_package(Eigen3 3.4 REQUIRED)
 target_link_libraries(${PROJECT_NAME} Eigen3::Eigen3)
 
@@ -44,9 +44,7 @@ target_link_libraries(${PROJECT_NAME} matplotlib_cpp::matplotlib_cpp)
 target_compile_definitions(${PROJECT_NAME} PUBLIC 
 $<BUILD_INTERFACE:LOG_DIR="${CMAKE_BINARY_DIR}/log">
 $<INSTALL_INTERFACE:LOG_DIR="/tmp/vslam/log">)
-target_compile_definitions(${PROJECT_NAME} PUBLIC 
-$<BUILD_INTERFACE:CFG_DIR="${CMAKE_CURRENT_LIST_DIR}/cfg/log">
-$<INSTALL_INTERFACE:CFG_DIR="/share/vslam/cfg/log">)
+
 
 install(DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/cfg/
     DESTINATION share/vslam/cfg/
@@ -66,5 +64,12 @@ endif()
 option(VSLAM_BUILD_TESTS "Enable to build tests" ON)
 if(VSLAM_BUILD_TESTS)
 	enable_testing()
-	add_subdirectory(test)
+        find_package(GTest CONFIG REQUIRED)
+
+        pd_add_test(log ${PROJECT_NAME})
+        pd_add_test(plot ${PROJECT_NAME})
+        
+        target_compile_definitions(logTest PUBLIC TEST_RESOURCE="${CMAKE_CURRENT_LIST_DIR}/test/resource")
+        target_compile_definitions(plotTest PUBLIC TEST_RESOURCE="${CMAKE_CURRENT_LIST_DIR}/test/resource")
+
 endif()

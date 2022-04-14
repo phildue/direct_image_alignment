@@ -3,9 +3,7 @@
 //
 
 #include <gtest/gtest.h>
-#include "utils/Exceptions.h"
-#include "utils/Log.h"
-#include "core/algorithm.h"
+#include "algorithm.h"
 using namespace testing;
 using namespace pd;
 using namespace pd::vision;
@@ -48,6 +46,7 @@ TEST(AlgorithmTest, Gradient)
 
 }
 
+
 TEST(AlgorithmTest, Resize)
 {
     Eigen::Matrix<std::uint8_t ,4,4> m;
@@ -62,8 +61,20 @@ TEST(AlgorithmTest, Resize)
 
     EXPECT_EQ(mRes.rows(),2);
     EXPECT_EQ(mRes.cols(),2);
+}
 
+TEST(AlgorithmTest, Conv2d)
+{
+    Eigen::Matrix<std::uint8_t ,4,4> m;
+    m <<    128,128,128,128,
+            128,128,255,255,
+            255,128,255,255,
+            255,255,255,255;
 
+    const auto mRes = algorithm::conv2d(m.cast<double>(),Kernel2d<double>::gaussian()).cast<int>();
+    std::cout << "out:\n" << mRes << std::endl;
+    EXPECT_EQ(mRes(1,1),(128+2*128+128+2*128+4*128+2*255+255+2*128+255)/16);
+ 
 
 }
 TEST(AlgorithmTest,Normalize)

@@ -5,7 +5,9 @@
 #include <opencv4/opencv2/core/eigen.hpp>
 #include <opencv4/opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
-
+#include <filesystem>
+#include <experimental/filesystem>
+namespace fs = std::experimental::filesystem;
 #include "Log.h"
 
 INITIALIZE_EASYLOGGINGPP
@@ -16,9 +18,9 @@ std::map<std::string, std::map<Level,std::shared_ptr<Log>>> Log::_logs = {};
 std::map<std::string, std::map<Level,std::shared_ptr<LogPlot>>> Log::_logsPlot = {};
 std::map<std::string, std::map<Level,std::shared_ptr<LogImage>>> Log::_logsImage = {};
 Level Log::_blockLevel = Level::Unknown;
-Level Log::_showLevel = Level::Debug;
+Level Log::_showLevel = Level::Unknown;
        
-    std::shared_ptr<Log> Log::get(const std::string& name,Level level)
+    std::shared_ptr<Log> Log::get(const std::string& name,const std::string& confFilePath, Level level)
     {
         auto it = _logs.find(name);
         if (it != _logs.end())
@@ -26,10 +28,10 @@ Level Log::_showLevel = Level::Debug;
             return it->second[level];
         }else{
             std::map<Level,std::shared_ptr<Log>> log = {
-                {el::Level::Debug,std::make_shared<Log>(name)},
-                {el::Level::Info,std::make_shared<Log>(name)},
-                {el::Level::Warning,std::make_shared<Log>(name)},
-                {el::Level::Error,std::make_shared<Log>(name)},
+                {el::Level::Debug,std::make_shared<Log>(name,confFilePath)},
+                {el::Level::Info,std::make_shared<Log>(name,confFilePath)},
+                {el::Level::Warning,std::make_shared<Log>(name,confFilePath)},
+                {el::Level::Error,std::make_shared<Log>(name,confFilePath)},
 
             };
             _logs[name] = log;
@@ -85,10 +87,10 @@ Level Log::_showLevel = Level::Debug;
     }
 
 
-    Log::Log(const std::string& name)
+    Log::Log(const std::string& name, const std::string& configFilePath)
     : _name(name)
     {
-        el::Configurations config(CFG_DIR"/log/" + name + ".conf");
+        el::Configurations config(configFilePath);
         // Actually reconfigure all loggers instead
         el::Loggers::reconfigureLogger(name, config);
       

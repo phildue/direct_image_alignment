@@ -6,38 +6,36 @@
 namespace pd{namespace vision{
 
 template<typename Warp>
-class LukasKanade{
+class LukasKanade : public vslam::solver::Problem<Warp::nParameters>{
 public:
     inline constexpr static int nParameters = Warp::nParameters;
-    LukasKanade (const Image& templ, const Image& image, std::shared_ptr<Warp> w0, std::shared_ptr<Loss> l = std::make_shared<QuadraticLoss>());
+    LukasKanade (const Image& templ, const MatXd& dX, const MatXd& dY, const Image& image,
+     std::shared_ptr<Warp> w0,
+     vslam::solver::Loss::ShPtr = std::make_shared<vslam::solver::QuadraticLoss>(),
+     double minGradient = 0,
+     std::shared_ptr<const vslam::solver::Prior<Warp::nParameters>> prior = nullptr);
     const std::shared_ptr<const Warp> warp();
 
-      //
-    // r = T(x) - I(W(x,p))
-    //
-    void computeResidual(Eigen::VectorXd& r, Eigen::VectorXd& w);
+    void updateX(const Eigen::Matrix<double,Warp::nParameters,1>& dx) override;
+    void setX(const Eigen::Matrix<double,Warp::nParameters,1>& x) override {_w->setX(x);}
 
-   
-    //
-    // J = Ixy*dW/dp
-    //
-    bool computeJacobian(Eigen::Matrix<double,-1,Warp::nParameters>& j) ;
+    Eigen::Matrix<double,Warp::nParameters,1> x() const override {return _w->x();}
 
-    bool updateX(const Eigen::Matrix<double,Warp::nParameters,1>& dx);
+    typename vslam::solver::NormalEquations<Warp::nParameters>::ConstShPtr computeNormalEquations() override;
 
-    Eigen::Matrix<double,Warp::nParameters,1> x() const {return _w->x();}
-    void extendLeft(Eigen::MatrixXd& H);
-    void extendRight(Eigen::VectorXd& g);
 
 protected:
 
     const Image _T;
     const Image _Iref;
-    Eigen::MatrixXi _dIx;
-    Eigen::MatrixXi _dIy;
+    Eigen::MatrixXd _dIdx;
+    Eigen::MatrixXd _dIdy;
     const std::shared_ptr<Warp> _w;
-    const std::shared_ptr<Loss> _l;
+    const std::shared_ptr<vslam::solver::Loss> _loss;
+    const double _minGradient;
+    const std::shared_ptr<const vslam::solver::Prior<Warp::nParameters>> _prior;
 
+    std::vector<Eigen::Vector2i> _interestPoints;
 };
 
 }}

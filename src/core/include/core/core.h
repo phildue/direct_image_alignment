@@ -7,4 +7,5 @@
 #include "macros.h"
 #include "PoseWithCovariance.h"
 #include "Frame.h"
+#include "Kernel2d.h"
 #endif// VSLAM_CORE_H__

@@ -10,7 +10,7 @@ using namespace testing;
 using namespace pd;
 using namespace pd::vision;
 
-#define LOG_TEST(level) CLOG(level,"test")
+#define LOG_TEST(level) LOG(level)
 
 class KalmanFilter2D : public KalmanFilter<4,2>
 {
@@ -23,7 +23,6 @@ class KalmanFilter2D : public KalmanFilter<4,2>
         _Q(2,2) = 1.5;
         _Q(3,3) = 1.5;
         
-        Log::get("test");
     }
     Matd<4,4> A(std::uint64_t dt) const override
     {

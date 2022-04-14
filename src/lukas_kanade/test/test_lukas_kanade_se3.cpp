@@ -3,14 +3,10 @@
 //
 
 #include <gtest/gtest.h>
-#include "utils/Exceptions.h"
-#include "utils/Log.h"
-#include "utils/utils.h"
-#include "utils/visuals.h"
-#include "core/algorithm.h"
-#include "core/types.h"
+#include <utils/utils.h>
+#include <core/core.h>
+#include <solver/solver.h>
 #include "lukas_kanade/LukasKanade.h"
-#include "solver/Loss.h"
 
 using namespace testing;
 using namespace pd;

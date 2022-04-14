@@ -27,7 +27,7 @@ class KalmanFilter{
                 ,_x(x0)
                 ,_Q()
                 {
-                        Log::get("kalman");
+                        Log::get("kalman",KALMAN_CFG_DIR"/log/kalman.conf");
                 }
                 Prediction predict(std::uint64_t t)
                 {

@@ -15,12 +15,19 @@ namespace Eigen{
 
 namespace pd::vision{
     typedef Eigen::Matrix<std::uint8_t ,Eigen::Dynamic,Eigen::Dynamic> Image;
+    typedef std::vector<Image> ImageVec;
     typedef Eigen::Matrix<double ,Eigen::Dynamic,Eigen::Dynamic> DepthMap;
+    typedef std::vector<DepthMap> DepthMapVec;
+
     typedef std::uint64_t Timestamp;
     typedef Sophus::SE3d SE3d;
     typedef Eigen::Matrix<std::uint8_t ,Eigen::Dynamic,Eigen::Dynamic> MatXui8;
     typedef Eigen::Matrix<int ,Eigen::Dynamic,Eigen::Dynamic> MatXi;
+    typedef std::vector<MatXi> MatXiVec;
+
     typedef Eigen::Matrix<double ,Eigen::Dynamic,Eigen::Dynamic> MatXd;
+    typedef std::vector<MatXd> MatXdVec;
+
     typedef Eigen::Matrix<float ,Eigen::Dynamic,Eigen::Dynamic> MatXf;
     typedef Eigen::Matrix<double ,3,3> Mat3d;
     typedef Eigen::Matrix<double ,2,2> Mat2d;

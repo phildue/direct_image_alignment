@@ -3,16 +3,25 @@ project(solver VERSION 1.0.0)
 
 set(sources
         src/Loss.cpp
+        src/Scaler.cpp
+
         )
 
 set(headers
         src/GaussNewton.h
         src/GaussNewton.hpp
+        src/Scaler.h
         include/solver/solver.h
         )
 
 pd_setup_lib(${PROJECT_NAME} ${PROJECT_VERSION} "${sources}" "${headers}" pd)
 target_link_libraries(${PROJECT_NAME} core utils)
+
+target_compile_definitions(${PROJECT_NAME} PUBLIC 
+$<BUILD_INTERFACE:SOLVER_CFG_DIR="${CMAKE_CURRENT_LIST_DIR}/cfg">
+$<INSTALL_INTERFACE:SOLVER_CFG_DIR="/share/vslam/cfg">)
+
+
 if (UNIX)
 	target_link_libraries(${PROJECT_NAME} stdc++fs)
 endif()

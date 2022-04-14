@@ -10,7 +10,8 @@
 #include <opencv4/opencv2/core/eigen.hpp>
 #include "utils/utils.h"
 #include "Exceptions.h"
-
+#include <filesystem>
+namespace fs = std::filesystem;
 namespace pd{ namespace vision {
         
 
@@ -60,9 +61,42 @@ namespace pd{ namespace vision {
 
             Eigen::MatrixXd img;
             cv::cv2eigen(mat,img);
-            return img;
+            return img.array().isNaN().select(0,img);
 
         }
+        std::map<Timestamp,SE3d> utils::loadTrajectory(const fs::path& path)
+        {
+            std::ifstream gtFile;
+            gtFile.open(path.string());
+            
+            if(!gtFile.is_open()) {  std::runtime_error("Could not open file at: " + path.string()); }
+
+            std::map<Timestamp,SE3d> poses;
+            std::string line;
+            while(getline(gtFile, line)) {
+                    
+                std::vector<std::string> elements;
+                std::string s;
+                std::istringstream lines(line);    
+                while (getline(lines, s, ' ')) { elements.push_back(s); }
+
+                if(elements[0] == "#") {continue; }//Skip comments
+
+                Eigen::Vector3d trans;
+                trans << std::stod(elements[1]),std::stod(elements[2]),std::stod(elements[3]);
+                Eigen::Quaterniond q(std::stod(elements[7]),std::stod(elements[4]),std::stod(elements[5]),std::stod(elements[6]));
+                std::vector<std::string> tElements;
+                std::string st;
+                std::istringstream tLine(elements[0]);    
+                while (getline(tLine, st, '.')) { tElements.push_back(st); }
+
+                auto sec = std::stoull(tElements[0]);
+                auto nanosec = std::stoull(tElements[1])*100000;
+                poses.insert({sec*1e9+nanosec,SE3d (q,trans)});
+            }
+            return poses;
+        }
+
 
         void utils::saveImage(const Image& img,const fs::path& path)
         {

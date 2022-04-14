@@ -57,7 +57,7 @@ namespace pd{ namespace vision{
         class Histogram : public Plot
         {
             public:
-            Histogram(const Eigen::VectorXd h,const std::string& title = "Histogram",int nBins = 10):_h(h),_title(title),_nBins(nBins){};
+            Histogram(const Eigen::VectorXd& h,const std::string& title = "Histogram",int nBins = 10):_h(h),_title(title),_nBins(nBins){};
             const Eigen::VectorXd _h;
             const std::string _title;
             const int _nBins;
