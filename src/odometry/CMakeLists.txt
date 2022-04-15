@@ -62,6 +62,10 @@ if(VSLAM_BUILD_TESTS)
         pd_add_test(alignment_se3 ${PROJECT_NAME})
         target_compile_definitions(alignment_se3Test PUBLIC TEST_RESOURCE="${CMAKE_CURRENT_LIST_DIR}/test/resource")
 
+        pd_add_test(alignment_se3_multi_frame ${PROJECT_NAME})
+        target_compile_definitions(alignment_se3_multi_frameTest PUBLIC TEST_RESOURCE="${CMAKE_CURRENT_LIST_DIR}/test/resource")
+
+
         pd_add_test(odometry_icp ${PROJECT_NAME})
         target_compile_definitions(odometry_icpTest PUBLIC TEST_RESOURCE="${CMAKE_CURRENT_LIST_DIR}/test/resource")
 

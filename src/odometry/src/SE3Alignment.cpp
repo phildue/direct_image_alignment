@@ -85,7 +85,7 @@ namespace pd::vision{
         }
         PoseWithCovariance::UnPtr SE3Alignment::align(const std::vector<FrameRgbd::ConstShPtr>& from,  FrameRgbd::ConstShPtr to) const
         {
-                SE3d pose;
+                SE3d pose = to->pose().pose();
                 for(int level = from[0]->nLevels()-1; level >= 0; level--)
                 {
                         TIMED_SCOPE(timerI,"align at level ( " + std::to_string(level) + " )");
@@ -95,7 +95,7 @@ namespace pd::vision{
                         {
                                 auto prior = _includePrior ? std::make_shared<MotionPrior>(to->pose(),f->pose()) : nullptr;
                                 
-                                auto w = std::make_shared<WarpSE3>(pose,f->depth(level),
+                                auto w = std::make_shared<WarpSE3>(pose,f->pcl(level), f->width(level),
                                      f->camera(level),to->camera(level),f->pose().pose());
 
                                 std::vector<Eigen::Vector2i> interestPoints;
@@ -109,9 +109,11 @@ namespace pd::vision{
                                         }
                                 });
 
-                                vslam::solver::Problem<6>::ShPtr lk = std::make_shared<LukasKanadeInverseCompositionalSE3> (
+                                auto lk = std::make_shared<LukasKanadeInverseCompositionalSE3> (
                                 f->intensity(level),f->dIx(level), f->dIy(level),
                                 to->intensity(level), w,interestPoints, _loss, prior );
+
+                                frames.push_back(lk);
 
                         }
                         vslam::solver::Problem<6>::ShPtr lk = std::make_shared<LukasKanadeInverseCompositionalStackedSE3> (frames);
