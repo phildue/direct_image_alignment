@@ -8,4 +8,5 @@
 #include "PoseWithCovariance.h"
 #include "Frame.h"
 #include "Kernel2d.h"
+#include "image_transform.h"
 #endif// VSLAM_CORE_H__

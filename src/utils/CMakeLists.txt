@@ -46,11 +46,7 @@ $<BUILD_INTERFACE:LOG_DIR="${CMAKE_BINARY_DIR}/log">
 $<INSTALL_INTERFACE:LOG_DIR="/tmp/vslam/log">)
 
 
-install(DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/cfg/
-    DESTINATION share/vslam/cfg/
-    FILES_MATCHING # install only matched files
-    PATTERN "*" # select all files
-    )
+
 target_compile_definitions(${PROJECT_NAME} PUBLIC
         ELPP_FEATURE_PERFORMANCE_TRACKING
 )

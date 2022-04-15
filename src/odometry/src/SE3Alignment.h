@@ -16,7 +16,7 @@ class SE3Alignment : public AlignmentSE3{
         SE3Alignment(double minGradient,
          vslam::solver::Solver<6>::ShPtr solver,
          vslam::solver::Loss::ShPtr loss,
-         vslam::solver::Scaler::ShPtr scaler
+         bool includePrior = false
          );
 
         PoseWithCovariance::UnPtr align(FrameRgbd::ConstShPtr from, FrameRgbd::ConstShPtr to) const override;
@@ -25,9 +25,8 @@ class SE3Alignment : public AlignmentSE3{
    
         protected:
      
-        const double _minGradient;
+        const double _minGradient2;
         const vslam::solver::Loss::ShPtr _loss;
-        const vslam::solver::Scaler::ShPtr _scaler;
         const vslam::solver::Solver<6>::ShPtr _solver;
         const bool _includePrior;
 

@@ -19,7 +19,7 @@ using namespace pd::vision;
 using namespace pd::vslam::solver;
 using namespace pd::vslam::odometry;
 
-#define VISUALIZE true
+#define VISUALIZE false
 
 void readAssocTextfile(std::string filename,
                        std::vector<std::string>& inputRGBPaths,
@@ -52,6 +52,7 @@ class TestSE3Alignment : public Test{
        
         if (VISUALIZE)
         {
+            
             LOG_IMG("ImageWarped")->_show = true;
             LOG_IMG("Depth")->_show = true;
             LOG_IMG("Residual")->_show = true;
@@ -71,12 +72,11 @@ class TestSE3Alignment : public Test{
         readAssocTextfile(_datasetPath + "/assoc.txt",_imgFilenames,_depthFilenames,_timestamps);
         _trajectoryGt = std::make_shared<Trajectory>(utils::loadTrajectory(_datasetPath + "/groundtruth.txt"));
 
-        auto solver = std::make_shared<GaussNewton<6>>(1e-9,100);
-        auto loss = std::make_shared<HuberLoss>(std::make_shared<MedianScaler>());
-        auto scaler = std::make_shared<Scaler>();
+        auto solver = std::make_shared<GaussNewton<6>>(1e-9,30);
+        auto loss = std::make_shared<HuberLoss>(std::make_shared<MeanScaler>());
         _aligner =
         {
-            std::make_shared<SE3Alignment>(0,solver,loss,scaler),
+            std::make_shared<SE3Alignment>(5,solver,loss,true),
             //std::make_shared<IterativeClosestPoint>(0,20),
             std::make_shared<RgbdAlignmentOpenCv>(),
             /*std::make_shared<IterativeClosestPointOcv>(0,20)*/
@@ -112,14 +112,14 @@ class TestSE3Alignment : public Test{
 
 TEST_F(TestSE3Alignment, Comparison)
 {
-    const double eps = 0.01;
-    const int nFrames = 20;
+    const double maxError = 0.01;
+    const int nFrames = 50;
     std::vector<int> fIds(nFrames,0);
     std::transform(fIds.begin(),fIds.end(),fIds.begin(),[&](auto UNUSED(p)){return random::U(0,_timestamps.size());});
     for (size_t idA = 0U; idA < _aligner.size(); idA++)
     {   
         auto aligner = _aligner[idA];
-        int nFailed = 0;
+        Eigen::Vector6d error = Eigen::Vector6d::Zero();
         for (int i = 0; i < nFrames; i++)
         {
             const int fId = fIds[i];
@@ -127,21 +127,19 @@ TEST_F(TestSE3Alignment, Comparison)
             auto fCur = loadFrame(fId+1);
             auto poseGt = _trajectoryGt->poseAt(fCur->t())->pose().inverse();
             fRef->set(_trajectoryGt->poseAt(fRef->t())->inverse());
-            //fCur->set(_trajectoryGt->poseAt(fCur->t())->inverse());
-            fCur->set(fRef->pose());
+            fCur->set(_trajectoryGt->poseAt(fCur->t())->inverse());
+            //fCur->set(fRef->pose());
                 
             auto result = aligner->align(fRef,fCur)->pose().log();
             fCur->set(result);
-            auto diff = fCur->pose().pose().inverse() * poseGt;
-            if (diff.log().norm() > eps)//TODO should be relative to true movement
-            {
-                nFailed++;
-                 std::cout << "Failed in: " << fId << " with " << _names[idA] 
-                << " by: " << diff.log().transpose() 
-                << " Total Failed: " << (double)nFailed/(double)nFrames << std::endl;
-            }
+            error += (fCur->pose().pose().inverse() * poseGt).log();
+            std::cout << fId << ": " << _names[idA] << ": " << error.transpose()/(double)(i+1) << std::endl;
         }
-        EXPECT_LT((double)nFailed/(double)nFrames,0.1) << "Failed for: " << _names[idA];
+        std::cout << "AVG RMSE: " << (error/(double)nFrames).norm() 
+        << "\nAVG RMSE Translation: " << (error.head(3)/(double)nFrames).norm() 
+        << "\nAVG RMSE Rotation: " << (error.tail(3)/(double)nFrames).norm()
+        << std::endl;
+        EXPECT_LT((error/(double)nFrames).norm() ,maxError) << "Failed for: " << _names[idA];
     }
 }
 

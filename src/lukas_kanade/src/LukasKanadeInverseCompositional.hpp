@@ -17,7 +17,6 @@ namespace pd{namespace vision{
     , _w(w0)
     , _loss(l)
     , _prior(prior)
-    , _minGradient(minGradient)
     {
         //TODO this could come from some external feature selector
         //TODO move dTx, dTy computation outside
@@ -26,7 +25,7 @@ namespace pd{namespace vision{
         {
             for (int32_t u = 0; u < _T.cols(); u++)
             {
-                if( std::sqrt(dTx(v,u)*dTx(v,u)+dTy(v,u)*dTy(v,u)) >= _minGradient)
+                if( std::sqrt(dTx(v,u)*dTx(v,u)+dTy(v,u)*dTy(v,u)) >= minGradient)
                 {
                     _interestPoints.push_back({u,v});
                 }
@@ -49,9 +48,40 @@ namespace pd{namespace vision{
 
         LOG_IMG("SteepestDescent") << steepestDescent;
     }
+    
+    template<typename Warp>
+    LukasKanadeInverseCompositional<Warp>::LukasKanadeInverseCompositional (const Image& templ, const MatXd& dTx, const MatXd& dTy, const Image& image,
+     std::shared_ptr<Warp> w0,
+     const std::vector<Eigen::Vector2i>& interestPoints,
+     vslam::solver::Loss::ShPtr l,
+     std::shared_ptr<const vslam::solver::Prior<Warp::nParameters>> prior)
+    : vslam::solver::Problem<Warp::nParameters>()
+    , _T(templ)
+    , _I(image)
+    , _w(w0)
+    , _loss(l)
+    , _prior(prior)
+    , _interestPoints(interestPoints)
+    {
+        _J.conservativeResize(_T.rows() *_T.cols(),Eigen::NoChange);
+        _J.setZero();
+        Eigen::MatrixXd steepestDescent = Eigen::MatrixXd::Zero(_T.rows(),_T.cols());
+        auto it = std::remove_if(std::execution::par_unseq,_interestPoints.begin(),_interestPoints.end(),[&](auto kp)
+            {
+                const Eigen::Matrix<double, 2,nParameters> Jw = _w->J(kp.x(),kp.y());
+                _J.row(kp.y() * _T.cols() + kp.x()) = Jw.row(0) * dTx(kp.y(), kp.x()) + Jw.row(1) * dTy(kp.y(),kp.x());
+                const auto Jnorm = _J.row(kp.y() * _T.cols() + kp.x()).norm();
+                steepestDescent(kp.y(),kp.x()) = std::isfinite(Jnorm) ? Jnorm : 0.0;
+                return !std::isfinite(Jnorm);
+            }
+        );
+        _interestPoints.erase(it,_interestPoints.end());
+
+        LOG_IMG("SteepestDescent") << steepestDescent;
+    }
     template<typename Warp>
     LukasKanadeInverseCompositional<Warp>::LukasKanadeInverseCompositional (const Image& templ, const Image& image,std::shared_ptr<Warp> w0, std::shared_ptr<vslam::solver::Loss> l, double minGradient, std::shared_ptr<const vslam::solver::Prior<Warp::nParameters>> prior)
-    : LukasKanadeInverseCompositional<Warp> (templ, algorithm::gradX(templ), algorithm::gradY(templ), image, w0, l, minGradient,prior){}
+    : LukasKanadeInverseCompositional<Warp> (templ, algorithm::gradX(templ).cast<double>(), algorithm::gradY(templ).cast<double>(), image, w0, l, minGradient,prior){}
 
 
 
@@ -77,7 +107,7 @@ namespace pd{namespace vision{
             }
         );
         interestPointsVisible.resize(std::distance(interestPointsVisible.begin(),it));
-        if(interestPointsVisible.empty()) { throw std::runtime_error("No valid interest points!"); }
+        if(interestPointsVisible.size() < Warp::nParameters) { throw std::runtime_error("Not enough valid interest points!"); }
         
         const MatXd R = IWxp.cast<double>() - _T.cast<double>();
         

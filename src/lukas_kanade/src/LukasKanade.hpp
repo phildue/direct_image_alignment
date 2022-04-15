@@ -83,7 +83,7 @@ namespace pd{namespace vision{
         );
         interestPointsVisible.resize(std::distance(interestPointsVisible.begin(),it));
 
-        if(interestPointsVisible.empty()) { throw std::runtime_error("No valid interest points!"); }
+        if(interestPointsVisible.size() < Warp::nParameters) { throw std::runtime_error("Not enough valid interest points!"); }
         
         const MatXd R = _T.cast<double>() - IWxp.cast<double>();
         

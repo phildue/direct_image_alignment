@@ -38,21 +38,23 @@ namespace pd::vslam::solver{
             // This can be solved with cholesky decomposition (Ax = b)
             // Where A = (JWJ + lambda * I), x = dx, b = JWr
             auto ne = problem->computeNormalEquations();
+            const double det = ne->A.determinant();
+            if(!std::isfinite(det) || det < 1e-6){
+                SOLVER( WARNING ) << _i << " > " << "STOP. Bad Hessian.";
+                break;
+            }
             SOLVER(DEBUG) << _i << " > A=\n" << ne->A << "\nb=\n" << ne->b.transpose() << "\nnConstraints="<< ne->nConstraints << " chi2=" <<ne->chi2;
 
             _chi2(_i) = ne->chi2 / ne->nConstraints;
 
             const double dChi2 = _i > 0 ? _chi2(_i)-_chi2(_i-1) : 0;
-            if (_i > 0 && dChi2 > 0)
+            if (_i > 0 && dChi2 > 0 )
             {
                 SOLVER( INFO ) << _i << " > " << "CONVERGED. No improvement";
                 problem->setX(_x.row(_i-1));
                 break;
             }
-            //TODO normalization necessary?
-            const auto A = ne->A;
-            const auto b = ne->b;
-            const auto dx = A.ldlt().solve(b);
+            const auto dx = ne->A.ldlt().solve(ne->b);
             _H  = ne->A;
             problem->updateX(dx);
             _x.row(_i) = problem->x();
@@ -75,5 +77,7 @@ namespace pd::vslam::solver{
         LOG_PLT("SolverGN") << std::make_shared<pd::vision::vis::PlotGaussNewton>(_i,_chi2,_stepSize);
 
     }
+
+  
 
 }

@@ -28,8 +28,8 @@ namespace pd::vslam::solver{
               }
               void combine(const NormalEquations& that)
               {
-                      A += that.A;
-                      b += that.b;
+                      A.noalias() += that.A;
+                      b.noalias() += that.b;
                       chi2 += that.chi2;
                       nConstraints += that.nConstraints;
               }

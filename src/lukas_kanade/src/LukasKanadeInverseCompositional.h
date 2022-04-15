@@ -33,10 +33,16 @@ class LukasKanadeInverseCompositional : public vslam::solver::Problem<Warp::nPar
 public:
     inline constexpr static int nParameters = Warp::nParameters;
     LukasKanadeInverseCompositional (const Image& templ, const MatXd& dX, const MatXd& dY, const Image& image,
-     std::shared_ptr<Warp> w0,
-     vslam::solver::Loss::ShPtr = std::make_shared<vslam::solver::QuadraticLoss>(),
-     double minGradient = 0,
-     std::shared_ptr<const vslam::solver::Prior<Warp::nParameters>> prior = nullptr);
+    std::shared_ptr<Warp> w0,
+    vslam::solver::Loss::ShPtr = std::make_shared<vslam::solver::QuadraticLoss>(),
+    double minGradient = 0,
+    std::shared_ptr<const vslam::solver::Prior<Warp::nParameters>> prior = nullptr);
+    
+    LukasKanadeInverseCompositional (const Image& templ, const MatXd& dX, const MatXd& dY, const Image& image,
+    std::shared_ptr<Warp> w0,
+    const std::vector<Eigen::Vector2i>& interestPoints,
+    vslam::solver::Loss::ShPtr = std::make_shared<vslam::solver::QuadraticLoss>(),
+    std::shared_ptr<const vslam::solver::Prior<Warp::nParameters>> prior = nullptr);
 
     LukasKanadeInverseCompositional (const Image& templ, const Image& image, std::shared_ptr<Warp> w0, 
     vslam::solver::Loss::ShPtr = std::make_shared<vslam::solver::QuadraticLoss>(), double minGradient = 0, std::shared_ptr<const vslam::solver::Prior<Warp::nParameters>> prior = nullptr);
@@ -56,7 +62,6 @@ protected:
     const std::shared_ptr<vslam::solver::Loss> _loss;
     const std::shared_ptr<const vslam::solver::Prior<Warp::nParameters>> _prior;
     Eigen::Matrix<double,-1,Warp::nParameters> _J;
-    const double _minGradient;
     std::vector<Eigen::Vector2i> _interestPoints;
 
 };

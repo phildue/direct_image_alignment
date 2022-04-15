@@ -25,7 +25,7 @@ namespace pd{namespace vision{
     typename vslam::solver::NormalEquations<Warp::nParameters>::ConstShPtr LukasKanadeInverseCompositionalStacked<Warp>::computeNormalEquations() 
     {
         auto ne = std::make_shared<vslam::solver::NormalEquations<Warp::nParameters>>();
-        std::for_each(std::execution::par_unseq,_frames.begin(),_frames.end(),[&](auto f){ne->combine(*f->computeNormalEquations());});
+        std::for_each(std::execution::unseq,_frames.begin(),_frames.end(),[&](auto f){ne->combine(*f->computeNormalEquations());});
         return ne;
     }
    

@@ -3,6 +3,7 @@
 
 #define LOG_ODOM(level) CLOG(level,"odometry")
 using namespace pd::vslam::solver;
+using namespace pd::vslam::core;
 namespace pd::vision{
 
         /*
@@ -13,7 +14,7 @@ namespace pd::vision{
         public:
                 MotionPrior(const PoseWithCovariance& predictedPose, const PoseWithCovariance& referencePose)
                 :Prior<6>()
-                , _predictionSE3((predictedPose.pose().inverse() * referencePose.pose()).log())
+                , _xPred((predictedPose.pose() * referencePose.pose().inverse()).log())
                 ,_information(predictedPose.cov().inverse()){}
                 
                 void apply(NormalEquations<6>::ShPtr ne, const Eigen::VectorXd& x) const override{
@@ -22,19 +23,20 @@ namespace pd::vision{
                         ne->b.noalias() = ne->b * normalizer;
 
                         ne->A.noalias() += _information; 
-                        ne->b.noalias() += _information * (_predictionSE3 - x);
+                        ne->b.noalias() += _information * (_xPred - x);
+
+                        LOG_ODOM( DEBUG ) << "Prior: " << _xPred.transpose() << " \nInformation:\n " << _information;
                 }
         private:
-        Eigen::VectorXd _predictionSE3;
+        Eigen::VectorXd _xPred;
         Eigen::MatrixXd _information;
         };
 
-        SE3Alignment::SE3Alignment(double minGradient, vslam::solver::Solver<6>::ShPtr solver, vslam::solver::Loss::ShPtr loss, vslam::solver::Scaler::ShPtr scaler)
-        : _minGradient(minGradient)
+        SE3Alignment::SE3Alignment(double minGradient, Solver<6>::ShPtr solver, Loss::ShPtr loss, bool includePrior)
+        : _minGradient2(minGradient*minGradient)
         , _loss( loss ) 
-        , _scaler ( scaler )
         , _solver ( solver )
-        , _includePrior (false)
+        , _includePrior (includePrior)
         {
                 Log::get("odometry",ODOMETRY_CFG_DIR"/log/odometry.conf");
         }
@@ -54,24 +56,36 @@ namespace pd::vision{
                         LOG_IMG("Template") << from->intensity(level);
                         LOG_IMG("Depth") << from->depth(level);
                         
-                        auto w = std::make_shared<WarpSE3>(pose,from->pcl(level,false),from->width(level),
-                        from->camera(level),to->camera(level),from->pose().pose());
+                        auto w = std::make_shared<WarpSE3>(
+                                pose,from->pcl(level,false),from->width(level),
+                                from->camera(level),to->camera(level),from->pose().pose());
 
-                        vslam::solver::Problem<6>::ShPtr lk = std::make_shared<LukasKanadeInverseCompositionalSE3> (
+                        std::vector<Eigen::Vector2i> interestPoints;
+                        interestPoints.reserve(from->width(level)*from->height(level));
+                        const MatXd gradientMagnitude = from->dIx(level).array().pow(2) + from->dIy(level).array().pow(2);
+                        forEachPixel(gradientMagnitude,[&](int u, int v, double p)
+                        {
+                                if( p >= _minGradient2 && from->depth(level)(v,u) > 0.0)
+                                {
+                                        interestPoints.emplace_back(u,v);
+                                }
+                        });
+
+                        auto lk = std::make_shared<LukasKanadeInverseCompositionalSE3> (
                                 from->intensity(level),from->dIx(level), from->dIy(level),
-                                to->intensity(level),
-                                w, _loss,_minGradient, prior );
+                                to->intensity(level), w,interestPoints,
+                                _loss, prior );
 
                         _solver->solve(lk);
                         
                         pose = w->poseCur();
                     
                 }
-                return std::make_unique<PoseWithCovariance>( pose, _solver->cov() );
+                return std::make_unique<PoseWithCovariance>( pose, MatXd::Identity(6,6) );
         }
         PoseWithCovariance::UnPtr SE3Alignment::align(const std::vector<FrameRgbd::ConstShPtr>& from,  FrameRgbd::ConstShPtr to) const
         {
-                SE3d pose = to->pose().pose();
+                SE3d pose;
                 for(int level = from[0]->nLevels()-1; level >= 0; level--)
                 {
                         TIMED_SCOPE(timerI,"align at level ( " + std::to_string(level) + " )");
@@ -84,14 +98,21 @@ namespace pd::vision{
                                 auto w = std::make_shared<WarpSE3>(pose,f->depth(level),
                                      f->camera(level),to->camera(level),f->pose().pose());
 
+                                std::vector<Eigen::Vector2i> interestPoints;
+                                interestPoints.reserve(f->width(level)*f->height(level));
+                                const MatXd gradientMagnitude = f->dIx(level).array().pow(2) + f->dIy(level).array().pow(2);
+                                forEachPixel(gradientMagnitude,[&](int u, int v, double p)
+                                {
+                                        if( p >= _minGradient2 && f->depth(level)(v,u) > 0.0)
+                                        {
+                                                interestPoints.emplace_back(u,v);
+                                        }
+                                });
+
                                 vslam::solver::Problem<6>::ShPtr lk = std::make_shared<LukasKanadeInverseCompositionalSE3> (
                                 f->intensity(level),f->dIx(level), f->dIy(level),
-                                to->intensity(level),
-                                w, _loss,_minGradient, prior );
+                                to->intensity(level), w,interestPoints, _loss, prior );
 
-                 
-
-                                
                         }
                         vslam::solver::Problem<6>::ShPtr lk = std::make_shared<LukasKanadeInverseCompositionalStackedSE3> (frames);
 
@@ -101,7 +122,7 @@ namespace pd::vision{
                         
                     
                 }
-                return std::make_unique<PoseWithCovariance>( pose, _solver->cov() );
+                return std::make_unique<PoseWithCovariance>( pose, MatXd::Identity(6,6) );
         }
 
 

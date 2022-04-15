@@ -37,9 +37,7 @@ class OdometryRgbd : public Odometry{
         OdometryRgbd(double minGradient,
          vslam::solver::Solver<6>::ShPtr solver,
          vslam::solver::Loss::ShPtr loss,
-         vslam::solver::Scaler::ShPtr scaler,
-         Map::ConstShPtr map
-         );
+         Map::ConstShPtr map );
 
         void update(FrameRgbd::ConstShPtr frame) override;
         
@@ -47,7 +45,7 @@ class OdometryRgbd : public Odometry{
         PoseWithCovariance::ConstShPtr speed() const override { return _speed;}
         protected:
      
-        const RgbdAlignmentOpenCv::ConstShPtr _aligner;
+        const SE3Alignment::ConstShPtr _aligner;
         const Map::ConstShPtr _map;
         const bool _includeKeyFrame;
         PoseWithCovariance::ConstShPtr _speed;

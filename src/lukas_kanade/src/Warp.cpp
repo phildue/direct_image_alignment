@@ -132,7 +132,7 @@ namespace pd{namespace vision{
     ,_camCur(camCur)
     ,_camRef(camRef)
     ,_pcl(pcl)
-    {}
+    {_x = _se3.log();}
     void WarpSE3::updateAdditive(const Eigen::Vector6d& dx)
     {
         _se3 = _se3 * Sophus::SE3d::exp(dx);
