@@ -48,6 +48,8 @@ namespace pd::vslam::solver{
               virtual void updateX(const Eigen::Vector<double,nParameters>& dx) = 0;
               virtual void setX(const Eigen::Vector<double,nParameters>& x) = 0;
               virtual Eigen::Vector<double,nParameters> x() const = 0;
+              virtual vision::Mat<double,nParameters,nParameters> cov() const = 0;
+              
               virtual typename NormalEquations<nParameters>::ConstShPtr computeNormalEquations() = 0;
       };
 
@@ -61,8 +63,6 @@ namespace pd::vslam::solver{
           typedef std::unique_ptr<const Solver> ConstUnPtr;
           
           virtual void solve(std::shared_ptr< Problem<nParameters> > problem) = 0;
-          virtual vision::Mat<double,nParameters,nParameters> cov() const  = 0;
-
       };
 
      
@@ -88,10 +88,6 @@ namespace pd::vslam::solver{
         const Eigen::Matrix<double,Eigen::Dynamic,nParameters>& x() const {return _x;}
         const Eigen::VectorXd& stepSize() const {return _stepSize;}
 
-        // Source: https://stats.stackexchange.com/questions/93316/parameter-uncertainty-after-non-linear-least-squares-estimation
-        vision::Mat<double,nParameters,nParameters> cov() const override{ return _H.inverse();}
-        vision::Mat<double,nParameters,nParameters> covScaled() const { return _H.inverse() * _chi2(_i)/(_i - nParameters);}
-
         private:
         const double _minStepSize;
         const double _minGradient;
@@ -100,8 +96,6 @@ namespace pd::vslam::solver{
         Eigen::VectorXd _chi2,_stepSize;
         Eigen::Matrix<double,Eigen::Dynamic,nParameters> _x;
         int _i;
-        vision::Mat<double,nParameters,nParameters> _H;
-
     };
    
 }

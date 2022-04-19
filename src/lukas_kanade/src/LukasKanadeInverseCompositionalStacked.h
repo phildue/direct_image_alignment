@@ -22,11 +22,13 @@ public:
 
     Eigen::Matrix<double,Warp::nParameters,1> x() const override{return _frames[0]->x();}
     void setX(const Eigen::Matrix<double,Warp::nParameters,1>& x) override;
+    Eigen::Matrix<double,Warp::nParameters,Warp::nParameters> cov() const override {return _covariance;}
 
     typename vslam::solver::NormalEquations<Warp::nParameters>::ConstShPtr computeNormalEquations() override;
 
 protected:
     std::vector<std::shared_ptr<LukasKanadeInverseCompositional<Warp>>> _frames;
+    Eigen::Matrix<double,Warp::nParameters,Warp::nParameters> _covariance;
 
 };
 

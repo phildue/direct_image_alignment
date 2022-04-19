@@ -20,7 +20,7 @@ public:
     void setX(const Eigen::Matrix<double,Warp::nParameters,1>& x) override {_w->setX(x);}
 
     Eigen::Matrix<double,Warp::nParameters,1> x() const override {return _w->x();}
-
+    Eigen::Matrix<double,Warp::nParameters,Warp::nParameters> cov() const override {return _covariance;}
     typename vslam::solver::NormalEquations<Warp::nParameters>::ConstShPtr computeNormalEquations() override;
 
 
@@ -36,6 +36,7 @@ protected:
     const std::shared_ptr<const vslam::solver::Prior<Warp::nParameters>> _prior;
 
     std::vector<Eigen::Vector2i> _interestPoints;
+    Eigen::Matrix<double,Warp::nParameters,Warp::nParameters> _covariance;
 };
 
 }}

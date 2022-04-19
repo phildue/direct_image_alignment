@@ -26,6 +26,9 @@ namespace pd{namespace vision{
     {
         auto ne = std::make_shared<vslam::solver::NormalEquations<Warp::nParameters>>();
         std::for_each(std::execution::unseq,_frames.begin(),_frames.end(),[&](auto f){ne->combine(*f->computeNormalEquations());});
+        // Source: https://stats.stackexchange.com/questions/93316/parameter-uncertainty-after-non-linear-least-squares-estimation
+        _covariance = ne->A.inverse();
+
         return ne;
     }
    
