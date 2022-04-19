@@ -138,6 +138,9 @@ namespace pd{namespace vision{
 
         if (_prior){ _prior->apply(ne,_w->x()); }
 
+        // Source: https://stats.stackexchange.com/questions/93316/parameter-uncertainty-after-non-linear-least-squares-estimation
+        _covariance = ne->A.inverse();
+
         LOG_IMG("ImageWarped") << IWxp;
         LOG_IMG("Residual") << R;
         LOG_IMG("Weights") << W;

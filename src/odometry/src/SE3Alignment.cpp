@@ -45,7 +45,7 @@ namespace pd::vision{
         PoseWithCovariance::UnPtr SE3Alignment::align(FrameRgbd::ConstShPtr from, FrameRgbd::ConstShPtr to) const
         {
                 auto prior = _includePrior ? std::make_shared<MotionPrior>(to->pose(),from->pose()) : nullptr;
-                SE3d pose = to->pose().pose();
+                PoseWithCovariance::UnPtr pose = std::make_unique<PoseWithCovariance>(to->pose());
                 for(int level = from->nLevels()-1; level >= 0; level--)
                 {
                         TIMED_SCOPE(timerI,"align at level ( " + std::to_string(level) + " )");
@@ -57,7 +57,7 @@ namespace pd::vision{
                         LOG_IMG("Depth") << from->depth(level);
                         
                         auto w = std::make_shared<WarpSE3>(
-                                pose,from->pcl(level,false),from->width(level),
+                                pose->pose(),from->pcl(level,false),from->width(level),
                                 from->camera(level),to->camera(level),from->pose().pose());
 
                         std::vector<Eigen::Vector2i> interestPoints;
@@ -78,14 +78,14 @@ namespace pd::vision{
 
                         _solver->solve(lk);
                         
-                        pose = w->poseCur();
+                        pose = std::make_unique<PoseWithCovariance>(w->poseCur(),lk->cov()) ;
                     
                 }
-                return std::make_unique<PoseWithCovariance>( pose, MatXd::Identity(6,6) );
+                return pose;
         }
         PoseWithCovariance::UnPtr SE3Alignment::align(const std::vector<FrameRgbd::ConstShPtr>& from,  FrameRgbd::ConstShPtr to) const
         {
-                SE3d pose = to->pose().pose();
+                PoseWithCovariance::UnPtr pose = std::make_unique<PoseWithCovariance>(to->pose());
                 for(int level = from[0]->nLevels()-1; level >= 0; level--)
                 {
                         TIMED_SCOPE(timerI,"align at level ( " + std::to_string(level) + " )");
@@ -95,7 +95,7 @@ namespace pd::vision{
                         {
                                 auto prior = _includePrior ? std::make_shared<MotionPrior>(to->pose(),f->pose()) : nullptr;
                                 
-                                auto w = std::make_shared<WarpSE3>(pose,f->pcl(level), f->width(level),
+                                auto w = std::make_shared<WarpSE3>(pose->pose(),f->pcl(level), f->width(level),
                                      f->camera(level),to->camera(level),f->pose().pose());
 
                                 std::vector<Eigen::Vector2i> interestPoints;
@@ -120,11 +120,11 @@ namespace pd::vision{
 
                         _solver->solve(lk);
                         
-                        pose = frames[0]->warp()->poseCur();
+                        pose = std::make_unique<PoseWithCovariance>(frames[0]->warp()->poseCur(),lk->cov()) ;
                         
                     
                 }
-                return std::make_unique<PoseWithCovariance>( pose, MatXd::Identity(6,6) );
+                return pose;
         }
 
 
