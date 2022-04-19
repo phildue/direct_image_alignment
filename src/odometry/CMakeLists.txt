@@ -4,6 +4,7 @@ project(odometry VERSION 1.0.0)
 set(sources
         src/MotionPrediction.cpp
         src/KeyFrameSelection.cpp
+        src/Map.cpp
         src/Odometry.cpp
         src/IterativeClosestPoint.cpp
         src/IterativeClosestPointOcv.cpp

@@ -7,3 +7,4 @@
 *install*
 *bin*
 .vscode
+src/odometry/test/resource/rgbd_dataset*
