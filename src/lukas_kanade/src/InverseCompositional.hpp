@@ -101,7 +101,7 @@ namespace pd::vslam::lukas_kanade{
                 Eigen::Vector2d uvI = _w->apply(kp.x(),kp.y());
                 const bool visible = 1 < uvI.x() && uvI.x() < _I.cols() - 1 && 1 < uvI.y() && uvI.y() < _I.rows() - 1 && std::isfinite(uvI.x());
                 if (visible){
-                    IWxp(kp.y(),kp.x()) =  algorithm::bilinearInterpolation(_I,uvI.x(),uvI.y());
+                    IWxp(kp.y(),kp.x()) =  _I((int)std::round(uvI.y()),(int)std::round(uvI.x()));//algorithm::bilinearInterpolation(_I,uvI.x(),uvI.y());
                 }
                 return visible;
             }
