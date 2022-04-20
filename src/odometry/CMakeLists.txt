@@ -35,7 +35,7 @@ $<INSTALL_INTERFACE:ODOMETRY_CFG_DIR="/share/vslam/cfg">)
 
 target_link_libraries(${PROJECT_NAME} kalman lukas_kanade utils core)
 
-target_link_libraries(${PROJECT_NAME} core utils solver)
+target_link_libraries(${PROJECT_NAME} core utils least_squares)
 if (UNIX)
 	target_link_libraries(${PROJECT_NAME} stdc++fs)
 endif()

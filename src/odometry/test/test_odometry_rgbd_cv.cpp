@@ -11,8 +11,9 @@
 
 using namespace testing;
 using namespace pd;
-using namespace pd::vision;
-using namespace pd::vslam::solver;
+using namespace pd::vslam;
+using namespace pd::vslam::least_squares;
+using namespace pd::vslam::lukas_kanade;
 
 #define VISUALIZE true
 

@@ -12,7 +12,7 @@
 #include "Exceptions.h"
 #include <filesystem>
 namespace fs = std::filesystem;
-namespace pd{ namespace vision {
+namespace pd::vslam{
         
 
         void utils::throw_if_nan(const Eigen::MatrixXd &mat, const std::string &msg)
@@ -114,4 +114,4 @@ namespace pd{ namespace vision {
         }
 
 
-    }}
+    }

@@ -7,7 +7,8 @@
 #include "visuals.h"
 using namespace testing;
 using namespace pd;
-using namespace pd::vision;
+using namespace pd::vslam;
+
 #define VISUALIZE true
 TEST(LogTest,Plot)
 {

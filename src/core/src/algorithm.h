@@ -12,7 +12,7 @@
 
 #include "types.h"
 #include "Kernel2d.h"
-namespace pd{ namespace vision{ 
+namespace pd::vslam{
     namespace algorithm{
 
     template<typename Derived>
@@ -212,5 +212,5 @@ namespace random{
     int sign();
     Eigen::VectorXd N(const Eigen::MatrixXd& cov);
 }
-}}
+}
 #endif //DIRECT_IMAGE_ALIGNMENT_ALGORITHM_H

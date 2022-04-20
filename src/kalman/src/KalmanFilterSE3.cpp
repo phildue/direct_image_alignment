@@ -29,7 +29,7 @@
 *
 */
 
-namespace pd::vision{
+namespace pd::vslam{
 
         KalmanFilterSE3::KalmanFilterSE3(const Matd<6,6>& Q, const Matd<6,1>& x0, std::uint64_t t0)
         : KalmanFilter<6,6>(Matd<6,6>::Zero(),x0,t0)

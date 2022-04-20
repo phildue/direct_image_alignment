@@ -1,5 +1,7 @@
-#ifndef VSLAM_SOLVER_H__
-#define VSLAM_SOLVER_H__
+#ifndef VSLAM_LEAST_SQUARES_H__
+#define VSLAM_LEAST_SQUARES_H__
+
+#include "Solver.h"
 #include "GaussNewton.h"
 #include "Loss.h"
 #include "Scaler.h"

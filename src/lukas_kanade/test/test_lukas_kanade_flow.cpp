@@ -5,13 +5,14 @@
 #include <gtest/gtest.h>
 #include "utils/utils.h"
 #include "core/core.h"
-#include "solver/solver.h"
+#include "least_squares/least_squares.h"
 #include "lukas_kanade/lukas_kanade.h"
 
 using namespace testing;
 using namespace pd;
-using namespace pd::vision;
-using namespace pd::vslam::solver;
+using namespace pd::vslam;
+using namespace pd::vslam::least_squares;
+using namespace pd::vslam::lukas_kanade;
 
 #define VISUALIZE true
 
@@ -39,8 +40,8 @@ TEST_F(LukasKanadeOpticalFlowTest,LukasKanadeOpticalFlow)
         Eigen::Vector2d x;
         x << random::U(5,6)*random::sign(),random::U(5,6)*random::sign();
         auto w = std::make_shared<WarpOpticalFlow>(x);
-        auto gn = std::make_shared<GaussNewton<LukasKanadeInverseCompositionalOpticalFlow::nParameters>> ( 1e-7,100);
-        auto lk = std::make_shared<LukasKanadeInverseCompositionalOpticalFlow> (img1,img0,w);
+        auto gn = std::make_shared<GaussNewton<InverseCompositionalOpticalFlow::nParameters>> ( 1e-7,100);
+        auto lk = std::make_shared<InverseCompositionalOpticalFlow> (img1,img0,w);
         if (VISUALIZE)
         {
             LOG_IMG("ImageWarped")->_show = true;

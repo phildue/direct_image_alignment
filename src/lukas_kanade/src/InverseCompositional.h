@@ -1,9 +1,9 @@
 #ifndef VSLAM_LUKAS_KANADE_INVERSE_COMPOSITIONAL_H__
 #define VSLAM_LUKAS_KANADE_INVERSE_COMPOSITIONAL_H__
 #include "core/core.h"
-#include "solver/solver.h"
+#include "least_squares/least_squares.h"
 #include <memory>
-namespace pd{namespace vision{
+namespace pd::vslam::lukas_kanade{
 
 /*
 Compute parameters p of the warp W by incrementally warping the image I to the template T.
@@ -29,52 +29,50 @@ Hence, we update p by applying the *inverse compositional*: W_new = W(-h,W(p)).
 */
 
 template<typename Warp>
-class LukasKanadeInverseCompositional : public vslam::solver::Problem<Warp::nParameters>{
+class InverseCompositional : public least_squares::Problem<Warp::nParameters>{
 public:
     inline constexpr static int nParameters = Warp::nParameters;
-    LukasKanadeInverseCompositional (const Image& templ, const MatXd& dX, const MatXd& dY, const Image& image,
+    InverseCompositional (const Image& templ, const MatXd& dX, const MatXd& dY, const Image& image,
     std::shared_ptr<Warp> w0,
-    vslam::solver::Loss::ShPtr = std::make_shared<vslam::solver::QuadraticLoss>(),
+    least_squares::Loss::ShPtr = std::make_shared<least_squares::QuadraticLoss>(),
     double minGradient = 0,
-    std::shared_ptr<const vslam::solver::Prior<Warp::nParameters>> prior = nullptr);
+    std::shared_ptr<const least_squares::Prior<Warp::nParameters>> prior = nullptr);
     
-    LukasKanadeInverseCompositional (const Image& templ, const MatXd& dX, const MatXd& dY, const Image& image,
+    InverseCompositional (const Image& templ, const MatXd& dX, const MatXd& dY, const Image& image,
     std::shared_ptr<Warp> w0,
     const std::vector<Eigen::Vector2i>& interestPoints,
-    vslam::solver::Loss::ShPtr = std::make_shared<vslam::solver::QuadraticLoss>(),
-    std::shared_ptr<const vslam::solver::Prior<Warp::nParameters>> prior = nullptr);
+    least_squares::Loss::ShPtr = std::make_shared<least_squares::QuadraticLoss>(),
+    std::shared_ptr<const least_squares::Prior<Warp::nParameters>> prior = nullptr);
 
-    LukasKanadeInverseCompositional (const Image& templ, const Image& image, std::shared_ptr<Warp> w0, 
-    vslam::solver::Loss::ShPtr = std::make_shared<vslam::solver::QuadraticLoss>(), double minGradient = 0, std::shared_ptr<const vslam::solver::Prior<Warp::nParameters>> prior = nullptr);
+    InverseCompositional (const Image& templ, const Image& image, std::shared_ptr<Warp> w0, 
+    least_squares::Loss::ShPtr = std::make_shared<least_squares::QuadraticLoss>(), double minGradient = 0, std::shared_ptr<const least_squares::Prior<Warp::nParameters>> prior = nullptr);
     std::shared_ptr<const Warp> warp() { return _w;}
 
     void updateX(const Eigen::Matrix<double,Warp::nParameters,1>& dx) override;
     void setX(const Eigen::Matrix<double,Warp::nParameters,1>& x) override {_w->setX(x);}
 
     Eigen::Matrix<double,Warp::nParameters,1> x() const override {return _w->x();}
-    Eigen::Matrix<double,Warp::nParameters,Warp::nParameters> cov() const override {return _covariance;}
 
-    typename vslam::solver::NormalEquations<Warp::nParameters>::ConstShPtr computeNormalEquations() override;
+    typename least_squares::NormalEquations<Warp::nParameters>::ConstShPtr computeNormalEquations() override;
 
 protected:
     const Image _T;
     const Image _I;
     const std::shared_ptr<Warp> _w;
-    const std::shared_ptr<vslam::solver::Loss> _loss;
-    const std::shared_ptr<const vslam::solver::Prior<Warp::nParameters>> _prior;
+    const std::shared_ptr<least_squares::Loss> _loss;
+    const std::shared_ptr<const least_squares::Prior<Warp::nParameters>> _prior;
     Eigen::Matrix<double,-1,Warp::nParameters> _J;
     std::vector<Eigen::Vector2i> _interestPoints;
-    Eigen::Matrix<double,Warp::nParameters,Warp::nParameters> _covariance;
 
 };
 
-}}
-#include "LukasKanadeInverseCompositional.hpp"
+}
+#include "InverseCompositional.hpp"
 #include "Warp.h"
-namespace pd{namespace vision{
+namespace pd::vslam::lukas_kanade{
 
-typedef LukasKanadeInverseCompositional<WarpAffine> LukasKanadeInverseCompositionalAffine;
-typedef LukasKanadeInverseCompositional<WarpOpticalFlow> LukasKanadeInverseCompositionalOpticalFlow;
-typedef LukasKanadeInverseCompositional<WarpSE3> LukasKanadeInverseCompositionalSE3;
-}}
+typedef InverseCompositional<WarpAffine> InverseCompositionalAffine;
+typedef InverseCompositional<WarpOpticalFlow> InverseCompositionalOpticalFlow;
+typedef InverseCompositional<WarpSE3>InverseCompositionalSE3;
+}
 #endif

@@ -2,9 +2,8 @@
 #include "SE3Alignment.h"
 
 #define LOG_ODOM(level) CLOG(level,"odometry")
-using namespace pd::vslam::solver;
-using namespace pd::vslam::core;
-namespace pd::vision{
+using namespace pd::vslam::least_squares;
+namespace pd::vslam{
 
         /*
         We expect the new pose not be too far away from a prediction.
@@ -49,14 +48,14 @@ namespace pd::vision{
                 for(int level = from->nLevels()-1; level >= 0; level--)
                 {
                         TIMED_SCOPE(timerI,"align at level ( " + std::to_string(level) + " )");
-                        LOG_ODOM(INFO) << "Aligning from: \n"<< from->pose().pose().log().transpose() << " to " << pose.log().transpose()
+                        LOG_ODOM(INFO) << "Aligning from: \n"<< from->pose().pose().log().transpose() << " to " << pose->pose().log().transpose()
                          << "\nat " << level << " image size: ["<< from->width(level) << "," << from->height(level) <<"].";
 
                         LOG_IMG("Image") << to->intensity(level);
                         LOG_IMG("Template") << from->intensity(level);
                         LOG_IMG("Depth") << from->depth(level);
                         
-                        auto w = std::make_shared<WarpSE3>(
+                        auto w = std::make_shared<lukas_kanade::WarpSE3>(
                                 pose->pose(),from->pcl(level,false),from->width(level),
                                 from->camera(level),to->camera(level),from->pose().pose());
 
@@ -71,14 +70,14 @@ namespace pd::vision{
                                 }
                         });
 
-                        auto lk = std::make_shared<LukasKanadeInverseCompositionalSE3> (
+                        auto lk = std::make_shared<lukas_kanade::InverseCompositionalSE3> (
                                 from->intensity(level),from->dIx(level), from->dIy(level),
                                 to->intensity(level), w,interestPoints,
                                 _loss, prior );
 
-                        _solver->solve(lk);
-                        
-                        pose = std::make_unique<PoseWithCovariance>(w->poseCur(),lk->cov()) ;
+                        auto results = _solver->solve(lk);
+                        auto covariance = MatXd::Identity(6,6);// !results->cov.empty() ? results->cov.at(results->cov.size()-1) : MatXd::Identity(6,6);
+                        pose = std::make_unique<PoseWithCovariance>(w->poseCur(),covariance) ;
                     
                 }
                 return pose;
@@ -90,12 +89,12 @@ namespace pd::vision{
                 {
                         TIMED_SCOPE(timerI,"align at level ( " + std::to_string(level) + " )");
                        
-                        std::vector<std::shared_ptr<LukasKanadeInverseCompositionalSE3>> frames;
+                        std::vector<std::shared_ptr<lukas_kanade::InverseCompositionalSE3>> frames;
                         for (const auto& f : from)
                         {
                                 auto prior = _includePrior ? std::make_shared<MotionPrior>(to->pose(),f->pose()) : nullptr;
                                 
-                                auto w = std::make_shared<WarpSE3>(pose->pose(),f->pcl(level), f->width(level),
+                                auto w = std::make_shared<lukas_kanade::WarpSE3>(pose->pose(),f->pcl(level), f->width(level),
                                      f->camera(level),to->camera(level),f->pose().pose());
 
                                 std::vector<Eigen::Vector2i> interestPoints;
@@ -109,19 +108,18 @@ namespace pd::vision{
                                         }
                                 });
 
-                                auto lk = std::make_shared<LukasKanadeInverseCompositionalSE3> (
+                                auto lk = std::make_shared<lukas_kanade::InverseCompositionalSE3> (
                                 f->intensity(level),f->dIx(level), f->dIy(level),
                                 to->intensity(level), w,interestPoints, _loss, prior );
 
                                 frames.push_back(lk);
 
                         }
-                        vslam::solver::Problem<6>::ShPtr lk = std::make_shared<LukasKanadeInverseCompositionalStackedSE3> (frames);
+                        auto lk = std::make_shared<lukas_kanade::InverseCompositionalStacked<lukas_kanade::WarpSE3>> (frames);
 
-                        _solver->solve(lk);
-                        
-                        pose = std::make_unique<PoseWithCovariance>(frames[0]->warp()->poseCur(),lk->cov()) ;
-                        
+                        auto results = _solver->solve(lk);
+                        auto covariance = MatXd::Identity(6,6);// !results->cov.empty() ? results->cov.at(results->cov.size()-1) : MatXd::Identity(6,6);
+                        pose = std::make_unique<PoseWithCovariance>(lk->warp()->poseCur(),covariance) ;
                     
                 }
                 return pose;

@@ -3,9 +3,9 @@
 
 #include "core/core.h"
 #include "lukas_kanade/lukas_kanade.h"
-#include "solver/solver.h"
+#include "least_squares/least_squares.h"
 #include "AlignmentSE3.h"
-namespace pd::vision{
+namespace pd::vslam{
 class SE3Alignment : public AlignmentSE3{
         public:
         typedef std::shared_ptr<SE3Alignment> ShPtr;
@@ -14,8 +14,8 @@ class SE3Alignment : public AlignmentSE3{
         typedef std::unique_ptr<const SE3Alignment> ConstUnPtr;
 
         SE3Alignment(double minGradient,
-         vslam::solver::Solver<6>::ShPtr solver,
-         vslam::solver::Loss::ShPtr loss,
+         vslam::least_squares::Solver<6>::ShPtr solver,
+         vslam::least_squares::Loss::ShPtr loss,
          bool includePrior = false
          );
 
@@ -26,8 +26,8 @@ class SE3Alignment : public AlignmentSE3{
         protected:
      
         const double _minGradient2;
-        const vslam::solver::Loss::ShPtr _loss;
-        const vslam::solver::Solver<6>::ShPtr _solver;
+        const vslam::least_squares::Loss::ShPtr _loss;
+        const vslam::least_squares::Solver<6>::ShPtr _solver;
         const bool _includePrior;
 
 };

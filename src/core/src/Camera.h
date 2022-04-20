@@ -9,8 +9,8 @@
 #include <memory>
 
 #include "types.h"
-namespace pd{
-    namespace vision {
+namespace pd::vslam{
+
 
         class Camera {
         public:
@@ -40,6 +40,6 @@ namespace pd{
             Eigen::Matrix<double, 3, 3 > _K; //< Intrinsic camera matrix
             Eigen::Matrix<double, 3, 3 > _Kinv; //< Intrinsic camera matrix inverted
         };
-    }}
+    }
 
 #endif //VSLAM_CAMERA_H

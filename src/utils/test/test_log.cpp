@@ -7,6 +7,7 @@
 #include "Log.h"
 using namespace testing;
 using namespace pd;
-using namespace pd::vision;
+using namespace pd::vslam;
+
 #define VISUALIZE false
 

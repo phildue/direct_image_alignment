@@ -1,16 +1,17 @@
 
-#include "LukasKanade.h"
+#include "ForwardAdditive.h"
 
 #include "utils/utils.h"
 #include "core/core.h"
-namespace pd{namespace vision{
+
+namespace pd::vslam::lukas_kanade{
 
     template<typename Warp>
-    LukasKanade<Warp>::LukasKanade (const Image& templ, const MatXd& dIdx, const MatXd& dIdy, const Image& image,
+    ForwardAdditive<Warp>::ForwardAdditive (const Image& templ, const MatXd& dIdx, const MatXd& dIdy, const Image& image,
      std::shared_ptr<Warp> w0,
-     vslam::solver::Loss::ShPtr l,
+     least_squares::Loss::ShPtr l,
      double minGradient,
-     std::shared_ptr<const vslam::solver::Prior<Warp::nParameters>> prior)
+     std::shared_ptr<const least_squares::Prior<Warp::nParameters>> prior)
     : _T(templ)
     , _dIdx(dIdx)
     , _dIdy(dIdy)
@@ -37,13 +38,13 @@ namespace pd{namespace vision{
     }
 
     template<typename Warp>
-    void LukasKanade<Warp>::updateX(const Eigen::Matrix<double,Warp::nParameters,1>& dx)
+    void ForwardAdditive<Warp>::updateX(const Eigen::Matrix<double,Warp::nParameters,1>& dx)
     {
         _w->updateAdditive(dx);
     }
 
     template<typename Warp>
-    typename vslam::solver::NormalEquations<Warp::nParameters>::ConstShPtr LukasKanade<Warp>::computeNormalEquations() 
+    typename least_squares::NormalEquations<Warp::nParameters>::ConstShPtr ForwardAdditive<Warp>::computeNormalEquations() 
     {
 
         Eigen::MatrixXd steepestDescent = Eigen::MatrixXd::Zero(_T.rows(),_T.cols());
@@ -94,7 +95,7 @@ namespace pd{namespace vision{
 
         if(_loss){  _loss->computeScale(Eigen::Map<Eigen::VectorXd> (r.data(),r.size()));}
    
-        auto ne = std::make_shared<vslam::solver::NormalEquations<Warp::nParameters>>();
+        auto ne = std::make_shared<least_squares::NormalEquations<Warp::nParameters>>();
         Eigen::MatrixXd W = Eigen::MatrixXd::Zero(_T.rows(),_T.cols());
         std::for_each(std::execution::unseq,interestPointsVisible.begin(),interestPointsVisible.end(),
         [&](auto kp)
@@ -114,9 +115,6 @@ namespace pd{namespace vision{
 
         if (_prior){ _prior->apply(ne,_w->x()); }
 
-        // Source: https://stats.stackexchange.com/questions/93316/parameter-uncertainty-after-non-linear-least-squares-estimation
-        _covariance = ne->A.inverse();
-
         LOG_IMG("ImageWarped") << IWxp;
         LOG_IMG("Residual") << R;
         LOG_IMG("Weights") << W;
@@ -126,4 +124,4 @@ namespace pd{namespace vision{
 
     }
     
-}}
+}

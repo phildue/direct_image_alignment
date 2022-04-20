@@ -1,5 +1,4 @@
 #include "Trajectory.h"
-using namespace pd::vision;
 namespace pd::vslam::odometry
 {
         Trajectory::Trajectory(const std::map<Timestamp,PoseWithCovariance::ConstShPtr>& poses):_poses(poses){}
@@ -54,7 +53,7 @@ namespace pd::vslam::odometry
                 auto dPose = SE3d::exp(((double)t - (double)t0)*speed);
                 return std::make_shared<PoseWithCovariance>(dPose * p0->pose(),p0->cov());
         }
-        void Trajectory::append(vision::Timestamp t, PoseWithCovariance::ConstShPtr pose)
+        void Trajectory::append(Timestamp t, PoseWithCovariance::ConstShPtr pose)
         {
                 _poses[t] = pose;
         }

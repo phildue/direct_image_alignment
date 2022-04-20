@@ -12,7 +12,7 @@
 
 #include "core/core.h"
 
-namespace pd{ namespace vision{
+namespace pd::vslam{
     class Frame;
     class FrameRGBD;
     
@@ -110,7 +110,8 @@ namespace pd{ namespace vision{
             const int _nIterations;
 
         };
-     
-}}}
+
+    }
+}
 
 #endif //VSLAM_LOG_H

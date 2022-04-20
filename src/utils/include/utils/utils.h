@@ -11,7 +11,7 @@
 #include "visuals.h"
 #include "Exceptions.h"
 
-namespace pd{ namespace vision { namespace utils{
+namespace pd::vslam::utils{
     void throw_if_nan(const Eigen::MatrixXd &mat, const std::string &msg);
     Image loadImage(const std::filesystem::path& path, int height = -1, int width = -1, bool grayscale = true);
     Eigen::MatrixXd loadDepth(const std::filesystem::path& path, int height = -1, int width = -1);
@@ -19,5 +19,5 @@ namespace pd{ namespace vision { namespace utils{
 
     void saveImage(const Image& img,const std::filesystem::path& path);
     void saveDepth(const Eigen::MatrixXd& img,const std::filesystem::path& path);
-}}}
+}
 #endif

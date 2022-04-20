@@ -9,8 +9,7 @@
 #include "RgbdAlignmentOpenCv.h"
 
 #define LOG_ODOM(level) CLOG(level,"odometry")
-using namespace pd::vslam::solver;
-namespace pd::vision{
+namespace pd::vslam{
 
 
         RgbdAlignmentOpenCv::RgbdAlignmentOpenCv()

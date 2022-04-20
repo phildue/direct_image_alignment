@@ -9,7 +9,9 @@
 #include <lukas_kanade/lukas_kanade.h>
 using namespace testing;
 using namespace pd;
-using namespace pd::vision;
+using namespace pd::vslam;
+using namespace pd::vslam::lukas_kanade;
+
 #define VISUALIZE true
 TEST(FrameTest,CreatePyramid)
 {
@@ -17,7 +19,7 @@ TEST(FrameTest,CreatePyramid)
     Image img = utils::loadImage(TEST_RESOURCE"/rgb.png");
    
     auto cam = std::make_shared<Camera>(525.0,525.0,319.5,239.5);
-    auto f = std::make_shared<pd::vision::FrameRgbd>(img,depth,cam,3,0);
+    auto f = std::make_shared<FrameRgbd>(img,depth,cam,3,0);
     for(size_t i = 0; i < f->nLevels(); i++)
     {
         auto pcl = f->pcl(i,true);
@@ -72,8 +74,8 @@ TEST(WarpTest,Warp)
     Image img = utils::loadImage(TEST_RESOURCE"/rgb.png");
    
     auto cam = std::make_shared<Camera>(525.0,525.0,319.5,239.5);
-    auto f0 = std::make_shared<pd::vision::FrameRgbd>(img,depth,cam,3,0);
-    auto f1 = std::make_shared<pd::vision::FrameRgbd>(img,depth,cam,3,0);
+    auto f0 = std::make_shared<FrameRgbd>(img,depth,cam,3,0);
+    auto f1 = std::make_shared<FrameRgbd>(img,depth,cam,3,0);
  
     for(size_t i = 0; i < f0->nLevels(); i++)
     {

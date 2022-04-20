@@ -1,9 +1,8 @@
 #include <utils/utils.h>
 #include "Scaler.h"
-using namespace pd::vision;
-namespace pd::vslam::solver
-{
-    void MedianScaler::compute(const vision::VecXd& r)
+namespace pd::vslam::least_squares{
+
+    void MedianScaler::compute(const VecXd& r)
     {
         /*
         std::vector<double> rs();
@@ -23,7 +22,7 @@ namespace pd::vslam::solver
         return (r.array() - _median)/_std; 
     }
 
-    void MeanScaler::compute(const vision::VecXd& r)
+    void MeanScaler::compute(const VecXd& r)
     {
 
         _mean = r.mean();

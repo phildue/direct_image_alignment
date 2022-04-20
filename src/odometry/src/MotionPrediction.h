@@ -2,7 +2,7 @@
 #define VSLAM_MOTION_PREDICTION
 
 #include "core/core.h"
-namespace pd::vision{
+namespace pd::vslam{
 class MotionPrediction{
         public:
         typedef std::shared_ptr<MotionPrediction> ShPtr;

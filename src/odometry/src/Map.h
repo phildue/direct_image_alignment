@@ -2,7 +2,7 @@
 #define VSLAM_MAP_H__
 #include <deque>
 #include "core/core.h"
-namespace pd::vision{
+namespace pd::vslam{
 class Map{
         public:
         typedef std::shared_ptr<Map> ShPtr;

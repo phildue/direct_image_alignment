@@ -2,7 +2,7 @@
 #define VSLAM_CORE_IMAGE_TRANSFORM_H__
 #include <Eigen/Dense>
 #include "types.h"
-namespace pd::vslam::core{
+namespace pd::vslam{
 
         template< typename Derived, typename Operation>
         void forEachPixel(const Eigen::Matrix<Derived,-1,-1>& image,Operation op)

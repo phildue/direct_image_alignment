@@ -3,15 +3,15 @@
 #include "core/core.h"
 #include <algorithm>
 #include <execution>
-namespace pd{namespace vision{
+namespace pd::vslam::lukas_kanade{
 
     template<typename Warp>
-    LukasKanadeInverseCompositional<Warp>::LukasKanadeInverseCompositional (const Image& templ, const MatXd& dTx, const MatXd& dTy, const Image& image,
+    InverseCompositional<Warp>::InverseCompositional (const Image& templ, const MatXd& dTx, const MatXd& dTy, const Image& image,
      std::shared_ptr<Warp> w0,
-     vslam::solver::Loss::ShPtr l,
+     least_squares::Loss::ShPtr l,
      double minGradient ,
-     std::shared_ptr<const vslam::solver::Prior<Warp::nParameters>> prior)
-    : vslam::solver::Problem<Warp::nParameters>()
+     std::shared_ptr<const least_squares::Prior<Warp::nParameters>> prior)
+    : least_squares::Problem<Warp::nParameters>()
     , _T(templ)
     , _I(image)
     , _w(w0)
@@ -50,12 +50,12 @@ namespace pd{namespace vision{
     }
     
     template<typename Warp>
-    LukasKanadeInverseCompositional<Warp>::LukasKanadeInverseCompositional (const Image& templ, const MatXd& dTx, const MatXd& dTy, const Image& image,
+    InverseCompositional<Warp>::InverseCompositional (const Image& templ, const MatXd& dTx, const MatXd& dTy, const Image& image,
      std::shared_ptr<Warp> w0,
      const std::vector<Eigen::Vector2i>& interestPoints,
-     vslam::solver::Loss::ShPtr l,
-     std::shared_ptr<const vslam::solver::Prior<Warp::nParameters>> prior)
-    : vslam::solver::Problem<Warp::nParameters>()
+     least_squares::Loss::ShPtr l,
+     std::shared_ptr<const least_squares::Prior<Warp::nParameters>> prior)
+    : least_squares::Problem<Warp::nParameters>()
     , _T(templ)
     , _I(image)
     , _w(w0)
@@ -80,19 +80,19 @@ namespace pd{namespace vision{
         LOG_IMG("SteepestDescent") << steepestDescent;
     }
     template<typename Warp>
-    LukasKanadeInverseCompositional<Warp>::LukasKanadeInverseCompositional (const Image& templ, const Image& image,std::shared_ptr<Warp> w0, std::shared_ptr<vslam::solver::Loss> l, double minGradient, std::shared_ptr<const vslam::solver::Prior<Warp::nParameters>> prior)
-    : LukasKanadeInverseCompositional<Warp> (templ, algorithm::gradX(templ).cast<double>(), algorithm::gradY(templ).cast<double>(), image, w0, l, minGradient,prior){}
+    InverseCompositional<Warp>::InverseCompositional (const Image& templ, const Image& image,std::shared_ptr<Warp> w0, std::shared_ptr<least_squares::Loss> l, double minGradient, std::shared_ptr<const least_squares::Prior<Warp::nParameters>> prior)
+    : InverseCompositional<Warp> (templ, algorithm::gradX(templ).cast<double>(), algorithm::gradY(templ).cast<double>(), image, w0, l, minGradient,prior){}
 
 
 
     template<typename Warp>
-    void LukasKanadeInverseCompositional<Warp>::updateX(const Eigen::Matrix<double,Warp::nParameters,1>& dx)
+    void InverseCompositional<Warp>::updateX(const Eigen::Matrix<double,Warp::nParameters,1>& dx)
     {
         _w->updateCompositional(-dx);
     }
     // 0,0 -+-10-> -10,-10 --10-> -10,-10
     template<typename Warp>
-    typename vslam::solver::NormalEquations<Warp::nParameters>::ConstShPtr LukasKanadeInverseCompositional<Warp>::computeNormalEquations() 
+    typename least_squares::NormalEquations<Warp::nParameters>::ConstShPtr InverseCompositional<Warp>::computeNormalEquations() 
     {
         Image IWxp = Image::Zero(_I.rows(),_I.cols());
         std::vector<Eigen::Vector2i> interestPointsVisible(_interestPoints.size());
@@ -118,7 +118,7 @@ namespace pd{namespace vision{
 
         if(_loss){  _loss->computeScale(Eigen::Map<Eigen::VectorXd> (r.data(),r.size()));}
         
-        auto ne = std::make_shared<vslam::solver::NormalEquations<Warp::nParameters>>();
+        auto ne = std::make_shared<least_squares::NormalEquations<Warp::nParameters>>();
         Eigen::MatrixXd W = Eigen::MatrixXd::Zero(_T.rows(),_T.cols());
         std::for_each(std::execution::unseq,interestPointsVisible.begin(),interestPointsVisible.end(),
         [&](auto kp)
@@ -138,9 +138,6 @@ namespace pd{namespace vision{
 
         if (_prior){ _prior->apply(ne,_w->x()); }
 
-        // Source: https://stats.stackexchange.com/questions/93316/parameter-uncertainty-after-non-linear-least-squares-estimation
-        _covariance = ne->A.inverse();
-
         LOG_IMG("ImageWarped") << IWxp;
         LOG_IMG("Residual") << R;
         LOG_IMG("Weights") << W;
@@ -149,47 +146,4 @@ namespace pd{namespace vision{
 
     }
 
-}}
-
-/*
-       Image IWxp = Image::Zero(_I.rows(),_I.cols());
-        std::vector<InterestPoint> interestPointsValid(_interestPoints.size());
-        auto it = std::copy_if(std::execution::par_unseq,_interestPoints.begin(),_interestPoints.end(),interestPointsValid.begin(),
-        [&](auto kp) {
-                Eigen::Vector2d uvI = _w->apply(kp.u,kp.v);
-                if (1 < uvI.x() && uvI.x() < _I.cols() - 1  &&
-                    1 < uvI.y() && uvI.y() < _I.rows() - 1)
-                {
-                    IWxp(kp.v,kp.u) =  algorithm::bilinearInterpolation(_I,uvI.x(),uvI.y());
-                    return true;
-                }
-                return false;
-            }
-        );
-        interestPointsValid.resize(std::distance(interestPointsValid.begin(),it));
-
-        MatXd R = IWxp.cast<double>() - _T.cast<double>();
-        std::vector<double> r(interestPointsValid.size());
-        std::transform(std::execution::unseq,interestPointsValid.begin(),interestPointsValid.end(),r.begin(),[&](auto kp){
-            return R(kp.v,kp.u);
-        });
-       
-        const Eigen::VectorXd rScaled = _scaler->scale(Eigen::Map<Eigen::VectorXd> (r.data(),r.size())); 
-        
-        auto ne = std::make_shared<vslam::solver::NormalEquations<Warp::nParameters>>();
-        Eigen::MatrixXd W = Eigen::MatrixXd::Zero(_T.rows(),_T.cols());
-        for(size_t i = 0; i < interestPointsValid.size(); i++)
-        {
-            const auto& kp = interestPointsValid[i];
-            W(kp.v,kp.u) = _l->computeWeight(rScaled(i));
-            ne->addConstraint(_J.row(kp.idx),R(kp.v,kp.u),W(kp.v,kp.u));
-        }
-
-        LOG_IMG("ImageWarped") << IWxp;
-        LOG_IMG("Residual") << R;
-        LOG_IMG("Weights") << W;
-
-        return ne;
-
-
-*/
+}

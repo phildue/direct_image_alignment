@@ -3,8 +3,8 @@
 //
 
 #include "Camera.h"
-namespace pd{
-    namespace vision {
+namespace pd::vslam{
+
 
         Eigen::Vector2d Camera::camera2image(const Eigen::Vector3d &pWorld) const {
             if (pWorld.z() <= 0)
@@ -44,4 +44,4 @@ namespace pd{
 
 
 
-    }}
+    }

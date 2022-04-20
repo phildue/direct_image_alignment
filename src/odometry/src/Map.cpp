@@ -1,5 +1,5 @@
 #include "Map.h"
-namespace pd::vision{
+namespace pd::vslam{
 
         Map::Map()
         :_frames()

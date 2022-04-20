@@ -9,7 +9,7 @@
 #include <pcl/visualization/pcl_visualizer.h>
 #include <pcl/console/time.h>   // TicToc
 
-namespace pd::vision{
+namespace pd::vslam{
 class IterativeClosestPoint : public AlignmentSE3{
         public:
         typedef std::shared_ptr<IterativeClosestPoint> ShPtr;

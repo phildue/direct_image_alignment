@@ -2,7 +2,7 @@
 #define VSLAM_KEY_FRAME_SELECTION
 
 #include "core/core.h"
-namespace pd::vision{
+namespace pd::vslam{
 class KeyFrameSelection{
         public:
         typedef std::shared_ptr<KeyFrameSelection> ShPtr;
@@ -23,13 +23,13 @@ class KeyFrameSelectionIdx : public KeyFrameSelection{
         typedef std::shared_ptr<const KeyFrameSelectionIdx> ConstShPtr;
         typedef std::unique_ptr<const KeyFrameSelectionIdx> ConstUnPtr;
         
-        KeyFrameSelectionIdx(uint64_t period = 2):KeyFrameSelection(),_period(period){}
+        KeyFrameSelectionIdx(uint64_t period = 2):KeyFrameSelection(),_period(period),_ctr(0U){}
         void update(FrameRgbd::ConstShPtr UNUSED(frame)) override {_ctr++;};
-        bool isKeyFrame() const override {return _ctr % _period == 0;};
+        bool isKeyFrame() const override {return _ctr == 0  || _ctr % _period == 0;};
         
         private:
+        const uint64_t _period;
         uint64_t _ctr;
-        uint64_t _period;
 };
 }
 #endif// VSLAM_RGBD_ODOMETRY

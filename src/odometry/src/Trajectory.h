@@ -12,17 +12,17 @@ namespace pd::vslam::odometry
                 typedef std::shared_ptr<const Trajectory> ConstShPtr;
                 typedef std::unique_ptr<const Trajectory> ConstUnPtr;
 
-                Trajectory(const std::map<vision::Timestamp,vision::PoseWithCovariance::ConstShPtr>& poses);
-                Trajectory(const std::map<vision::Timestamp,vision::SE3d>& poses);
-                vision::PoseWithCovariance::ConstShPtr poseAt(vision::Timestamp t, bool interpolate = true) const;
-                vision::PoseWithCovariance::ConstShPtr motionBetween(vision::Timestamp t0,vision::Timestamp t1, bool interpolate = true) const;
-                void append(vision::Timestamp t, vision::PoseWithCovariance::ConstShPtr pose);
-                const std::map<vision::Timestamp, vision::PoseWithCovariance::ConstShPtr>& poses() const {return _poses;}
+                Trajectory(const std::map<Timestamp,PoseWithCovariance::ConstShPtr>& poses);
+                Trajectory(const std::map<Timestamp,SE3d>& poses);
+                PoseWithCovariance::ConstShPtr poseAt(Timestamp t, bool interpolate = true) const;
+                PoseWithCovariance::ConstShPtr motionBetween(Timestamp t0,Timestamp t1, bool interpolate = true) const;
+                void append(Timestamp t, PoseWithCovariance::ConstShPtr pose);
+                const std::map<Timestamp, PoseWithCovariance::ConstShPtr>& poses() const {return _poses;}
                 private:
                 
-                vision::PoseWithCovariance::ConstShPtr interpolateAt(vision::Timestamp t) const;
+                PoseWithCovariance::ConstShPtr interpolateAt(Timestamp t) const;
 
-                std::map<vision::Timestamp, vision::PoseWithCovariance::ConstShPtr> _poses;
+                std::map<Timestamp, PoseWithCovariance::ConstShPtr> _poses;
 
         };
 } // namespace pd::vslam::odometry

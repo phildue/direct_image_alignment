@@ -15,8 +15,9 @@
 #include "Trajectory.h"
 using namespace testing;
 using namespace pd;
-using namespace pd::vision;
-using namespace pd::vslam::solver;
+using namespace pd::vslam;
+using namespace pd::vslam::least_squares;
+
 using namespace pd::vslam::odometry;
 
 #define VISUALIZE false
@@ -78,7 +79,7 @@ class TestSE3Alignment : public Test{
         {
             std::make_shared<SE3Alignment>(5,solver,loss,true),
             //std::make_shared<IterativeClosestPoint>(0,20),
-            std::make_shared<RgbdAlignmentOpenCv>(),
+            //std::make_shared<RgbdAlignmentOpenCv>(),
             /*std::make_shared<IterativeClosestPointOcv>(0,20)*/
 
         };
@@ -113,7 +114,7 @@ class TestSE3Alignment : public Test{
 TEST_F(TestSE3Alignment, Comparison)
 {
     const double maxError = 0.01;
-    const int nFrames = 50;
+    const int nFrames = 2;
     std::vector<int> fIds(nFrames,0);
     std::transform(fIds.begin(),fIds.end(),fIds.begin(),[&](auto UNUSED(p)){return random::U(0,_timestamps.size());});
     for (size_t idA = 0U; idA < _aligner.size(); idA++)

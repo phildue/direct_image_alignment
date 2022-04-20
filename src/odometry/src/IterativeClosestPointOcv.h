@@ -5,7 +5,7 @@
 #include "AlignmentSE3.h"
 
 
-namespace pd::vision{
+namespace pd::vslam{
 class IterativeClosestPointOcv : public AlignmentSE3{
         public:
         typedef std::shared_ptr<IterativeClosestPointOcv> ShPtr;

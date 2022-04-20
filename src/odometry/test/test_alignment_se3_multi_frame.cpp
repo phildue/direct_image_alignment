@@ -15,8 +15,9 @@
 #include "Trajectory.h"
 using namespace testing;
 using namespace pd;
-using namespace pd::vision;
-using namespace pd::vslam::solver;
+using namespace pd::vslam;
+using namespace pd::vslam::least_squares;
+
 using namespace pd::vslam::odometry;
 
 #define VISUALIZE false

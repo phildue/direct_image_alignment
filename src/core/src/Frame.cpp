@@ -5,8 +5,8 @@
 #include <opencv4/opencv2/core/eigen.hpp>
 #include "Frame.h"
 #define USE_OPENCV
-namespace pd::vision
-{
+namespace pd::vslam{
+
         FrameRgb::FrameRgb(const Image& intensity, Camera::ConstShPtr cam, size_t nLevels, const Timestamp& t, const PoseWithCovariance& pose)
         :_t(t),
         _pose(pose){

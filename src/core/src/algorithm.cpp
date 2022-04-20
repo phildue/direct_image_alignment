@@ -5,7 +5,8 @@
 #include "algorithm.h"
 #include "macros.h"
 #include "Kernel2d.h"
-namespace pd{ namespace vision{ namespace algorithm{
+namespace pd::vslam{
+ namespace algorithm{
 
 
     double rmse(const Eigen::MatrixXi& patch1, const Eigen::MatrixXi& patch2)
@@ -212,4 +213,4 @@ namespace random{
 
 }
 
-}}
+}

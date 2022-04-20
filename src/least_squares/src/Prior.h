@@ -2,8 +2,7 @@
 #define VSLAM_SOLVER_PRIOR
 #include <core/core.h>
 #include "GaussNewton.h"
-namespace pd::vslam::solver
-{
+namespace pd::vslam::least_squares{
 template<int nParameters>
 class Prior{
         public:
@@ -16,8 +15,6 @@ class Prior{
 
 };
 
-
-
-} // namespace pd::vslam::solver
+} // namespace pd::vslam::least_squares
 
 #endif

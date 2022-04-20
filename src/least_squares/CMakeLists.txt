@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(solver VERSION 1.0.0)
+project(least_squares VERSION 1.0.0)
 
 set(sources
         src/Loss.cpp
@@ -11,15 +11,18 @@ set(headers
         src/GaussNewton.h
         src/GaussNewton.hpp
         src/Scaler.h
-        include/solver/solver.h
+        src/Prior.h
+        src/Loss.h
+        src/Solver.h
+        include/least_squares/least_squares.h
         )
 
 pd_setup_lib(${PROJECT_NAME} ${PROJECT_VERSION} "${sources}" "${headers}" pd)
 target_link_libraries(${PROJECT_NAME} core utils)
 
 target_compile_definitions(${PROJECT_NAME} PUBLIC 
-$<BUILD_INTERFACE:SOLVER_CFG_DIR="${CMAKE_CURRENT_LIST_DIR}/cfg">
-$<INSTALL_INTERFACE:SOLVER_CFG_DIR="/share/vslam/cfg">)
+$<BUILD_INTERFACE:LEAST_SQUARES_CFG_DIR="${CMAKE_CURRENT_LIST_DIR}/cfg">
+$<INSTALL_INTERFACE:LEAST_SQUARES_CFG_DIR="/share/vslam/cfg">)
 
 
 if (UNIX)
@@ -38,7 +41,7 @@ if(VSLAM_BUILD_TESTS)
 	enable_testing()
         find_package(GTest CONFIG REQUIRED)
 
-        pd_add_test(loss solver)
+        pd_add_test(loss least_squares)
 endif()
 
 # Install

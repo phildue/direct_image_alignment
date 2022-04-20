@@ -3,7 +3,7 @@
 #include <memory>
 
 #include "types.h"
-namespace pd::vision{
+namespace pd::vslam{
 class PoseWithCovariance{
 
         public:
