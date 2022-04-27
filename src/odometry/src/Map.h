@@ -20,9 +20,9 @@ class Map{
         const std::deque<FrameRgbd::ConstShPtr>& keyFrames() const { return _keyFrames;};
         const std::deque<FrameRgbd::ConstShPtr>& frames() const { return _frames;};
         private:
-        std::deque<FrameRgbd::ConstShPtr> _keyFrames;
         std::deque<FrameRgbd::ConstShPtr> _frames;
-        size_t _maxFrames = 7,_maxKeyFrames = 7;
+        std::deque<FrameRgbd::ConstShPtr> _keyFrames;
+        const size_t _maxFrames,_maxKeyFrames;
 
 };
 

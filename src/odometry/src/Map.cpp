@@ -4,6 +4,8 @@ namespace pd::vslam{
         Map::Map()
         :_frames()
         ,_keyFrames()
+        ,_maxFrames(7)
+        ,_maxKeyFrames(7)
         {}
         void Map::update(FrameRgbd::ConstShPtr frame, bool isKeyFrame)
         {

@@ -64,7 +64,8 @@ namespace pd::vslam{
                         const MatXd gradientMagnitude = from->dIx(level).array().pow(2) + from->dIy(level).array().pow(2);
                         forEachPixel(gradientMagnitude,[&](int u, int v, double p)
                         {
-                                if( p >= _minGradient2 && from->depth(level)(v,u) > 0.0)
+                                double s = 1.0/std::pow(0.5,level);
+                                if( p >= _minGradient2 && from->depth()((int)(v*s),(int)(u*s)) > 0.0)
                                 {
                                         interestPoints.emplace_back(u,v);
                                 }
