@@ -1,9 +1,9 @@
-#ifndef VSLAM_ODOMETRY_POSE_GRAPH_H__
-#define VSLAM_ODOMETRY_POSE_GRAPH_H__
+#ifndef VSLAM_TRAJECTORY_H__
+#define VSLAM_TRAJECTORY_H__
 #include <map>
 #include <core/core.h>
 
-namespace pd::vslam::odometry
+namespace pd::vslam
 {
         class Trajectory{
                 public:
@@ -12,6 +12,7 @@ namespace pd::vslam::odometry
                 typedef std::shared_ptr<const Trajectory> ConstShPtr;
                 typedef std::unique_ptr<const Trajectory> ConstUnPtr;
 
+                Trajectory();
                 Trajectory(const std::map<Timestamp,PoseWithCovariance::ConstShPtr>& poses);
                 Trajectory(const std::map<Timestamp,SE3d>& poses);
                 PoseWithCovariance::ConstShPtr poseAt(Timestamp t, bool interpolate = true) const;
@@ -25,6 +26,6 @@ namespace pd::vslam::odometry
                 std::map<Timestamp, PoseWithCovariance::ConstShPtr> _poses;
 
         };
-} // namespace pd::vslam::odometry
+} // namespace pd::vslam
 
 #endif

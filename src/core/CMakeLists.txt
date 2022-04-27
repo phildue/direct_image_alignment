@@ -6,6 +6,7 @@ set(sources
         src/algorithm.cpp
         src/PoseWithCovariance.cpp
         src/Frame.cpp
+        src/Trajectory.cpp
         )
 
 set(headers
@@ -14,7 +15,7 @@ set(headers
         src/Exceptions.h
         src/PoseWithCovariance.h
         src/Frame.h
-
+        src/Trajectory.h
         include/core/core.h
         )
 pd_setup_lib(${PROJECT_NAME} ${PROJECT_VERSION} "${sources}" "${headers}" pd)

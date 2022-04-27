@@ -1,6 +1,7 @@
 #include "Trajectory.h"
-namespace pd::vslam::odometry
+namespace pd::vslam
 {
+        Trajectory::Trajectory(){}
         Trajectory::Trajectory(const std::map<Timestamp,PoseWithCovariance::ConstShPtr>& poses):_poses(poses){}
         Trajectory::Trajectory(const std::map<Timestamp,SE3d>& poses)
         {
@@ -60,4 +61,4 @@ namespace pd::vslam::odometry
         
 
 
-} // namespace pd::vslam::odometry
+} // namespace pd::vslam

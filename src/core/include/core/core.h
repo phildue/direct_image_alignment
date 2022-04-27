@@ -9,4 +9,6 @@
 #include "Frame.h"
 #include "Kernel2d.h"
 #include "image_transform.h"
+#include "Trajectory.h"
+
 #endif// VSLAM_CORE_H__
