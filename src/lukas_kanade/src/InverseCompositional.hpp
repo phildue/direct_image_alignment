@@ -20,14 +20,15 @@ namespace pd::vslam::lukas_kanade{
     {
         //TODO this could come from some external feature selector
         //TODO move dTx, dTy computation outside
-        _interestPoints.reserve(_T.rows() *_T.cols());
+        std::vector<Eigen::Vector2i> interestPoints;
+        interestPoints.reserve(_T.rows() *_T.cols());
         for (int32_t v = 0; v < _T.rows(); v++)
         {
             for (int32_t u = 0; u < _T.cols(); u++)
             {
                 if( std::sqrt(dTx(v,u)*dTx(v,u)+dTy(v,u)*dTy(v,u)) >= minGradient)
                 {
-                    _interestPoints.push_back({u,v});
+                    interestPoints.emplace_back(u,v);
                 }
                     
             }
@@ -35,16 +36,19 @@ namespace pd::vslam::lukas_kanade{
         _J.conservativeResize(_T.rows() *_T.cols(),Eigen::NoChange);
         _J.setZero();
         Eigen::MatrixXd steepestDescent = Eigen::MatrixXd::Zero(_T.rows(),_T.cols());
-        auto it = std::remove_if(std::execution::par_unseq,_interestPoints.begin(),_interestPoints.end(),[&](auto kp)
+        size_t idx = 0U;
+        std::for_each(interestPoints.begin(),interestPoints.end(),[&](auto kp)
             {
                 const Eigen::Matrix<double, 2,nParameters> Jw = _w->J(kp.x(),kp.y());
                 _J.row(kp.y() * _T.cols() + kp.x()) = Jw.row(0) * dTx(kp.y(), kp.x()) + Jw.row(1) * dTy(kp.y(),kp.x());
-                const auto Jnorm = _J.row(kp.y() * _T.cols() + kp.x()).norm();
+                const double Jnorm = _J.row(kp.y() * _T.cols() + kp.x()).norm();
                 steepestDescent(kp.y(),kp.x()) = std::isfinite(Jnorm) ? Jnorm : 0.0;
-                return !std::isfinite(Jnorm);
+                if (std::isfinite(Jnorm))
+                {
+                    _interestPoints.push_back({idx++,kp});
+                }
             }
         );
-        _interestPoints.erase(it,_interestPoints.end());
 
         LOG_IMG("SteepestDescent") << steepestDescent;
     }
@@ -61,21 +65,28 @@ namespace pd::vslam::lukas_kanade{
     , _w(w0)
     , _loss(l)
     , _prior(prior)
-    , _interestPoints(interestPoints)
+    , _interestPoints(interestPoints.size())
     {
         _J.conservativeResize(_T.rows() *_T.cols(),Eigen::NoChange);
         _J.setZero();
         Eigen::MatrixXd steepestDescent = Eigen::MatrixXd::Zero(_T.rows(),_T.cols());
-        auto it = std::remove_if(std::execution::par_unseq,_interestPoints.begin(),_interestPoints.end(),[&](auto kp)
+        std::atomic<size_t> idx = 0U;
+        std::for_each(std::execution::par_unseq, interestPoints.begin(),interestPoints.end(),[&](auto kp)
             {
                 const Eigen::Matrix<double, 2,nParameters> Jw = _w->J(kp.x(),kp.y());
-                _J.row(kp.y() * _T.cols() + kp.x()) = Jw.row(0) * dTx(kp.y(), kp.x()) + Jw.row(1) * dTy(kp.y(),kp.x());
-                const auto Jnorm = _J.row(kp.y() * _T.cols() + kp.x()).norm();
-                steepestDescent(kp.y(),kp.x()) = std::isfinite(Jnorm) ? Jnorm : 0.0;
-                return !std::isfinite(Jnorm);
+                const Eigen::Matrix<double, 1,nParameters> Jwi = Jw.row(0) * dTx(kp.y(), kp.x()) + Jw.row(1) * dTy(kp.y(),kp.x());
+                const double Jwin = Jwi.norm();
+                if (std::isfinite(Jwin))
+                {
+                    _J.row(idx) = Jwi;
+                    steepestDescent(kp.y(),kp.x()) = Jwin;
+                    _interestPoints[idx] = {idx,kp};
+                    idx++;
+                }
             }
         );
-        _interestPoints.erase(it,_interestPoints.end());
+        _J.conservativeResize(idx,Eigen::NoChange);
+        _interestPoints.resize(idx);
 
         LOG_IMG("SteepestDescent") << steepestDescent;
     }
@@ -90,49 +101,51 @@ namespace pd::vslam::lukas_kanade{
     {
         _w->updateCompositional(-dx);
     }
-    // 0,0 -+-10-> -10,-10 --10-> -10,-10
     template<typename Warp>
     typename least_squares::NormalEquations<Warp::nParameters>::ConstShPtr InverseCompositional<Warp>::computeNormalEquations() 
     {
         Image IWxp = Image::Zero(_I.rows(),_I.cols());
-        std::vector<Eigen::Vector2i> interestPointsVisible(_interestPoints.size());
-        auto it = std::copy_if(std::execution::par_unseq,_interestPoints.begin(),_interestPoints.end(),interestPointsVisible.begin(),
+        MatXd R = MatXd::Zero(_I.rows(),_I.cols());
+        MatXd W = MatXd::Zero(_I.rows(),_I.cols());
+        VecXd r = VecXd::Zero(_interestPoints.size());
+        VecXd w = VecXd::Zero(_interestPoints.size());
+
+        std::for_each(std::execution::par_unseq,_interestPoints.begin(),_interestPoints.end(),
         [&](auto kp) {
-                Eigen::Vector2d uvI = _w->apply(kp.x(),kp.y());
+                Eigen::Vector2d uvI = _w->apply(kp.pos.x(),kp.pos.y());
                 const bool visible = 1 < uvI.x() && uvI.x() < _I.cols() - 1 && 1 < uvI.y() && uvI.y() < _I.rows() - 1 && std::isfinite(uvI.x());
                 if (visible){
-                    IWxp(kp.y(),kp.x()) =  _I((int)std::round(uvI.y()),(int)std::round(uvI.x()));//algorithm::bilinearInterpolation(_I,uvI.x(),uvI.y());
+                    //IWxp(kp.pos.y(),kp.pos.x()) = algorithm::bilinearInterpolation(_I,uvI.x(),uvI.y());
+                    IWxp(kp.pos.y(),kp.pos.x()) = _I((int)  std::round(uvI.y()),(int) std::round(uvI.x()));
+                    R(kp.pos.y(),kp.pos.x()) = (double)IWxp(kp.pos.y(),kp.pos.x()) - (double)_T(kp.pos.y(),kp.pos.x());
+                    W(kp.pos.y(),kp.pos.x()) = 1.0;
+                    r(kp.idx) = R(kp.pos.y(),kp.pos.x());
+                    w(kp.idx) = W(kp.pos.y(),kp.pos.x());
                 }
-                return visible;
             }
         );
-        interestPointsVisible.resize(std::distance(interestPointsVisible.begin(),it));
-        if(interestPointsVisible.size() < Warp::nParameters) { throw std::runtime_error("Not enough valid interest points!"); }
         
-        const MatXd R = IWxp.cast<double>() - _T.cast<double>();
-        
-        std::vector<double> r(interestPointsVisible.size());
-        std::transform(std::execution::unseq,interestPointsVisible.begin(),interestPointsVisible.end(),r.begin(),[&](auto kp){
-            return R(kp.y(),kp.x());
-        });
-
-        if(_loss){  _loss->computeScale(Eigen::Map<Eigen::VectorXd> (r.data(),r.size()));}
-        
-        auto ne = std::make_shared<least_squares::NormalEquations<Warp::nParameters>>();
-        Eigen::MatrixXd W = Eigen::MatrixXd::Zero(_T.rows(),_T.cols());
-        std::for_each(std::execution::unseq,interestPointsVisible.begin(),interestPointsVisible.end(),
-        [&](auto kp)
-        {
-            W(kp.y(),kp.x()) = _loss ? _loss->computeWeight( R(kp.y(),kp.x())) : 1.0;
-
-            if(!std::isfinite(_J.row(kp.y() * _T.cols() + kp.x()).norm()) || !std::isfinite(R(kp.y(),kp.x())) || !std::isfinite(W(kp.y(),kp.x())))
-            {
-                std::stringstream ss;
-                ss << "NaN during LK with: R = " << R(kp.y(),kp.x()) << " W = "<< W(kp.y(),kp.x()) << " J = " << _J.row(kp.y() * _T.cols() + kp.x()) << " at: " << kp.transpose();
-                throw std::runtime_error(ss.str());
-            }
-            ne->addConstraint(_J.row(kp.y() * _T.cols() + kp.x()),R(kp.y(),kp.x()),W(kp.y(),kp.x()));
-        });
+        if(_loss)
+        {  
+            _loss->computeScale(r);
+            std::for_each(std::execution::par_unseq,_interestPoints.begin(),_interestPoints.end(),
+            [&](auto kp) 
+                {
+                    if(w(kp.idx) > 0.0){
+                        W(kp.pos.y(),kp.pos.x()) = _loss->computeWeight( R(kp.pos.y(),kp.pos.x()));
+                        w(kp.idx) = W(kp.pos.y(),kp.pos.x());
+                    }
+                    
+                }
+            );
+            
+        }
+        auto ne = std::make_shared<least_squares::NormalEquations<nParameters>>();
+        auto Jtw = _J.transpose() * w.asDiagonal();
+        ne->A = Jtw * _J;
+        ne->b = Jtw * r;
+        ne->chi2 = (r * w).transpose() * r;
+        ne->nConstraints = r.rows();
         ne->A.noalias() = ne->A / (double)ne->nConstraints;
         ne->b.noalias() = ne->b / (double)ne->nConstraints;
 
@@ -143,6 +156,7 @@ namespace pd::vslam::lukas_kanade{
         LOG_IMG("Weights") << W;
 
         return ne;
+
 
     }
 

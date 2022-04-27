@@ -62,7 +62,11 @@ protected:
     const std::shared_ptr<least_squares::Loss> _loss;
     const std::shared_ptr<const least_squares::Prior<Warp::nParameters>> _prior;
     Eigen::Matrix<double,-1,Warp::nParameters> _J;
-    std::vector<Eigen::Vector2i> _interestPoints;
+    struct IndexedKeyPoint{
+        size_t idx;
+        Eigen::Vector2i pos;
+    };
+    std::vector<IndexedKeyPoint> _interestPoints;
 
 };
 
