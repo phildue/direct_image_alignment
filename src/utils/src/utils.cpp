@@ -113,5 +113,38 @@ namespace pd::vslam{
             cv::imwrite(path.string() + ".exr",mat);
         }
 
+        void utils::writeTrajectory(const Trajectory& traj, const fs::path& path, bool writeCovariance)
+        {
+            std::fstream algoFile;
+            algoFile.open(path,std::ios_base::out);
+            algoFile << "# Algorithm Trajectory\n";
+            algoFile << "# file: " << path << "\n";
+            algoFile << "# timestamp tx ty tz qx qy qz qw\n";
+            if(!algoFile.is_open()) { std::runtime_error("Could not open file at: " + path.string()); }
+
+            for (const auto& pose : traj.poses())
+            {
+                Timestamp sec = (Timestamp)((double)pose.first/1e9);
+                const auto t = pose.second->pose().translation();
+                const auto q = pose.second->pose().unit_quaternion();
+                algoFile << sec << "." << (Timestamp)((double)pose.first - (double)sec*1e9)  << " "
+                << t.x() << " " << t.y() << " " << t.z() << " "
+                << q.x() << " " << q.y() << " " << q.z() << " " << q.w();
+                if (writeCovariance)
+                {
+                    for (int i = 0; i < 6; i++)
+                    {
+                        for (int j = 0; j < 6; j++)
+                        {
+                            algoFile << " " << pose.second->cov()(i,j);
+                        }
+                    }
+                }
+                
+                algoFile << "\n";
+            }
+            
+        }
+
 
     }

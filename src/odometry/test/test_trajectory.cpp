@@ -10,7 +10,6 @@
 using namespace testing;
 using namespace pd;
 using namespace pd::vslam;
-using namespace pd::vslam::odometry;
 
 TEST(TrajectoryTest,Create)
 {
