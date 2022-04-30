@@ -1,7 +1,7 @@
 #include <memory>
 #include "core/core.h"
 #include "Warp.h"
-namespace pd{namespace vision{
+namespace pd::vslam::lukas_kanade{
 
     WarpAffine::WarpAffine(const Eigen::Vector6d& x, double cx,double cy)
     :_x(x),
@@ -132,7 +132,7 @@ namespace pd{namespace vision{
     ,_camCur(camCur)
     ,_camRef(camRef)
     ,_pcl(pcl)
-    {}
+    {_x = _se3.log();}
     void WarpSE3::updateAdditive(const Eigen::Vector6d& dx)
     {
         _se3 = _se3 * Sophus::SE3d::exp(dx);
@@ -237,4 +237,4 @@ namespace pd{namespace vision{
 
    
 
-}}
+}

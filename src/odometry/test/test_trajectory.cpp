@@ -9,8 +9,7 @@
 #include "odometry/odometry.h"
 using namespace testing;
 using namespace pd;
-using namespace pd::vision;
-using namespace pd::vslam::odometry;
+using namespace pd::vslam;
 
 TEST(TrajectoryTest,Create)
 {

@@ -10,14 +10,14 @@ include(Macros)
 
 add_subdirectory(src/core)
 add_subdirectory(src/utils)
-add_subdirectory(src/solver)
+add_subdirectory(src/least_squares)
 add_subdirectory(src/lukas_kanade)
 add_subdirectory(src/kalman)
 add_subdirectory(src/odometry)
 
 add_library(vslam INTERFACE)
 add_library(pd::vslam ALIAS vslam)
-target_link_libraries(${PROJECT_NAME} INTERFACE core lukas_kanade solver utils kalman odometry)
+target_link_libraries(${PROJECT_NAME} INTERFACE core lukas_kanade least_squares utils kalman odometry)
 target_include_directories(${PROJECT_NAME} INTERFACE 
 $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include/>
 $<INSTALL_INTERFACE:include/vslam>
@@ -32,7 +32,7 @@ endif()
 
 # Installation
 set(name )
-install(TARGETS ${PROJECT_NAME} core utils solver lukas_kanade kalman odometry
+install(TARGETS ${PROJECT_NAME} core utils least_squares lukas_kanade kalman odometry
     EXPORT ${PROJECT_NAME}Targets
     LIBRARY DESTINATION lib
     ARCHIVE DESTINATION lib

@@ -2,7 +2,7 @@
 #define VSLAM_IMAGE_KERNEL_H__
 #include <Eigen/Dense>
 #include "types.h"
-namespace pd::vision{
+namespace pd::vslam{
 //TODO give argument for size
 template<typename T>
 class Kernel2d{

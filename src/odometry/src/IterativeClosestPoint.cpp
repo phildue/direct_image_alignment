@@ -2,7 +2,7 @@
 #include <utils/utils.h>
 #include "IterativeClosestPoint.h"
 #define LOG_ODOM(level) CLOG(level,"odometry")
-namespace pd::vision{
+namespace pd::vslam{
 
 
         PoseWithCovariance::UnPtr IterativeClosestPoint::align(FrameRgbd::ConstShPtr from, FrameRgbd::ConstShPtr to) const

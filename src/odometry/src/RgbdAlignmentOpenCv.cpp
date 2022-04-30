@@ -9,8 +9,7 @@
 #include "RgbdAlignmentOpenCv.h"
 
 #define LOG_ODOM(level) CLOG(level,"odometry")
-using namespace pd::vslam::solver;
-namespace pd::vision{
+namespace pd::vslam{
 
 
         RgbdAlignmentOpenCv::RgbdAlignmentOpenCv()
@@ -31,7 +30,7 @@ namespace pd::vision{
                 << "\nguess:\t" << relativePose.log().transpose();
 
                 cv::rgbd::RgbdOdometry estimator(camMat,cv::rgbd::Odometry::DEFAULT_MIN_DEPTH(), cv::rgbd::Odometry::DEFAULT_MAX_DEPTH(),
-                  cv::rgbd::Odometry::DEFAULT_MAX_DEPTH_DIFF(), std::vector<int>({30,30,30}));
+                  cv::rgbd::Odometry::DEFAULT_MAX_DEPTH_DIFF(), std::vector<int>({100,100,100}));
 
                 cv::eigen2cv(from->intensity(),srcImage);
                 cv::eigen2cv(from->depth(),srcDepth);

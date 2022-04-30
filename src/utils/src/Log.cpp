@@ -13,7 +13,7 @@ namespace fs = std::experimental::filesystem;
 INITIALIZE_EASYLOGGINGPP
 
 
-namespace pd{ namespace vision {
+namespace pd::vslam{
 std::map<std::string, std::map<Level,std::shared_ptr<Log>>> Log::_logs = {};
 std::map<std::string, std::map<Level,std::shared_ptr<LogPlot>>> Log::_logsPlot = {};
 std::map<std::string, std::map<Level,std::shared_ptr<LogImage>>> Log::_logsImage = {};
@@ -140,5 +140,5 @@ Level Log::_showLevel = Level::Unknown;
     void operator<<(LogImage::ShPtr log, vis::Drawable::ConstShPtr drawable){
         log->append(drawable);
     }
-}}
+}
 

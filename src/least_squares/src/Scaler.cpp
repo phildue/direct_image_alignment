@@ -1,9 +1,8 @@
 #include <utils/utils.h>
 #include "Scaler.h"
-using namespace pd::vision;
-namespace pd::vslam::solver
-{
-    void MedianScaler::compute(const vision::VecXd& r)
+namespace pd::vslam::least_squares{
+
+    void MedianScaler::compute(const VecXd& r)
     {
         /*
         std::vector<double> rs();
@@ -23,9 +22,12 @@ namespace pd::vslam::solver
         return (r.array() - _median)/_std; 
     }
 
-    void MeanScaler::compute(const vision::VecXd& r)
+    void MeanScaler::compute(const VecXd& r)
     {
-
+        if(r.rows() == 0){ 
+            SOLVER( WARNING ) << "Empty residual.";
+            return;
+        }
         _mean = r.mean();
         _std = std::sqrt((r.array() - _mean).array().abs().sum()/(r.rows() - 1));
         LOG_PLT("MedianScaler") << std::make_shared<vis::Histogram>(r,"ErrorDistribution",30);

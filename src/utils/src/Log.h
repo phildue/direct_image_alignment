@@ -21,11 +21,11 @@
 #define IMAGE_ALIGNMENT(loglevel) CLOG(loglevel, "image_alignment")
 #define SOLVER(loglevel) CLOG(loglevel, "solver")
 
-#define LOG_IMG(name) pd::vision::Log::getImageLog(name,pd::vision::Level::Debug)
-#define LOG_PLT(name) pd::vision::Log::getPlotLog(name,pd::vision::Level::Debug)
+#define LOG_IMG(name) pd::vslam::Log::getImageLog(name,pd::vslam::Level::Debug)
+#define LOG_PLT(name) pd::vslam::Log::getPlotLog(name,pd::vslam::Level::Debug)
 
 
-namespace pd{ namespace vision{
+namespace pd::vslam{
     class Frame;
     class FrameRGBD;
     using Level = el::Level;
@@ -136,6 +136,6 @@ namespace pd{ namespace vision{
     static std::map<std::string, std::map<Level,std::shared_ptr<LogImage>>> _logsImage;
 
     };
-    }}
+    }
 
 #endif //VSLAM_LOG_H

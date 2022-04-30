@@ -5,8 +5,8 @@
 #include <opencv4/opencv2/core/eigen.hpp>
 #include "Frame.h"
 #define USE_OPENCV
-namespace pd::vision
-{
+namespace pd::vslam{
+
         FrameRgb::FrameRgb(const Image& intensity, Camera::ConstShPtr cam, size_t nLevels, const Timestamp& t, const PoseWithCovariance& pose)
         :_t(t),
         _pose(pose){
@@ -18,6 +18,7 @@ namespace pd::vision
                 const double s = 0.5;
 
                 #ifdef USE_OPENCV
+                //TODO replace using custom implementation
                 cv::Mat mat;
                 cv::eigen2cv(intensity,mat);
                 std::vector<cv::Mat> mats;
@@ -135,7 +136,7 @@ namespace pd::vision
                                 
                         }else{
                                 DepthMap depthBlur = algorithm::medianBlur<double>(_depth[i-1],3,3,[](double v){ return v <= 0.0;});
-                                _depth[i] = algorithm::resize(_depth[i-1],s);
+                                _depth[i] = algorithm::resize(depthBlur,s);
                                 _pcl[i] = depth2pcl(_depth[i],camera(i));
 
                         } 

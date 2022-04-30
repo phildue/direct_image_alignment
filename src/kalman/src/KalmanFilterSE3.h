@@ -3,7 +3,7 @@
 
 #include "core/core.h"
 #include "KalmanFilter.h"
-namespace pd::vision{
+namespace pd::vslam{
 
 class KalmanFilterSE3 : public KalmanFilter<6,6>{
         public:

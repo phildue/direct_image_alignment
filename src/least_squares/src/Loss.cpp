@@ -2,7 +2,7 @@
 #include "core/core.h"
 #include "utils/utils.h"
 
-namespace pd::vslam::solver{
+namespace pd::vslam::least_squares{
 
 
     double TukeyLoss::compute(double r) const

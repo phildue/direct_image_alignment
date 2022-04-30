@@ -2,12 +2,13 @@
 #include <gtest/gtest.h>
 #include <utils/utils.h>
 #include <core/core.h>
-#include <solver/solver.h>
 #include "lukas_kanade/lukas_kanade.h"
 
 using namespace testing;
 using namespace pd;
-using namespace pd::vision;
+using namespace pd::vslam;
+using namespace pd::vslam::least_squares;
+using namespace pd::vslam::lukas_kanade;
 
 //OpenCV implementation
 void calcRgbdEquationCoeffs(double* C, double dIdx, double dIdy, const Vec3d& p3d, double fx, double fy)

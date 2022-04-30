@@ -7,10 +7,10 @@ set(sources
         )
 
 set(headers
-        src/LukasKanade.hpp
-        src/LukasKanade.h
-        src/LukasKanadeInverseCompositional.hpp
-        src/LukasKanadeInverseCompositional.h
+        src/ForwardAdditive.hpp
+        src/ForwardAdditive.h
+        src/InverseCompositional.hpp
+        src/InverseCompositional.h
         src/Warp.h
         include/lukas_kanade/lukas_kanade.h
         )
@@ -21,7 +21,7 @@ target_compile_definitions(${PROJECT_NAME} PUBLIC
 $<BUILD_INTERFACE:CFG_DIR="${CMAKE_CURRENT_LIST_DIR}/cfg">
 $<INSTALL_INTERFACE:CFG_DIR="/share/vslam/cfg">)
 
-target_link_libraries(${PROJECT_NAME} core utils solver)
+target_link_libraries(${PROJECT_NAME} core utils least_squares)
 if (UNIX)
 	target_link_libraries(${PROJECT_NAME} stdc++fs)
 endif()

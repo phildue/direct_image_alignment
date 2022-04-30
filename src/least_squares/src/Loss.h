@@ -9,7 +9,7 @@
 // computeWeights assigns weights corresponding to L'(r) the first order derivative of the loss function
 // There are many other weights based on the expected distribution of errors (e.g. t distribution)[Image Gradient-based Joint Direct Visual Odometry for Stereo Camera]
 
-namespace pd::vslam::solver{
+namespace pd::vslam::least_squares{
 class Loss
 {
         public:
@@ -26,7 +26,7 @@ class Loss
         //w(r) = dl/dr (r) * 1/r
         virtual double computeWeight(double r) const {return computeDerivative(scale(r))/scale(r);}
 
-        virtual void computeScale(const vision::VecXd& residuals){_scaler->compute(residuals);}
+        virtual void computeScale(const VecXd& residuals){_scaler->compute(residuals);}
         double scale(double r) const {return _scaler->scale(r);}
         private:
         Scaler::ShPtr _scaler;
@@ -58,7 +58,7 @@ class OpenCvLoss : public Loss
         double computeDerivative(double r) const override {return scale(r);}
         //w(r) = dl/dr (r) * 1/r
         double computeWeight(double r) const override {return 1.0/(_std + r);}
-        void computeScale(const vision::VecXd& residuals){_std = std::sqrt((residuals.array() - residuals.mean()).array().abs().sum()/(residuals.rows() - 1));}
+        void computeScale(const VecXd& residuals){_std = std::sqrt((residuals.array() - residuals.mean()).array().abs().sum()/(residuals.rows() - 1));}
 
         private:
         double _std;

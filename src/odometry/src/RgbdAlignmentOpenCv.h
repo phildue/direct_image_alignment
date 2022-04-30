@@ -3,10 +3,9 @@
 
 #include "core/core.h"
 #include "lukas_kanade/lukas_kanade.h"
-#include "solver/solver.h"
 #include "AlignmentSE3.h"
 
-namespace pd::vision{
+namespace pd::vslam{
 class RgbdAlignmentOpenCv : public AlignmentSE3{
         public:
         typedef std::shared_ptr<RgbdAlignmentOpenCv> ShPtr;

@@ -7,8 +7,8 @@
 #include "algorithm.h"
 #include "Camera.h"
 #include "Kernel2d.h"
-namespace pd::vision
-{
+namespace pd::vslam{
+
         
         class FrameRgb{
 

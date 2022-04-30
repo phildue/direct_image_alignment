@@ -9,9 +9,8 @@
 #include <experimental/filesystem>
 namespace fs = std::experimental::filesystem;
 #include "visuals.h"
-namespace pd {
-namespace vision {
-namespace vis {
+namespace pd::vslam::vis{
+
 
 
 cv::Mat drawAsImage(const Eigen::MatrixXd& mat)
@@ -148,6 +147,4 @@ std::string PlotGaussNewton::csv() const
     return "";
 }
 
-} // namespace vis
-} // namespace vision
-} // namespace pd
+} 

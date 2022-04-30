@@ -6,7 +6,7 @@
 #include "algorithm.h"
 using namespace testing;
 using namespace pd;
-using namespace pd::vision;
+using namespace pd::vslam;
 
 TEST(MathTest,BilinearInterpolation)
 {

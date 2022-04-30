@@ -2,7 +2,7 @@
 #include "MotionPrediction.h"
 #include "utils/utils.h"
 #define LOG_MOTION_PREDICTION(level) CLOG(level,"motion_prediction")
-namespace pd::vision{
+namespace pd::vslam{
 
         MotionPrediction::ShPtr MotionPrediction::make(const std::string& model)
         {

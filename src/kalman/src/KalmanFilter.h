@@ -3,7 +3,7 @@
 //https://thekalmanfilter.com/kalman-filter-explained-simply/
 #include "core/core.h"
 #include "utils/utils.h"
-namespace pd::vision{
+namespace pd::vslam{
 
 /// Bayesian filtering for a linear system following:
 /// x_t1 = A x_t0 + B u_t0

@@ -7,7 +7,7 @@
 
 #include <opencv2/rgbd.hpp>
 #define LOG_ODOM(level) CLOG(level,"odometry")
-namespace pd::vision{
+namespace pd::vslam{
 
 
         PoseWithCovariance::UnPtr IterativeClosestPointOcv::align(FrameRgbd::ConstShPtr from, FrameRgbd::ConstShPtr to) const

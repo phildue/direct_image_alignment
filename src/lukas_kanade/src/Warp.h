@@ -4,9 +4,7 @@
 #include <vector>
 
 #include "core/core.h"
-#include "solver/solver.h"
-namespace pd{namespace vision{
-
+namespace pd::vslam::lukas_kanade{
 class WarpAffine
 {
     public:
@@ -74,5 +72,5 @@ class WarpSE3
     std::vector<Eigen::Vector3d> _pcl;
 };
 
-}}
+}
 #endif

@@ -11,6 +11,8 @@
 using namespace testing;
 using namespace pd;
 using namespace pd::vision;
+using namespace pd::vslam::least_squares;
+using namespace pd::vslam::lukas_kanade;
 
 class LukasKanadeSE3Test : public TestWithParam<int>{
     public:

@@ -1,17 +1,16 @@
 
 #include "Odometry.h"
 #define LOG_ODOM(level) CLOG(level,"odometry")
-namespace pd::vision{
-         //:_aligner(std::make_shared<SE3Alignment>(minGradient,solver,loss,scaler))
+namespace pd::vslam{
 
         OdometryRgbd::OdometryRgbd(double minGradient,
-         vslam::solver::Solver<6>::ShPtr solver,
-         vslam::solver::Loss::ShPtr loss,
-         vslam::solver::Scaler::ShPtr scaler,
+         least_squares::Solver<6>::ShPtr solver,
+         least_squares::Loss::ShPtr loss,
          Map::ConstShPtr map)
-         :_aligner(std::make_shared<RgbdAlignmentOpenCv>())
+         :_aligner(std::make_shared<SE3Alignment>(minGradient,solver,loss,true))
          ,_map(map)
          ,_includeKeyFrame(false)
+         ,_trackKeyFrame(false)
          {
                 Log::get("odometry",ODOMETRY_CFG_DIR"/log/odometry.conf");
 
@@ -20,15 +19,27 @@ namespace pd::vision{
         {
                 if(_map->lastFrame())
                 {
-                        if(_includeKeyFrame && _map->lastKf() != nullptr)
-                        {
-                               // _pose = _aligner->align({_map->lastKf(),_map->lastFrame()},frame);
+                        try{
+                                if(_includeKeyFrame && _map->lastKf() && _map->lastKf() != _map->lastFrame())
+                                {
+                                        _pose = _aligner->align({_map->lastKf(),_map->lastFrame()},frame);
+                                        
+                                }else if(_trackKeyFrame && _map->lastKf())
+                                {
+                                        _pose = _aligner->align(_map->lastKf(),frame);
+
+                                }else{
+                                        _pose = _aligner->align(_map->lastFrame(),frame);
+                                }
+                                auto dT = frame->t() - _map->lastFrame()->t();
+                                _speed = std::make_shared<PoseWithCovariance>(SE3d::exp(algorithm::computeRelativeTransform(_map->lastFrame()->pose().pose(),_pose->pose()).log()/((double)dT/1e9)),_pose->cov());
+   
+                        }catch(const std::runtime_error& e){
+                                LOG_ODOM( ERROR ) << e.what();
+                                _pose = std::make_shared<PoseWithCovariance>(frame->pose());
+                                _speed = std::make_shared<PoseWithCovariance>();
                                 
-                        }else{
-                                _pose = _aligner->align(_map->lastFrame(),frame);
                         }
-                        auto dT = frame->t() - _map->lastFrame()->t();
-                        _speed = std::make_shared<PoseWithCovariance>(SE3d::exp(algorithm::computeRelativeTransform(_map->lastFrame()->pose().pose(),_pose->pose()).log()/((double)dT/1e9)),_pose->cov());
                 }else{
                         _pose = std::make_shared<PoseWithCovariance>(frame->pose());
                         _speed = std::make_shared<PoseWithCovariance>();

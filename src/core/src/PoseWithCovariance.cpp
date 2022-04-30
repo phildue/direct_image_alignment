@@ -1,5 +1,5 @@
 #include "PoseWithCovariance.h"
-namespace pd::vision{
+namespace pd::vslam{
 PoseWithCovariance operator*(const SE3d& p1, const PoseWithCovariance& p0)
 {
         //https://robotics.stackexchange.com/questions/2556/how-to-rotate-covariance

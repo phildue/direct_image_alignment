@@ -7,8 +7,8 @@
 #include "Loss.h"
 using namespace testing;
 using namespace pd;
-using namespace pd::vision;
-using namespace pd::vslam::solver;
+using namespace pd::vslam;
+using namespace pd::vslam::least_squares;
 #define VISUALIZE true
 TEST(LossTest,TukeyLoss)
 {

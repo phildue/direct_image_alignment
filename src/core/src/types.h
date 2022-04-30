@@ -13,7 +13,7 @@ namespace Eigen{
     typedef Eigen::Matrix<double,6,1> Vector6d;
 }
 
-namespace pd::vision{
+namespace pd::vslam{
     typedef Eigen::Matrix<std::uint8_t ,Eigen::Dynamic,Eigen::Dynamic> Image;
     typedef std::vector<Image> ImageVec;
     typedef Eigen::Matrix<double ,Eigen::Dynamic,Eigen::Dynamic> DepthMap;
