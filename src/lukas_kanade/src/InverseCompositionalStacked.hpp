@@ -1,4 +1,5 @@
 #include <execution>
+#include <vector>
 
 #include "utils/utils.h"
 #include "core/core.h"
@@ -24,9 +25,10 @@ namespace pd::vslam::lukas_kanade{
     template<typename Warp>
     typename least_squares::NormalEquations<Warp::nParameters>::ConstShPtr InverseCompositionalStacked<Warp>::computeNormalEquations() 
     {
+        std::vector<typename least_squares::NormalEquations<Warp::nParameters>::ConstShPtr> nes(_frames.size());
+        std::transform(std::execution::par_unseq,_frames.begin(),_frames.end(),nes.begin(),[&](auto f){return f->computeNormalEquations();});
         auto ne = std::make_shared<least_squares::NormalEquations<Warp::nParameters>>();
-        std::for_each(std::execution::unseq,_frames.begin(),_frames.end(),[&](auto f){ne->combine(*f->computeNormalEquations());});
-
+        std::for_each(nes.begin(),nes.end(),[&](auto n){ne->combine(*n);});
         return ne;
     }
    

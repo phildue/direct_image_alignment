@@ -7,9 +7,9 @@ namespace pd::vslam{
          least_squares::Solver<6>::ShPtr solver,
          least_squares::Loss::ShPtr loss,
          Map::ConstShPtr map)
-         :_aligner(std::make_shared<SE3Alignment>(minGradient,solver,loss,true))
+         :_aligner(std::make_shared<SE3Alignment>(minGradient,solver,loss,false))
          ,_map(map)
-         ,_includeKeyFrame(false)
+         ,_includeKeyFrame(true)
          ,_trackKeyFrame(false)
          {
                 Log::get("odometry",ODOMETRY_CFG_DIR"/log/odometry.conf");

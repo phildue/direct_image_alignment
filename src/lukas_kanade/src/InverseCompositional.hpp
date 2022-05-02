@@ -71,7 +71,7 @@ namespace pd::vslam::lukas_kanade{
         _J.setZero();
         Eigen::MatrixXd steepestDescent = Eigen::MatrixXd::Zero(_T.rows(),_T.cols());
         std::atomic<size_t> idx = 0U;
-        std::for_each(std::execution::par_unseq, interestPoints.begin(),interestPoints.end(),[&](auto kp)
+        std::for_each(interestPoints.begin(),interestPoints.end(),[&](auto kp)
             {
                 const Eigen::Matrix<double, 2,nParameters> Jw = _w->J(kp.x(),kp.y());
                 const Eigen::Matrix<double, 1,nParameters> Jwi = Jw.row(0) * dTx(kp.y(), kp.x()) + Jw.row(1) * dTy(kp.y(),kp.x());
@@ -110,7 +110,7 @@ namespace pd::vslam::lukas_kanade{
         VecXd r = VecXd::Zero(_interestPoints.size());
         VecXd w = VecXd::Zero(_interestPoints.size());
 
-        std::for_each(std::execution::par_unseq,_interestPoints.begin(),_interestPoints.end(),
+        std::for_each(_interestPoints.begin(),_interestPoints.end(),
         [&](auto kp) {
                 Eigen::Vector2d uvI = _w->apply(kp.pos.x(),kp.pos.y());
                 const bool visible = 1 < uvI.x() && uvI.x() < _I.cols() - 1 && 1 < uvI.y() && uvI.y() < _I.rows() - 1 && std::isfinite(uvI.x());
@@ -128,7 +128,7 @@ namespace pd::vslam::lukas_kanade{
         if(_loss)
         {  
             _loss->computeScale(r);
-            std::for_each(std::execution::par_unseq,_interestPoints.begin(),_interestPoints.end(),
+            std::for_each(_interestPoints.begin(),_interestPoints.end(),
             [&](auto kp) 
                 {
                     if(w(kp.idx) > 0.0){
@@ -146,9 +146,13 @@ namespace pd::vslam::lukas_kanade{
         ne->b = Jtw * r;
         ne->chi2 = (r * w).transpose() * r;
         ne->nConstraints = r.rows();
-        ne->A.noalias() = ne->A / (double)ne->nConstraints;
-        ne->b.noalias() = ne->b / (double)ne->nConstraints;
-
+        if (ne->nConstraints > 1)
+        {
+            ne->A.noalias() = ne->A / (double)ne->nConstraints;
+            ne->b.noalias() = ne->b / (double)ne->nConstraints;
+            ne->chi2 = ne->chi2 / (double)ne->nConstraints;
+        }
+       
         if (_prior){ _prior->apply(ne,_w->x()); }
 
         LOG_IMG("ImageWarped") << IWxp;
