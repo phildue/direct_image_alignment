@@ -16,13 +16,13 @@ namespace pd::vslam{
                 , _xPred((predictedPose.pose() * referencePose.pose().inverse()).log())
                 ,_information(predictedPose.cov().inverse()){}
                 
-                void apply(NormalEquations<6>::ShPtr ne, const Eigen::VectorXd& x) const override{
+                void apply(NormalEquations::ShPtr ne, const Eigen::VectorXd& x) const override{
                         const double normalizer = 1.0 / (255.0 * 255.0);//otherwise prior has no influence ?
-                        ne->A.noalias() = ne->A * normalizer;
-                        ne->b.noalias() = ne->b * normalizer;
+                        ne->A().noalias() = ne->A() * normalizer;
+                        ne->b().noalias() = ne->b() * normalizer;
 
-                        ne->A.noalias() += _information; 
-                        ne->b.noalias() += _information * (_xPred - x);
+                        ne->A().noalias() += _information; 
+                        ne->b().noalias() += _information * (_xPred - x);
 
                         LOG_ODOM( DEBUG ) << "Prior: " << _xPred.transpose() << " \nInformation:\n " << _information;
                 }

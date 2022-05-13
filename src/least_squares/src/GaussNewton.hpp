@@ -41,10 +41,10 @@ namespace pd::vslam::least_squares{
             // Where A = (JWJ + lambda * I), x = dx, b = JWr
             auto ne = problem->computeNormalEquations();
 
-            const double det = ne->A.determinant();
-            if(ne->nConstraints < nParameters)
+            const double det = ne->A().determinant();
+            if(ne->nConstraints() < nParameters)
             {
-                SOLVER( WARNING ) << i << " > " << "STOP. Not enough constraints: " << ne->nConstraints << " / " << nParameters;
+                SOLVER( WARNING ) << i << " > " << "STOP. Not enough constraints: " << ne->nConstraints() << " / " << nParameters;
                 break;
             }
             if(!std::isfinite(det) || std::abs(det) < 1e-6){
@@ -52,9 +52,9 @@ namespace pd::vslam::least_squares{
                 break;
             }
             
-            SOLVER(DEBUG) << i << " > A=\n" << ne->A << "\nb=\n" << ne->b.transpose() << "\nnConstraints="<< ne->nConstraints << " chi2=" <<ne->chi2;
+            SOLVER(DEBUG) << i << " > " << ne->toString();
 
-            r->chi2(i) = ne->chi2;
+            r->chi2(i) = ne->chi2();
 
             const double dChi2 = i > 0 ? r->chi2(i)- r->chi2(i-1) : 0;
             if (i > 0 && dChi2 > 0 )
@@ -63,16 +63,16 @@ namespace pd::vslam::least_squares{
                 problem->setX(r->x.row(i-1));
                 break;
             }
-            const VecXd dx = ne->A.ldlt().solve(ne->b);
+            const VecXd dx = ne->A().ldlt().solve(ne->b());
             problem->updateX(dx);
             r->x.row(i) = problem->x();
             r->stepSize(i) = dx.norm();
-            r->cov.push_back(ne->A.inverse());
+            r->cov.push_back(ne->A().inverse());
             r->iteration = i;
 
             SOLVER( INFO ) << "Iteration: " << i << " chi2: " << r->chi2(i) << " dChi2: " << dChi2 << " stepSize: " << r->stepSize(i) 
-            << " Points: " << ne->nConstraints << "\nx: " << problem->x().transpose() << "\ndx: " << dx.transpose();
-            if ( i > 0 && (r->stepSize(i) < _minStepSize || std::abs(ne->b.maxCoeff()) < _minGradient || std::abs(dChi2) < _minReduction) )
+            << " Points: " << ne->nConstraints() << "\nx: " << problem->x().transpose() << "\ndx: " << dx.transpose();
+            if ( i > 0 && (r->stepSize(i) < _minStepSize || std::abs(ne->b().maxCoeff()) < _minGradient || std::abs(dChi2) < _minReduction) )
             { 
                 SOLVER( INFO ) << i << " > " << r->stepSize(i) << "/" << _minStepSize << " CONVERGED. ";
                 break;
@@ -80,7 +80,9 @@ namespace pd::vslam::least_squares{
 
             if (!std::isfinite(r->stepSize(i)))
             {
-                throw pd::Exception(std::to_string(i) + "> NaN during optimization.");
+                SOLVER( ERROR ) << i << " > " << "STOP. NaN during optimization.";
+                problem->setX(r->x.row(i-1));
+                break;
             }
 
         }

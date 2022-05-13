@@ -44,7 +44,7 @@ namespace pd::vslam::lukas_kanade{
     }
 
     template<typename Warp>
-    typename least_squares::NormalEquations<Warp::nParameters>::ConstShPtr ForwardAdditive<Warp>::computeNormalEquations() 
+    least_squares::NormalEquations::ConstShPtr ForwardAdditive<Warp>::computeNormalEquations() 
     {
 
         Eigen::MatrixXd steepestDescent = Eigen::MatrixXd::Zero(_T.rows(),_T.cols());
@@ -95,7 +95,7 @@ namespace pd::vslam::lukas_kanade{
 
         if(_loss){  _loss->computeScale(Eigen::Map<Eigen::VectorXd> (r.data(),r.size()));}
    
-        auto ne = std::make_shared<least_squares::NormalEquations<Warp::nParameters>>();
+        auto ne = std::make_shared<least_squares::NormalEquations>(Warp::nParameters);
         Eigen::MatrixXd W = Eigen::MatrixXd::Zero(_T.rows(),_T.cols());
         std::for_each(std::execution::unseq,interestPointsVisible.begin(),interestPointsVisible.end(),
         [&](auto kp)

@@ -53,7 +53,7 @@ public:
 
     Eigen::Matrix<double,Warp::nParameters,1> x() const override {return _w->x();}
 
-    typename least_squares::NormalEquations<Warp::nParameters>::ConstShPtr computeNormalEquations() override;
+    least_squares::NormalEquations::ConstShPtr computeNormalEquations() override;
 
 protected:
     const Image _T;

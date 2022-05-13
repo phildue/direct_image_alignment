@@ -102,7 +102,7 @@ namespace pd::vslam::lukas_kanade{
         _w->updateCompositional(-dx);
     }
     template<typename Warp>
-    typename least_squares::NormalEquations<Warp::nParameters>::ConstShPtr InverseCompositional<Warp>::computeNormalEquations() 
+    least_squares::NormalEquations::ConstShPtr InverseCompositional<Warp>::computeNormalEquations() 
     {
         Image IWxp = Image::Zero(_I.rows(),_I.cols());
         MatXd R = MatXd::Zero(_I.rows(),_I.cols());
@@ -140,17 +140,12 @@ namespace pd::vslam::lukas_kanade{
             );
             
         }
-        auto ne = std::make_shared<least_squares::NormalEquations<nParameters>>();
-        auto Jtw = _J.transpose() * w.asDiagonal();
-        ne->A = Jtw * _J;
-        ne->b = Jtw * r;
-        ne->chi2 = (r * w).transpose() * r;
-        ne->nConstraints = r.rows();
-        if (ne->nConstraints > 1)
+        auto ne = std::make_shared<least_squares::NormalEquations>(_J,r,w);
+        if (ne->nConstraints() > 1)
         {
-            ne->A.noalias() = ne->A / (double)ne->nConstraints;
-            ne->b.noalias() = ne->b / (double)ne->nConstraints;
-            ne->chi2 = ne->chi2 / (double)ne->nConstraints;
+            ne->A().noalias() = ne->A() / (double)ne->nConstraints();
+            ne->b().noalias() = ne->b() / (double)ne->nConstraints();
+            ne->chi2() = ne->chi2() / (double)ne->nConstraints();
         }
        
         if (_prior){ _prior->apply(ne,_w->x()); }

@@ -23,7 +23,7 @@ public:
     Eigen::Matrix<double,Warp::nParameters,1> x() const override{return _frames[0]->x();}
     void setX(const Eigen::Matrix<double,Warp::nParameters,1>& x) override;
 
-    typename least_squares::NormalEquations<Warp::nParameters>::ConstShPtr computeNormalEquations() override;
+    least_squares::NormalEquations::ConstShPtr computeNormalEquations() override;
 
 protected:
     std::vector<std::shared_ptr<InverseCompositional<Warp>>> _frames;

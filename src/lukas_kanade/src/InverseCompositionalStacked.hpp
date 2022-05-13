@@ -23,11 +23,11 @@ namespace pd::vslam::lukas_kanade{
         std::for_each(_frames.begin(),_frames.end(),[&x](auto f){f->setX(x);});
     }
     template<typename Warp>
-    typename least_squares::NormalEquations<Warp::nParameters>::ConstShPtr InverseCompositionalStacked<Warp>::computeNormalEquations() 
+    least_squares::NormalEquations::ConstShPtr InverseCompositionalStacked<Warp>::computeNormalEquations() 
     {
-        std::vector<typename least_squares::NormalEquations<Warp::nParameters>::ConstShPtr> nes(_frames.size());
-        std::transform(std::execution::par_unseq,_frames.begin(),_frames.end(),nes.begin(),[&](auto f){return f->computeNormalEquations();});
-        auto ne = std::make_shared<least_squares::NormalEquations<Warp::nParameters>>();
+        std::vector<least_squares::NormalEquations::ConstShPtr> nes(_frames.size());
+        std::transform(_frames.begin(),_frames.end(),nes.begin(),[&](auto f){return f->computeNormalEquations();});
+        auto ne = std::make_shared<least_squares::NormalEquations>(Warp::nParameters);
         std::for_each(nes.begin(),nes.end(),[&](auto n){ne->combine(*n);});
         return ne;
     }

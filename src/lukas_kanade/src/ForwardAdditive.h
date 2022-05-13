@@ -20,7 +20,7 @@ public:
     void setX(const Eigen::Matrix<double,Warp::nParameters,1>& x) override {_w->setX(x);}
 
     Eigen::Matrix<double,Warp::nParameters,1> x() const override {return _w->x();}
-    typename least_squares::NormalEquations<Warp::nParameters>::ConstShPtr computeNormalEquations() override;
+    typename least_squares::NormalEquations::ConstShPtr computeNormalEquations() override;
 
 
 protected:

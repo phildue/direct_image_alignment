@@ -40,7 +40,9 @@ class MotionPredictionConstant : public MotionPrediction{
         typedef std::unique_ptr<const MotionPredictionConstant> ConstUnPtr;
         MotionPredictionConstant()
         : MotionPrediction()
+        , _speed(Vec6d::Zero())
         , _lastPose(std::make_shared<PoseWithCovariance>(SE3d(),MatXd::Identity(6,6)))
+        , _lastT(0U)
         {}
         
         void update(PoseWithCovariance::ConstShPtr pose, Timestamp timestamp) override;

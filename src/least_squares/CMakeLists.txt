@@ -4,12 +4,13 @@ project(least_squares VERSION 1.0.0)
 set(sources
         src/Loss.cpp
         src/Scaler.cpp
-
+        src/NormalEquations.cpp
         )
 
 set(headers
         src/GaussNewton.h
         src/GaussNewton.hpp
+        src/NormalEquations.h
         src/Scaler.h
         src/Prior.h
         src/Loss.h

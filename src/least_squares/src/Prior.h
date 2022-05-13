@@ -11,7 +11,7 @@ class Prior{
         typedef std::shared_ptr<const Prior> ConstShPtr;
         typedef std::unique_ptr<const Prior> ConstUnPtr;
 
-        virtual void apply(typename NormalEquations<nParameters>::ShPtr ne, const Eigen::VectorXd& x) const = 0;
+        virtual void apply(typename NormalEquations::ShPtr ne, const Eigen::VectorXd& x) const = 0;
 
 };
 

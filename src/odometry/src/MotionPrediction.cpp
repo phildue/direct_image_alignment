@@ -22,7 +22,9 @@ namespace pd::vslam{
 
         void MotionPredictionConstant::update(PoseWithCovariance::ConstShPtr pose, Timestamp timestamp)
         {
+                if(timestamp < _lastT){ throw pd::Exception("New timestamp is older than last one!");}
                 const double dT = ((double)timestamp - (double) _lastT)/1e9;
+                
                 _speed = algorithm::computeRelativeTransform(_lastPose->pose(),pose->pose()).log()/dT;
                 _lastPose = pose;
                 _lastT = timestamp;
