@@ -10,13 +10,14 @@ namespace pd::vslam::lukas_kanade{
      std::shared_ptr<Warp> w0,
      least_squares::Loss::ShPtr l,
      double minGradient ,
-     std::shared_ptr<const least_squares::Prior<Warp::nParameters>> prior)
-    : least_squares::Problem<Warp::nParameters>()
+     std::shared_ptr<const least_squares::Prior> prior)
+    : least_squares::Problem(Warp::nParameters)
     , _T(templ)
     , _I(image)
     , _w(w0)
     , _loss(l)
     , _prior(prior)
+    , _J(Eigen::MatrixXd::Zero(_T.rows() *_T.cols(),Warp::nParameters))
     {
         //TODO this could come from some external feature selector
         //TODO move dTx, dTy computation outside
@@ -33,14 +34,12 @@ namespace pd::vslam::lukas_kanade{
                     
             }
         }
-        _J.conservativeResize(_T.rows() *_T.cols(),Eigen::NoChange);
-        _J.setZero();
         Eigen::MatrixXd steepestDescent = Eigen::MatrixXd::Zero(_T.rows(),_T.cols());
         size_t idx = 0U;
         std::for_each(interestPoints.begin(),interestPoints.end(),[&](auto kp)
             {
-                const Eigen::Matrix<double, 2,nParameters> Jw = _w->J(kp.x(),kp.y());
-                _J.row(kp.y() * _T.cols() + kp.x()) = Jw.row(0) * dTx(kp.y(), kp.x()) + Jw.row(1) * dTy(kp.y(),kp.x());
+                const Eigen::MatrixXd Jw = _w->J(kp.x(),kp.y());
+                _J.row(idx) = Jw.row(0) * dTx(kp.y(), kp.x()) + Jw.row(1) * dTy(kp.y(),kp.x());
                 const double Jnorm = _J.row(kp.y() * _T.cols() + kp.x()).norm();
                 steepestDescent(kp.y(),kp.x()) = std::isfinite(Jnorm) ? Jnorm : 0.0;
                 if (std::isfinite(Jnorm))
@@ -49,7 +48,7 @@ namespace pd::vslam::lukas_kanade{
                 }
             }
         );
-
+        _J.conservativeResize(idx,Eigen::NoChange);
         LOG_IMG("SteepestDescent") << steepestDescent;
     }
     
@@ -58,23 +57,22 @@ namespace pd::vslam::lukas_kanade{
      std::shared_ptr<Warp> w0,
      const std::vector<Eigen::Vector2i>& interestPoints,
      least_squares::Loss::ShPtr l,
-     std::shared_ptr<const least_squares::Prior<Warp::nParameters>> prior)
-    : least_squares::Problem<Warp::nParameters>()
+     std::shared_ptr<const least_squares::Prior> prior)
+    : least_squares::Problem(Warp::nParameters)
     , _T(templ)
     , _I(image)
     , _w(w0)
     , _loss(l)
     , _prior(prior)
     , _interestPoints(interestPoints.size())
+    , _J(Eigen::MatrixXd::Zero(_T.rows() *_T.cols(),Warp::nParameters))
     {
-        _J.conservativeResize(_T.rows() *_T.cols(),Eigen::NoChange);
-        _J.setZero();
         Eigen::MatrixXd steepestDescent = Eigen::MatrixXd::Zero(_T.rows(),_T.cols());
         std::atomic<size_t> idx = 0U;
         std::for_each(interestPoints.begin(),interestPoints.end(),[&](auto kp)
             {
-                const Eigen::Matrix<double, 2,nParameters> Jw = _w->J(kp.x(),kp.y());
-                const Eigen::Matrix<double, 1,nParameters> Jwi = Jw.row(0) * dTx(kp.y(), kp.x()) + Jw.row(1) * dTy(kp.y(),kp.x());
+                const auto Jw = _w->J(kp.x(),kp.y());
+                const auto Jwi = Jw.row(0) * dTx(kp.y(), kp.x()) + Jw.row(1) * dTy(kp.y(),kp.x());
                 const double Jwin = Jwi.norm();
                 if (std::isfinite(Jwin))
                 {
@@ -91,13 +89,13 @@ namespace pd::vslam::lukas_kanade{
         LOG_IMG("SteepestDescent") << steepestDescent;
     }
     template<typename Warp>
-    InverseCompositional<Warp>::InverseCompositional (const Image& templ, const Image& image,std::shared_ptr<Warp> w0, std::shared_ptr<least_squares::Loss> l, double minGradient, std::shared_ptr<const least_squares::Prior<Warp::nParameters>> prior)
+    InverseCompositional<Warp>::InverseCompositional (const Image& templ, const Image& image,std::shared_ptr<Warp> w0, std::shared_ptr<least_squares::Loss> l, double minGradient, std::shared_ptr<const least_squares::Prior> prior)
     : InverseCompositional<Warp> (templ, algorithm::gradX(templ).cast<double>(), algorithm::gradY(templ).cast<double>(), image, w0, l, minGradient,prior){}
 
 
 
     template<typename Warp>
-    void InverseCompositional<Warp>::updateX(const Eigen::Matrix<double,Warp::nParameters,1>& dx)
+    void InverseCompositional<Warp>::updateX(const Eigen::VectorXd& dx)
     {
         _w->updateCompositional(-dx);
     }

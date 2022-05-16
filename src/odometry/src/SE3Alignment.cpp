@@ -9,10 +9,10 @@ namespace pd::vslam{
         We expect the new pose not be too far away from a prediction.
         Namely we expect it to be normally distributed around the prediction ( mean ) with some uncertainty ( covariance ).
         */
-        class MotionPrior : public Prior<6>{
+        class MotionPrior : public Prior{
         public:
                 MotionPrior(const PoseWithCovariance& predictedPose, const PoseWithCovariance& referencePose)
-                :Prior<6>()
+                :Prior()
                 , _xPred((predictedPose.pose() * referencePose.pose().inverse()).log())
                 ,_information(predictedPose.cov().inverse()){}
                 
@@ -31,7 +31,7 @@ namespace pd::vslam{
         Eigen::MatrixXd _information;
         };
 
-        SE3Alignment::SE3Alignment(double minGradient, Solver<6>::ShPtr solver, Loss::ShPtr loss, bool includePrior)
+        SE3Alignment::SE3Alignment(double minGradient, Solver::ShPtr solver, Loss::ShPtr loss, bool includePrior)
         : _minGradient2(minGradient*minGradient)
         , _loss( loss ) 
         , _solver ( solver )

@@ -4,7 +4,6 @@
 #include "NormalEquations.h"
 namespace pd::vslam::least_squares{
 
-      template<int nParameters>
       class Problem{
               public:
               typedef std::shared_ptr<Problem> ShPtr;
@@ -12,15 +11,18 @@ namespace pd::vslam::least_squares{
               typedef std::shared_ptr<const Problem> ConstShPtr;
               typedef std::unique_ptr<const Problem> ConstUnPtr;
             
-              virtual void updateX(const Eigen::Vector<double,nParameters>& dx) = 0;
-              virtual void setX(const Eigen::Vector<double,nParameters>& x) = 0;
-              virtual Eigen::Vector<double,nParameters> x() const = 0;
-              
+              size_t nParameters() const { return _nParameters; }
+              Problem(size_t nParameters):_nParameters(nParameters){}
+
+              virtual void updateX(const Eigen::VectorXd& dx) = 0;
+              virtual void setX(const Eigen::VectorXd& x) = 0;
+              virtual Eigen::VectorXd x() const = 0;
               virtual NormalEquations::ConstShPtr computeNormalEquations() = 0;
+              private:
+              size_t _nParameters;
       };
 
 
-      template<int nParameters>
       class Solver{
           public:
           typedef std::shared_ptr<Solver> ShPtr;
@@ -34,12 +36,12 @@ namespace pd::vslam::least_squares{
                 typedef std::unique_ptr<const Results> ConstUnPtr;
 
                 Eigen::VectorXd chi2,stepSize;
-                Eigen::Matrix<double,Eigen::Dynamic,nParameters> x;
-                std::vector<Eigen::Matrix<double,nParameters,nParameters>> cov;
+                Eigen::MatrixXd x;
+                std::vector<Eigen::MatrixXd> cov;
                 size_t iteration;
         };
           
-          virtual typename Results::ConstUnPtr solve(std::shared_ptr< Problem<nParameters> > problem) = 0;
+          virtual Results::ConstUnPtr solve(std::shared_ptr< Problem > problem) = 0;
       };
 }
 #endif

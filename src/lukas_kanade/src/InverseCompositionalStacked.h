@@ -12,16 +12,16 @@
 namespace pd::vslam::lukas_kanade{
 
 template<typename Warp>
-class InverseCompositionalStacked : public least_squares::Problem<Warp::nParameters>{
+class InverseCompositionalStacked : public least_squares::Problem{
     
 public:
     InverseCompositionalStacked (const std::vector<std::shared_ptr<InverseCompositional<Warp>>>& frames);
     std::shared_ptr<const Warp> warp() { return _frames[0]->warp();}
 
-    void updateX(const Eigen::Matrix<double,Warp::nParameters,1>& dx) override;
+    void updateX(const Eigen::VectorXd& dx) override;
 
-    Eigen::Matrix<double,Warp::nParameters,1> x() const override{return _frames[0]->x();}
-    void setX(const Eigen::Matrix<double,Warp::nParameters,1>& x) override;
+    Eigen::VectorXd x() const override{return _frames[0]->x();}
+    void setX(const Eigen::VectorXd& x) override;
 
     least_squares::NormalEquations::ConstShPtr computeNormalEquations() override;
 

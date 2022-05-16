@@ -8,10 +8,7 @@
 
 namespace pd::vslam::least_squares{
 
-      template<int nParameters>
-      class GaussNewton : public Solver<nParameters>{
-        typedef Eigen::Matrix<double, Eigen::Dynamic, nParameters> Mmxn;
-        using Vn = Eigen::Matrix<double, nParameters, 1>;
+      class GaussNewton : public Solver{
  
         public:
         typedef std::shared_ptr<GaussNewton> ShPtr;
@@ -21,7 +18,7 @@ namespace pd::vslam::least_squares{
 
         GaussNewton( double minStepSize, size_t maxIterations );
 
-        typename Solver<nParameters>::Results::ConstUnPtr solve(std::shared_ptr< Problem<nParameters> > problem) override;
+        typename Solver::Results::ConstUnPtr solve(std::shared_ptr< Problem > problem) override;
 
         private:
         const double _minStepSize;
@@ -32,5 +29,4 @@ namespace pd::vslam::least_squares{
     };
    
 }
-#include "GaussNewton.hpp"
 #endif

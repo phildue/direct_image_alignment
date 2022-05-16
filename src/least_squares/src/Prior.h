@@ -3,7 +3,6 @@
 #include <core/core.h>
 #include "GaussNewton.h"
 namespace pd::vslam::least_squares{
-template<int nParameters>
 class Prior{
         public:
         typedef std::shared_ptr<Prior> ShPtr;

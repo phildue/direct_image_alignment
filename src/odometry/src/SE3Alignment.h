@@ -14,7 +14,7 @@ class SE3Alignment : public AlignmentSE3{
         typedef std::unique_ptr<const SE3Alignment> ConstUnPtr;
 
         SE3Alignment(double minGradient,
-         vslam::least_squares::Solver<6>::ShPtr solver,
+         vslam::least_squares::Solver::ShPtr solver,
          vslam::least_squares::Loss::ShPtr loss,
          bool includePrior = false
          );
@@ -27,7 +27,7 @@ class SE3Alignment : public AlignmentSE3{
      
         const double _minGradient2;
         const vslam::least_squares::Loss::ShPtr _loss;
-        const vslam::least_squares::Solver<6>::ShPtr _solver;
+        const vslam::least_squares::Solver::ShPtr _solver;
         const bool _includePrior;
 
 };

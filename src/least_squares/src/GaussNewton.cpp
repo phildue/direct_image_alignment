@@ -2,10 +2,10 @@
 
 #include "utils/utils.h"
 #include "core/core.h"
+#include "GaussNewton.h"
 namespace pd::vslam::least_squares{
 
-    template<int nParameters>
-    GaussNewton<nParameters>::GaussNewton(
+    GaussNewton::GaussNewton(
             double minStepSize,
             size_t maxIterations
             )
@@ -20,17 +20,16 @@ namespace pd::vslam::least_squares{
     }
   
 
-    template<int nParameters>
-    typename Solver<nParameters>::Results::ConstUnPtr GaussNewton<nParameters>::solve(std::shared_ptr< Problem<nParameters> > problem) {
+    Solver::Results::ConstUnPtr GaussNewton::solve(std::shared_ptr< Problem > problem) {
         
-        SOLVER( INFO ) << "Solving Problem for " << nParameters << " parameters.";
+        SOLVER( INFO ) << "Solving Problem for " << problem->nParameters() << " parameters.";
         TIMED_FUNC(timerF);
 
-        auto r = std::make_unique<typename Solver<nParameters>::Results>();
+        auto r = std::make_unique<Solver::Results>();
 
         r->chi2 = Eigen::VectorXd::Zero(_maxIterations);
         r->stepSize = Eigen::VectorXd::Zero(_maxIterations);
-        r->x = Eigen::MatrixXd::Zero(_maxIterations,nParameters);
+        r->x = Eigen::MatrixXd::Zero(_maxIterations,problem->nParameters());
         r->cov.reserve(_maxIterations);
         for(size_t i = 0; i < _maxIterations; i++ )
         {
@@ -42,9 +41,9 @@ namespace pd::vslam::least_squares{
             auto ne = problem->computeNormalEquations();
 
             const double det = ne->A().determinant();
-            if(ne->nConstraints() < nParameters)
+            if(ne->nConstraints() < problem->nParameters())
             {
-                SOLVER( WARNING ) << i << " > " << "STOP. Not enough constraints: " << ne->nConstraints() << " / " << nParameters;
+                SOLVER( WARNING ) << i << " > " << "STOP. Not enough constraints: " << ne->nConstraints() << " / " << problem->nParameters();
                 break;
             }
             if(!std::isfinite(det) || std::abs(det) < 1e-6){

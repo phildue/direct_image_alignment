@@ -6,21 +6,20 @@
 namespace pd::vslam::lukas_kanade{
 
 template<typename Warp>
-class ForwardAdditive : public least_squares::Problem<Warp::nParameters>{
+class ForwardAdditive : public least_squares::Problem{
 public:
-    inline constexpr static int nParameters = Warp::nParameters;
     ForwardAdditive (const Image& templ, const MatXd& dX, const MatXd& dY, const Image& image,
      std::shared_ptr<Warp> w0,
      least_squares::Loss::ShPtr = std::make_shared<least_squares::QuadraticLoss>(),
      double minGradient = 0,
-     std::shared_ptr<const least_squares::Prior<Warp::nParameters>> prior = nullptr);
+     std::shared_ptr<const least_squares::Prior> prior = nullptr);
     const std::shared_ptr<const Warp> warp();
 
-    void updateX(const Eigen::Matrix<double,Warp::nParameters,1>& dx) override;
-    void setX(const Eigen::Matrix<double,Warp::nParameters,1>& x) override {_w->setX(x);}
+    void updateX(const Eigen::VectorXd& dx) override;
+    void setX(const Eigen::VectorXd& x) override {_w->setX(x);}
 
-    Eigen::Matrix<double,Warp::nParameters,1> x() const override {return _w->x();}
-    typename least_squares::NormalEquations::ConstShPtr computeNormalEquations() override;
+    Eigen::VectorXd x() const override {return _w->x();}
+    least_squares::NormalEquations::ConstShPtr computeNormalEquations() override;
 
 
 protected:
@@ -32,7 +31,7 @@ protected:
     const std::shared_ptr<Warp> _w;
     const std::shared_ptr<least_squares::Loss> _loss;
     const double _minGradient;
-    const std::shared_ptr<const least_squares::Prior<Warp::nParameters>> _prior;
+    const std::shared_ptr<const least_squares::Prior> _prior;
 
     std::vector<Eigen::Vector2i> _interestPoints;
 };

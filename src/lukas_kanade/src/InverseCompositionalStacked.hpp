@@ -8,17 +8,17 @@ namespace pd::vslam::lukas_kanade{
 
     template<typename Warp>
     InverseCompositionalStacked<Warp>::InverseCompositionalStacked ( const std::vector<std::shared_ptr<InverseCompositional<Warp>>>& frames)
-    : least_squares::Problem<SE3d::DoF>()
+    : least_squares::Problem(SE3d::DoF)
     , _frames(frames)
     { }
 
     template<typename Warp>
-    void InverseCompositionalStacked<Warp>::updateX(const Eigen::Matrix<double,Warp::nParameters,1>& dx)
+    void InverseCompositionalStacked<Warp>::updateX(const Eigen::VectorXd& dx)
     {
         std::for_each(_frames.begin(),_frames.end(),[&dx](auto f){f->updateX(dx);});
     }
     template<typename Warp>
-    void InverseCompositionalStacked<Warp>::setX(const Eigen::Matrix<double,Warp::nParameters,1>& x)
+    void InverseCompositionalStacked<Warp>::setX(const Eigen::VectorXd& x)
     {
         std::for_each(_frames.begin(),_frames.end(),[&x](auto f){f->setX(x);});
     }

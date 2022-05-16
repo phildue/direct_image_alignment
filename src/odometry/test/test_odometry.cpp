@@ -13,10 +13,15 @@
 
 #include "RgbdAlignmentOpenCv.h"
 #include "Trajectory.h"
+#include "Map.h"
+#include "MotionPrediction.h"
+#include "KeyFrameSelection.h"
+#include "Odometry.h"
 using namespace testing;
 using namespace pd;
 using namespace pd::vslam;
 using namespace pd::vslam::least_squares;
+
 
 #define VISUALIZE false
 
@@ -44,20 +49,17 @@ void readAssocTextfile(std::string filename,
     in_stream.close();
 }
 
-class TestSE3Alignment : public Test{
+class EvaluationOdometry : public Test{
     public:
-    TestSE3Alignment()
+    EvaluationOdometry()
     {
-       
         if (VISUALIZE)
         {
-            
-            LOG_IMG("ImageWarped")->_show = true;
-            LOG_IMG("Depth")->_show = true;
             LOG_IMG("Residual")->_show = true;
             LOG_IMG("Image")->_show = true;
-            LOG_IMG("Template")->_show = true;
             LOG_IMG("Depth")->_show = true;
+            //LOG_IMG("Template")->_show = true;
+            LOG_IMG("ImageWarped")->_show = true;
             LOG_IMG("Weights")->_show = true;
             LOG_IMG("SteepestDescent")->_show = true;
             //LOG_PLT("MedianScaler")->_show = true;
@@ -71,9 +73,14 @@ class TestSE3Alignment : public Test{
         readAssocTextfile(_datasetPath + "/assoc.txt",_imgFilenames,_depthFilenames,_timestamps);
         _trajectoryGt = std::make_shared<Trajectory>(utils::loadTrajectory(_datasetPath + "/groundtruth.txt"));
 
-        auto solver = std::make_shared<GaussNewton>(1e-9,30);
-        auto loss = std::make_shared<HuberLoss>(std::make_shared<MeanScaler>());
-        _aligner = std::make_shared<SE3Alignment>(5,solver,loss,true);
+        auto solver = std::make_shared<GaussNewton>(1e-9,100);
+        auto loss = nullptr;//std::make_shared<LossTDistribution>(std::make_shared<ScalerTDistribution>());
+        _keyFrameSelection = std::make_shared<KeyFrameSelectionIdx>(5);
+        _map = std::make_shared<Map>();
+        _prediction = std::make_shared<MotionPredictionConstant>();
+        _odometry = std::make_shared<OdometryRgbd>(
+            30,
+            solver, loss, _map);
     }
 
     FrameRgbd::ShPtr loadFrame(size_t fNo)
@@ -85,7 +92,11 @@ class TestSE3Alignment : public Test{
             _cam,3,_timestamps.at(fNo));
     }
     protected:
-    SE3Alignment::ShPtr _aligner;
+    Odometry::ShPtr _odometry;
+    KeyFrameSelection::ShPtr _keyFrameSelection;
+    MotionPrediction::ShPtr _prediction;
+    Map::ShPtr _map;
+
     std::vector<std::string> _depthFilenames;
     std::vector<std::string> _imgFilenames;
     std::vector<Timestamp> _timestamps;
@@ -94,37 +105,43 @@ class TestSE3Alignment : public Test{
     std::string _datasetPath;
 };
 
-TEST_F(TestSE3Alignment, Comparison)
+TEST_F(EvaluationOdometry, Sequential)
 {
-    const double maxError = 0.01;
-    const int nFrames = 50;
-    std::vector<int> fIds(nFrames,0);
-    std::transform(fIds.begin(),fIds.end(),fIds.begin(),[&](auto UNUSED(p)){return random::U(0,_timestamps.size());});
-    Eigen::Vector6d error = Eigen::Vector6d::Zero();
-    for (int i = 0; i < nFrames; i++)
+    const int fId0 = 0;
+    const int nFrames = _imgFilenames.size();
+
+    Trajectory traj;
+    for (int fId = fId0; fId < nFrames; fId++)
     {
-        const int fId = i;//fIds[i];
-        auto fRef = loadFrame(fId);
-        auto fRef1 = loadFrame(fId+1);
-        auto fCur = loadFrame(fId+2);
-        auto poseGt = _trajectoryGt->poseAt(fCur->t())->pose().inverse();
-        fRef->set(_trajectoryGt->poseAt(fRef->t())->inverse());
-        fRef1->set(_trajectoryGt->poseAt(fRef1->t())->inverse());
-        //fCur->set(_trajectoryGt->poseAt(fCur->t())->inverse());
-        fCur->set(fRef1->pose());
+        auto fCur = loadFrame(fId);
+
+        fCur->set(*_prediction->predict(fCur->t()));
+
+        _odometry->update(fCur);
             
-        auto result = _aligner->align(std::vector<FrameRgbd::ConstShPtr>({fRef,fRef1}),fCur)->pose().log();
-        //auto result = _aligner->align(fRef1,fCur)->pose().log();
-        fCur->set(result);
-        error += (fCur->pose().pose().inverse() * poseGt).log();
-        std::cout << fId << ": " << error.transpose()/(double)(i+1) << std::endl;
+        fCur->set(*_odometry->pose());
+
+        _prediction->update(_odometry->pose(),fCur->t());
+
+        _keyFrameSelection->update(fCur);
+        
+        _map->update(fCur, _keyFrameSelection->isKeyFrame());
+        traj.append(fCur->t(),std::make_shared<PoseWithCovariance>(fCur->pose().inverse()));
+        if(_map->lastKf())
+        {
+            auto relativePose = algorithm::computeRelativeTransform(_map->lastKf()->pose().pose(),fCur->pose().pose()).inverse();
+            auto relativePoseGt = _trajectoryGt->motionBetween(_map->lastKf()->t(),fCur->t())->inverse();
+            auto error = (relativePose.inverse() * relativePoseGt.pose()).log();
+
+            std::cout 
+                << fId << "/" << nFrames <<": "<< ": " << fCur->pose().pose().log().transpose()
+                << "\n Error Translation: " << error.head(3).norm() 
+                << "\n Error Angle: " << error.tail(3).norm() << std::endl;
+            
+        }
+        
+        utils::writeTrajectory(traj,"trajectory.txt");
     }
-    std::cout << "AVG RMSE: " << (error/(double)nFrames).norm() 
-    << "\nAVG RMSE Translation: " << (error.head(3)/(double)nFrames).norm() 
-    << "\nAVG RMSE Rotation: " << (error.tail(3)/(double)nFrames).norm()
-    << std::endl;
-    EXPECT_LT((error/(double)nFrames).norm() ,maxError);
+    //TODO call evaluation script?
 }
-
-
 

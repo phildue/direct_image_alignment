@@ -11,8 +11,9 @@ namespace pd::vslam::lukas_kanade{
      std::shared_ptr<Warp> w0,
      least_squares::Loss::ShPtr l,
      double minGradient,
-     std::shared_ptr<const least_squares::Prior<Warp::nParameters>> prior)
-    : _T(templ)
+     std::shared_ptr<const least_squares::Prior> prior)
+    : least_squares::Problem(Warp::nParameters)
+    , _T(templ)
     , _dIdx(dIdx)
     , _dIdy(dIdy)
     , _Iref(image)
@@ -38,7 +39,7 @@ namespace pd::vslam::lukas_kanade{
     }
 
     template<typename Warp>
-    void ForwardAdditive<Warp>::updateX(const Eigen::Matrix<double,Warp::nParameters,1>& dx)
+    void ForwardAdditive<Warp>::updateX(const Eigen::VectorXd& dx)
     {
         _w->updateAdditive(dx);
     }
@@ -60,7 +61,7 @@ namespace pd::vslam::lukas_kanade{
                 dIxWp(kp.y(),kp.x()) = algorithm::bilinearInterpolation(_dIdx,uvWarped.x(),uvWarped.y());
                 dIyWp(kp.y(),kp.x()) = algorithm::bilinearInterpolation(_dIdy,uvWarped.x(),uvWarped.y());
 
-                const Eigen::Matrix<double, 2,nParameters> Jwarp = _w->J(kp.x(),kp.y());
+                const Eigen::Matrix<double, 2,Warp::nParameters> Jwarp = _w->J(kp.x(),kp.y());
                         
                 J.row(kp.y() * _Iref.cols() + kp.x()) = (dIxWp(kp.y(),kp.x()) * Jwarp.row(0) + dIyWp(kp.y(),kp.x()) * Jwarp.row(1));
                 steepestDescent(kp.y(),kp.x()) = J.row(kp.y() * _Iref.cols() + kp.x()).norm();

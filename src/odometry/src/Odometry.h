@@ -35,7 +35,7 @@ class OdometryRgbd : public Odometry{
         typedef std::unique_ptr<const OdometryRgbd> ConstUnPtr;
 
         OdometryRgbd(double minGradient,
-         least_squares::Solver<6>::ShPtr solver,
+         least_squares::Solver::ShPtr solver,
          least_squares::Loss::ShPtr loss,
          Map::ConstShPtr map );
 

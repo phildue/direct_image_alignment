@@ -71,7 +71,7 @@ class EvaluationSE3Alignment : public Test{
         readAssocTextfile(_datasetPath + "/assoc.txt",_imgFilenames,_depthFilenames,_timestamps);
         _trajectoryGt = std::make_shared<Trajectory>(utils::loadTrajectory(_datasetPath + "/groundtruth.txt"));
 
-        auto solver = std::make_shared<GaussNewton<6>>(1e-7,25);
+        auto solver = std::make_shared<GaussNewton>(1e-7,25);
         auto loss = std::make_shared<HuberLoss>(std::make_shared<MeanScaler>());
         _aligner =
         {

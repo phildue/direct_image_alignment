@@ -4,7 +4,7 @@
 namespace pd::vslam{
 
         OdometryRgbd::OdometryRgbd(double minGradient,
-         least_squares::Solver<6>::ShPtr solver,
+         least_squares::Solver::ShPtr solver,
          least_squares::Loss::ShPtr loss,
          Map::ConstShPtr map)
          :_aligner(std::make_shared<SE3Alignment>(minGradient,solver,loss,false))

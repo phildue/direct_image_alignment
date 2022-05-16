@@ -40,7 +40,7 @@ TEST_F(LukasKanadeOpticalFlowTest,LukasKanadeOpticalFlow)
         Eigen::Vector2d x;
         x << random::U(5,6)*random::sign(),random::U(5,6)*random::sign();
         auto w = std::make_shared<WarpOpticalFlow>(x);
-        auto gn = std::make_shared<GaussNewton<InverseCompositionalOpticalFlow::nParameters>> ( 1e-7,100);
+        auto gn = std::make_shared<GaussNewton> ( 1e-7,100);
         auto lk = std::make_shared<InverseCompositionalOpticalFlow> (img1,img0,w);
         if (VISUALIZE)
         {

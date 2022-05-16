@@ -23,7 +23,7 @@ class TestSE3Alignment : public Test{
     public:
     TestSE3Alignment()
     {
-        auto solver = std::make_shared<GaussNewton<6>>(1e-7,10);
+        auto solver = std::make_shared<GaussNewton>(1e-7,10);
         auto loss = std::make_shared<QuadraticLoss>();
         auto scaler = std::make_shared<Scaler>();
         if (VISUALIZE)
