@@ -1,4 +1,5 @@
 
+#include "utils/utils.h"
 #include "Odometry.h"
 #define LOG_ODOM(level) CLOG(level,"odometry")
 namespace pd::vslam{
@@ -7,7 +8,7 @@ namespace pd::vslam{
          least_squares::Solver::ShPtr solver,
          least_squares::Loss::ShPtr loss,
          Map::ConstShPtr map)
-         :_aligner(std::make_shared<SE3Alignment>(minGradient,solver,loss,false))
+         :_aligner(std::make_shared<SE3Alignment>(minGradient,solver,loss,true))
          ,_map(map)
          ,_includeKeyFrame(true)
          ,_trackKeyFrame(false)

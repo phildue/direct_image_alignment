@@ -3,13 +3,14 @@ project(lukas_kanade VERSION 1.0.0)
 
 set(sources
         src/Warp.cpp
+        src/InverseCompositional.cpp
+        src/ForwardAdditive.cpp
+        src/InverseCompositionalStacked.cpp
         ${CMAKE_BINARY_DIR}/include/easylogging++.cc
         )
 
 set(headers
-        src/ForwardAdditive.hpp
         src/ForwardAdditive.h
-        src/InverseCompositional.hpp
         src/InverseCompositional.h
         src/Warp.h
         include/lukas_kanade/lukas_kanade.h

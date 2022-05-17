@@ -73,5 +73,8 @@ if(VSLAM_BUILD_TESTS)
 
         pd_add_test(trajectory ${PROJECT_NAME})
         target_compile_definitions(trajectoryTest PUBLIC TEST_RESOURCE="${CMAKE_CURRENT_LIST_DIR}/test/resource")
+       
+        pd_add_test(odometry ${PROJECT_NAME})
+        target_compile_definitions(odometry PUBLIC TEST_RESOURCE="${CMAKE_CURRENT_LIST_DIR}/test/resource")
 
 endif()

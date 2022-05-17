@@ -7,11 +7,10 @@ namespace pd::vslam::least_squares{
 
     double TukeyLoss::compute(double r) const
     {
-        const double rs = scale(r);
         // If the residuals falls within the 95% the loss is quadratic
-        if ( std::abs(rs) < TukeyLoss::C)
+        if ( std::abs(r) < TukeyLoss::C)
         {
-        const double r_c = rs/TukeyLoss::C;
+        const double r_c = r/TukeyLoss::C;
 
         return C2_6*(1.0-std::pow( 1.0 - r_c*r_c,3));
 
@@ -23,14 +22,12 @@ namespace pd::vslam::least_squares{
 
     double TukeyLoss::computeDerivative(double r) const
     {
-        const double rs = scale(r);
-
         // If the residuals falls within the 95% the loss is quadratic
-        if ( std::abs(rs) < TukeyLoss::C)
+        if ( std::abs(r) < TukeyLoss::C)
         {
-                const double r_c = rs/TukeyLoss::C;
+                const double r_c = r/TukeyLoss::C;
 
-                return rs*std::pow( 1.0 - r_c*r_c,2);
+                return r*std::pow( 1.0 - r_c*r_c,2);
 
         }else{
                 // Outliers are disregarded
@@ -40,12 +37,11 @@ namespace pd::vslam::least_squares{
 
     double TukeyLoss::computeWeight(double r) const
     {
-        const double rs = scale(r);
 
         // If the residuals falls within the 95% the loss is quadratic
-        if ( std::abs(rs) < TukeyLoss::C)
+        if ( std::abs(r) < TukeyLoss::C)
         {
-                const double r_c = rs/TukeyLoss::C;
+                const double r_c = r/TukeyLoss::C;
 
                 return std::pow( 1.0 - r_c*r_c,2);
 
@@ -57,43 +53,38 @@ namespace pd::vslam::least_squares{
 
     double HuberLoss::computeWeight(double r) const
         {
-                const double rs = scale(r);
-
-                if(std::abs(rs) < _c )
+                if(std::abs(r) < _c )
                 {
                         return 1.0;
                 }else{
-                        return (_c * rs > 0.0 ? 1.0 : -1.0)/rs;
+                        return (_c * r > 0.0 ? 1.0 : -1.0)/r;
                 }
         }
         //dl/dr
         double HuberLoss::computeDerivative(double r) const
         {
-                const double rs = scale(r);
-                if(std::abs(rs) < _c )
+                if(std::abs(r) < _c )
                 {
-                        return rs;
+                        return r;
                 }else{
-                        return _c * rs > 0.0 ? 1.0 : -1.0;
+                        return _c * r > 0.0 ? 1.0 : -1.0;
                 }
         }
         //l(r)
         double HuberLoss::compute(double r) const
         {
-                const double rs = scale(r);
-                if(std::abs(rs) < _c )
+                if(std::abs(r) < _c )
                 {
-                        return 0.5 * rs*rs;
+                        return 0.5 * r*r;
                 }else{
-                        return _c * std::abs(rs) - 0.5 * rs*rs;
+                        return _c * std::abs(r) - 0.5 * r*r;
                 }
         }
 
         double LossTDistribution::computeWeight(double r) const
         {
-                const double rs = scale(r);
 
-                return (_v + 1.0) / (_v + rs*rs);
+                return (_v + 1.0) / (_v + r*r);
         }
         double LossTDistribution::computeDerivative(double UNUSED(r)) const
         {

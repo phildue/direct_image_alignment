@@ -12,26 +12,25 @@ class Scaler{
         typedef std::shared_ptr<const Scaler> ConstShPtr;
         typedef std::unique_ptr<const Scaler> ConstUnPtr;
 
-        virtual VecXd scale(const VecXd& r) {return r;};
-        virtual void compute(const VecXd& UNUSED(r)){};
-        virtual double scale(double UNUSED(r)) {return 1.0;};
+        struct Scale{
+                double offset;
+                double scale;
+        };
+
+        virtual Scale compute(const VecXd& UNUSED(r)) const { return {0.0,1.0};}
 
 };
 
 class MedianScaler : public Scaler{
         public:
-        VecXd scale(const VecXd& r) override;
-        double scale(double r) override { return (r - _median)/_std;}
-        void compute(const VecXd& r) override;
+        Scale compute(const VecXd& r) const override;
         private:
         double _median = 0.0;
         double _std = 1.0;
 };
 class MeanScaler : public Scaler{
         public:
-        VecXd scale(const VecXd& r) override;
-        double scale(double r) override { return (r - _mean)/_std;}
-        void compute(const VecXd& r) override;
+        Scale compute(const VecXd& r) const override;
         private:
         double _mean = 0.0;
         double _std = 1.0;
@@ -39,13 +38,17 @@ class MeanScaler : public Scaler{
 
 class ScalerTDistribution : public Scaler{
         public:
-        ScalerTDistribution(double v = 5.0):_v(v){}
-        VecXd scale(const VecXd& r) override;
+        ScalerTDistribution(double v = 5.0, uint64_t maxIterations = 30, double minStepSize = 1e-5)
+        :_v(v),_maxIterations(maxIterations),_minStepSize(minStepSize){}
+
+        Scale compute(const VecXd& r) const override;
+
         private:
         const double _v = 5.0; //Experimentally, Robust Odometry Estimation From Rgbd Cameras
         double _sigma = 1.0;
-        uint64_t _maxIterations = 20;
-        double _minStepSize = 1e-7;
+        double _sigma2 = 1.0;
+        uint64_t _maxIterations = 100;
+        double _minStepSize = 1e-5;
 };
 } // namespace pd::vslam::least_squares
 

@@ -48,11 +48,11 @@ TEST_P(LukasKanadeSE3Test,LukasKanadeSE3)
     Log::getImageLog("T")->append(mat1);
 
     auto w = std::make_shared<WarpSE3>(_x,_depth,_camera);
-    auto gn = std::make_shared<GaussNewton<LukasKanadeSE3>> ( 
+    auto gn = std::make_shared<GaussNewton<LukasKanade>> ( 
                 0.1,
                 1e-3,
                 100);
-    auto lk = std::make_shared<LukasKanadeSE3> (_img1,_img0,w);
+    auto lk = std::make_shared<LukasKanade> (_img1,_img0,w);
   
    
     ASSERT_GT(w->x().norm(), 0.1);

@@ -5,6 +5,7 @@
 #include <opencv4/opencv2/core/eigen.hpp>
 
 #include <opencv2/rgbd.hpp>
+#include "utils/utils.h"
 
 #include "RgbdAlignmentOpenCv.h"
 

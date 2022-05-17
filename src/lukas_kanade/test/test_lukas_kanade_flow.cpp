@@ -41,7 +41,7 @@ TEST_F(LukasKanadeOpticalFlowTest,LukasKanadeOpticalFlow)
         x << random::U(5,6)*random::sign(),random::U(5,6)*random::sign();
         auto w = std::make_shared<WarpOpticalFlow>(x);
         auto gn = std::make_shared<GaussNewton> ( 1e-7,100);
-        auto lk = std::make_shared<InverseCompositionalOpticalFlow> (img1,img0,w);
+        auto lk = std::make_shared<InverseCompositional> (img1,img0,w);
         if (VISUALIZE)
         {
             LOG_IMG("ImageWarped")->_show = true;

@@ -50,12 +50,12 @@ TEST_P(LukasKanadeAffineTest, DISABLED_LukasKanadeAffine)
     Log::getImageLog("T")->append(mat1);
 
     auto w = std::make_shared<WarpAffine>(x,img0.cols()/2,img0.rows()/2);
-    auto gn = std::make_shared<GaussNewton<ForwardAdditiveAffine>> (
+    auto gn = std::make_shared<GaussNewton<ForwardAdditive>> (
                 0.1,
                 1e-3,
                 100
                 );
-    auto lk = std::make_shared<ForwardAdditiveAffine> (img1,img0,w);
+    auto lk = std::make_shared<ForwardAdditive> (img1,img0,w);
     
     EXPECT_GT(w->x().norm(), 0.5);
 
@@ -74,11 +74,11 @@ TEST_P(LukasKanadeAffineTest, LukasKanadeAffineInverseCompositional)
     Log::getImageLog("T")->append(mat1);
 
     auto w = std::make_shared<WarpAffine>(x,img0.cols()/2,img0.rows()/2);
-    auto gn = std::make_shared<GaussNewton<InverseCompositional<WarpAffine>>> (
+    auto gn = std::make_shared<GaussNewton<InverseCompositional>> (
                 0.1,
                 1e-3,
                 100);
-    auto lk = std::make_shared<InverseCompositional<WarpAffine>> (img1,img0,w);
+    auto lk = std::make_shared<InverseCompositional> (img1,img0,w);
     
     EXPECT_GT(w->x().norm(), 0.5);
 

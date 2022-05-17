@@ -1,5 +1,6 @@
 
 #include "SE3Alignment.h"
+#include "utils/utils.h"
 
 #define LOG_ODOM(level) CLOG(level,"odometry")
 using namespace pd::vslam::least_squares;
@@ -71,7 +72,7 @@ namespace pd::vslam{
                                 }
                         });
 
-                        auto lk = std::make_shared<lukas_kanade::InverseCompositionalSE3> (
+                        auto lk = std::make_shared<lukas_kanade::InverseCompositional> (
                                 from->intensity(level),from->dIx(level), from->dIy(level),
                                 to->intensity(level), w,interestPoints,
                                 _loss, prior );
@@ -90,7 +91,9 @@ namespace pd::vslam{
                 {
                         TIMED_SCOPE(timerI,"align at level ( " + std::to_string(level) + " )");
                        
-                        std::vector<std::shared_ptr<lukas_kanade::InverseCompositionalSE3>> frames;
+                        std::vector<std::shared_ptr<lukas_kanade::InverseCompositional>> frames;
+                        std::vector<std::shared_ptr<lukas_kanade::WarpSE3>> warps;
+
                         for (const auto& f : from)
                         {
                                 auto prior = _includePrior ? std::make_shared<MotionPrior>(to->pose(),f->pose()) : nullptr;
@@ -109,18 +112,19 @@ namespace pd::vslam{
                                         }
                                 });
 
-                                auto lk = std::make_shared<lukas_kanade::InverseCompositionalSE3> (
+                                auto lk = std::make_shared<lukas_kanade::InverseCompositional> (
                                 f->intensity(level),f->dIx(level), f->dIy(level),
                                 to->intensity(level), w,interestPoints, _loss, prior );
 
                                 frames.push_back(lk);
+                                warps.push_back(w);
 
                         }
-                        auto lk = std::make_shared<lukas_kanade::InverseCompositionalStacked<lukas_kanade::WarpSE3>> (frames);
+                        auto lk = std::make_shared<lukas_kanade::InverseCompositionalStacked> (frames);
 
                         auto results = _solver->solve(lk);
                         auto covariance = MatXd::Identity(6,6);// !results->cov.empty() ? results->cov.at(results->cov.size()-1) : MatXd::Identity(6,6);
-                        pose = std::make_unique<PoseWithCovariance>(lk->warp()->poseCur(),covariance) ;
+                        pose = std::make_unique<PoseWithCovariance>(warps[0]->poseCur(),covariance) ;
                     
                 }
                 return pose;

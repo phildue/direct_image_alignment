@@ -1,4 +1,4 @@
-
+#include <execution>
 #include "ForwardAdditive.h"
 
 #include "utils/utils.h"
@@ -6,17 +6,16 @@
 
 namespace pd::vslam::lukas_kanade{
 
-    template<typename Warp>
-    ForwardAdditive<Warp>::ForwardAdditive (const Image& templ, const MatXd& dIdx, const MatXd& dIdy, const Image& image,
+    ForwardAdditive::ForwardAdditive (const Image& templ, const MatXd& dIdx, const MatXd& dIdy, const Image& image,
      std::shared_ptr<Warp> w0,
      least_squares::Loss::ShPtr l,
      double minGradient,
      std::shared_ptr<const least_squares::Prior> prior)
-    : least_squares::Problem(Warp::nParameters)
+    : least_squares::Problem(w0->nParameters())
     , _T(templ)
+    , _Iref(image)
     , _dIdx(dIdx)
     , _dIdy(dIdy)
-    , _Iref(image)
     , _w(w0)
     , _loss(l)
     , _minGradient(minGradient)
@@ -38,20 +37,18 @@ namespace pd::vslam::lukas_kanade{
 
     }
 
-    template<typename Warp>
-    void ForwardAdditive<Warp>::updateX(const Eigen::VectorXd& dx)
+    void ForwardAdditive::updateX(const Eigen::VectorXd& dx)
     {
         _w->updateAdditive(dx);
     }
 
-    template<typename Warp>
-    least_squares::NormalEquations::ConstShPtr ForwardAdditive<Warp>::computeNormalEquations() 
+    least_squares::NormalEquations::ConstShPtr ForwardAdditive::computeNormalEquations() 
     {
 
         Eigen::MatrixXd steepestDescent = Eigen::MatrixXd::Zero(_T.rows(),_T.cols());
         Eigen::MatrixXd dIxWp = Eigen::MatrixXd::Zero(_Iref.rows(),_Iref.cols());
         Eigen::MatrixXd dIyWp = Eigen::MatrixXd::Zero(_Iref.rows(),_Iref.cols());
-        Eigen::MatrixXd J = Eigen::MatrixXd::Zero(_Iref.rows()*_Iref.cols(),Warp::nParameters);
+        Eigen::MatrixXd J = Eigen::MatrixXd::Zero(_Iref.rows()*_Iref.cols(),_w->nParameters());
 
         std::for_each(_interestPoints.begin(),_interestPoints.end(),[&](auto kp){
             Eigen::Vector2d uvWarped = _w->apply(kp.x(),kp.y());
@@ -61,7 +58,7 @@ namespace pd::vslam::lukas_kanade{
                 dIxWp(kp.y(),kp.x()) = algorithm::bilinearInterpolation(_dIdx,uvWarped.x(),uvWarped.y());
                 dIyWp(kp.y(),kp.x()) = algorithm::bilinearInterpolation(_dIdy,uvWarped.x(),uvWarped.y());
 
-                const Eigen::Matrix<double, 2,Warp::nParameters> Jwarp = _w->J(kp.x(),kp.y());
+                const Eigen::MatrixXd Jwarp = _w->J(kp.x(),kp.y());
                         
                 J.row(kp.y() * _Iref.cols() + kp.x()) = (dIxWp(kp.y(),kp.x()) * Jwarp.row(0) + dIyWp(kp.y(),kp.x()) * Jwarp.row(1));
                 steepestDescent(kp.y(),kp.x()) = J.row(kp.y() * _Iref.cols() + kp.x()).norm();
@@ -85,7 +82,7 @@ namespace pd::vslam::lukas_kanade{
         );
         interestPointsVisible.resize(std::distance(interestPointsVisible.begin(),it));
 
-        if(interestPointsVisible.size() < Warp::nParameters) { throw std::runtime_error("Not enough valid interest points!"); }
+        if(interestPointsVisible.size() < _w->nParameters()) { throw std::runtime_error("Not enough valid interest points!"); }
         
         const MatXd R = _T.cast<double>() - IWxp.cast<double>();
         
@@ -96,7 +93,7 @@ namespace pd::vslam::lukas_kanade{
 
         if(_loss){  _loss->computeScale(Eigen::Map<Eigen::VectorXd> (r.data(),r.size()));}
    
-        auto ne = std::make_shared<least_squares::NormalEquations>(Warp::nParameters);
+        auto ne = std::make_shared<least_squares::NormalEquations>(_w->nParameters());
         Eigen::MatrixXd W = Eigen::MatrixXd::Zero(_T.rows(),_T.cols());
         std::for_each(std::execution::unseq,interestPointsVisible.begin(),interestPointsVisible.end(),
         [&](auto kp)
@@ -111,8 +108,8 @@ namespace pd::vslam::lukas_kanade{
             }
             ne->addConstraint(J.row(kp.y() * _T.cols() + kp.x()),R(kp.y(),kp.x()),W(kp.y(),kp.x()));
         });
-        ne->A.noalias() = ne->A / (double)ne->nConstraints;
-        ne->b.noalias() = ne->b / (double)ne->nConstraints;
+        ne->A().noalias() = ne->A() / (double)ne->nConstraints();
+        ne->b().noalias() = ne->b() / (double)ne->nConstraints();
 
         if (_prior){ _prior->apply(ne,_w->x()); }
 

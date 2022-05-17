@@ -1,11 +1,13 @@
 #ifndef VSLAM_LUKAS_KANADE_H__
 #define VSLAM_LUKAS_KANADE_H__
+#include <memory>
+
 #include "core/core.h"
 #include "least_squares/least_squares.h"
-#include <memory>
+
+#include "Warp.h"
 namespace pd::vslam::lukas_kanade{
 
-template<typename Warp>
 class ForwardAdditive : public least_squares::Problem{
 public:
     ForwardAdditive (const Image& templ, const MatXd& dX, const MatXd& dY, const Image& image,
@@ -36,13 +38,5 @@ protected:
     std::vector<Eigen::Vector2i> _interestPoints;
 };
 
-}
-#include "ForwardAdditive.hpp"
-#include "Warp.h"
-namespace pd::vslam::lukas_kanade{
-
-typedef ForwardAdditive<WarpAffine> ForwardAdditiveAffine;
-typedef ForwardAdditive<WarpOpticalFlow> ForwardAdditiveOpticalFlow;
-typedef ForwardAdditive<WarpSE3> ForwardAdditiveSE3;
 }
 #endif

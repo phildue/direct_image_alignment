@@ -2,7 +2,7 @@
 #include "Scaler.h"
 namespace pd::vslam::least_squares{
 
-    void MedianScaler::compute(const VecXd& r)
+    Scaler::Scale MedianScaler::compute(const VecXd& r) const
     {
         /*
         std::vector<double> rs();
@@ -12,52 +12,51 @@ namespace pd::vslam::least_squares{
             algorithm::insertionSort(rs,r(i));
         }*/
 
-        _median = algorithm::median(r,false);
-        _std = std::sqrt((r.array() - _median).array().abs().sum()/(r.rows() - 1));
+        auto median = algorithm::median(r,false);
+        auto std = std::sqrt((r.array() - median).array().abs().sum()/(r.rows() - 1));
         LOG_PLT("MedianScaler") << std::make_shared<vis::Histogram>(r,"ErrorDistribution",30);
+        return {median, std};
     }
 
-    VecXd MedianScaler::scale(const VecXd& r) { 
-        
-        return (r.array() - _median)/_std; 
-    }
 
-    void MeanScaler::compute(const VecXd& r)
+    Scaler::Scale MeanScaler::compute(const VecXd& r) const 
     {
         if(r.rows() == 0){ 
             SOLVER( WARNING ) << "Empty residual.";
-            return;
+            return {0.0,1.0};
         }
-        _mean = r.mean();
-        _std = std::sqrt((r.array() - _mean).array().abs().sum()/(r.rows() - 1));
+        auto mean = r.mean();
+        auto std = std::sqrt((r.array() - mean).array().abs().sum()/(r.rows() - 1));
         LOG_PLT("MedianScaler") << std::make_shared<vis::Histogram>(r,"ErrorDistribution",30);
+        return {mean, std};
+
     }
 
-    VecXd MeanScaler::scale(const VecXd& r) { 
-        
-        return (r.array() - _mean)/_std; 
-    }
-    
-    VecXd ScalerTDistribution::scale(const VecXd& r) { 
+
+    Scaler::Scale ScalerTDistribution::compute(const VecXd& r) const 
+    {
         double stepSize = std::numeric_limits<double>::max();
-
-        for(size_t iter = 0; 
-        iter < _maxIterations && stepSize < _minStepSize;
+        size_t iter = 0;
+        double sigma = 1.0;
+        for(; 
+        iter < _maxIterations && stepSize > _minStepSize;
          iter++)
         {
             double sum = 0.0;
             for (int i = 0; i < r.rows(); i++)
             {
-                sum += r(i)*r(i) * (_v+1)/(_v+r(i)/_sigma);
+                sum += r(i)*r(i) * (_v+1)/(_v+std::pow(r(i)/sigma,2));
             }
             const double sigma_i = std::sqrt(sum/(double)r.rows());
-            stepSize = std::abs(_sigma - sigma_i);
-            _sigma = sigma_i;
+            stepSize = std::abs(sigma - sigma_i);
+            SOLVER( DEBUG ) << "Sigma_i: " << iter << " with: " << sigma_i << " stepSize: " << stepSize;
+
+            sigma = sigma_i;
         }
+        SOLVER( DEBUG ) << "Converged after: " << iter << " with: " << sigma;
+        return {0.0,sigma};
+    }
 
-        return r / _sigma;
-
-     }
 
     
     

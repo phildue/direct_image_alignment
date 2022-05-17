@@ -1,8 +1,9 @@
 #ifndef VSLAM_LUKAS_KANADE_INVERSE_COMPOSITIONAL_H__
 #define VSLAM_LUKAS_KANADE_INVERSE_COMPOSITIONAL_H__
+#include <memory>
 #include "core/core.h"
 #include "least_squares/least_squares.h"
-#include <memory>
+#include "Warp.h"
 namespace pd::vslam::lukas_kanade{
 
 /*
@@ -28,7 +29,6 @@ After solving (1) we obtain the parameter update that would warp the template to
 Hence, we update p by applying the *inverse compositional*: W_new = W(-h,W(p)).
 */
 
-template<typename Warp>
 class InverseCompositional : public least_squares::Problem{
 public:
     InverseCompositional (const Image& templ, const MatXd& dX, const MatXd& dY, const Image& image,
@@ -69,13 +69,5 @@ protected:
 
 };
 
-}
-#include "InverseCompositional.hpp"
-#include "Warp.h"
-namespace pd::vslam::lukas_kanade{
-
-typedef InverseCompositional<WarpAffine> InverseCompositionalAffine;
-typedef InverseCompositional<WarpOpticalFlow> InverseCompositionalOpticalFlow;
-typedef InverseCompositional<WarpSE3>InverseCompositionalSE3;
 }
 #endif

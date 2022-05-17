@@ -24,12 +24,11 @@ class Loss
         //dl/dr
         virtual double computeDerivative(double r) const = 0;
         //w(r) = dl/dr (r) * 1/r
-        virtual double computeWeight(double r) const {return computeDerivative(scale(r))/scale(r);}
+        virtual double computeWeight(double r) const {return computeDerivative(r)/r;}
 
-        virtual void computeScale(const VecXd& residuals){_scaler->compute(residuals);}
-        double scale(double r) const {return _scaler->scale(r);}
+        virtual Scaler::Scale computeScale(const VecXd& residuals) const {return _scaler->compute(residuals);}
         private:
-        Scaler::ShPtr _scaler;
+        Scaler::ConstShPtr _scaler;
      
 };
 
@@ -39,29 +38,11 @@ class QuadraticLoss : public Loss
         QuadraticLoss(Scaler::ShPtr scaler = std::make_shared<Scaler>()):Loss(scaler){}
 
          //l(r)
-        double compute(double r) const override {return 0.5 * scale(r)*scale(r);}
+        double compute(double r) const override {return 0.5 * r*r;}
         //dl/dr
-        double computeDerivative(double r) const override {return scale(r);}
+        double computeDerivative(double r) const override {return r;}
         //w(r) = dl/dr (r) * 1/r
         double computeWeight(double UNUSED(r)) const override {return 1.0;}
-     
-};
-
-class OpenCvLoss : public Loss
-{
-        public:
-        OpenCvLoss(Scaler::ShPtr scaler = std::make_shared<Scaler>()):Loss(scaler){}
-
-         //l(r)
-        double compute(double r) const override {return 0.5 * scale(r)*scale(r);}
-        //dl/dr
-        double computeDerivative(double r) const override {return scale(r);}
-        //w(r) = dl/dr (r) * 1/r
-        double computeWeight(double r) const override {return 1.0/(_std + r);}
-        void computeScale(const VecXd& residuals){_std = std::sqrt((residuals.array() - residuals.mean()).array().abs().sum()/(residuals.rows() - 1));}
-
-        private:
-        double _std;
      
 };
 

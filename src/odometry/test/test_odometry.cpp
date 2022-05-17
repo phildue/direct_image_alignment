@@ -23,7 +23,7 @@ using namespace pd::vslam;
 using namespace pd::vslam::least_squares;
 
 
-#define VISUALIZE false
+#define VISUALIZE true
 
 void readAssocTextfile(std::string filename,
                        std::vector<std::string>& inputRGBPaths,
@@ -74,7 +74,7 @@ class EvaluationOdometry : public Test{
         _trajectoryGt = std::make_shared<Trajectory>(utils::loadTrajectory(_datasetPath + "/groundtruth.txt"));
 
         auto solver = std::make_shared<GaussNewton>(1e-9,100);
-        auto loss = nullptr;//std::make_shared<LossTDistribution>(std::make_shared<ScalerTDistribution>());
+        auto loss = std::make_shared<LossTDistribution>(std::make_shared<ScalerTDistribution>());
         _keyFrameSelection = std::make_shared<KeyFrameSelectionIdx>(5);
         _map = std::make_shared<Map>();
         _prediction = std::make_shared<MotionPredictionConstant>();
