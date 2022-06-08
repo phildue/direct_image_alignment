@@ -30,7 +30,7 @@ namespace pd::vslam::least_squares{
         r->chi2 = Eigen::VectorXd::Zero(_maxIterations);
         r->stepSize = Eigen::VectorXd::Zero(_maxIterations);
         r->x = Eigen::MatrixXd::Zero(_maxIterations,problem->nParameters());
-        r->cov.reserve(_maxIterations);
+        r->normalEquations.reserve(_maxIterations);
         for(size_t i = 0; i < _maxIterations; i++ )
         {
             TIMED_SCOPE(timerI,"solve ( " + std::to_string(i) + " )");
@@ -66,7 +66,7 @@ namespace pd::vslam::least_squares{
             problem->updateX(dx);
             r->x.row(i) = problem->x();
             r->stepSize(i) = dx.norm();
-            r->cov.push_back(ne->A().inverse());
+            r->normalEquations.push_back(ne);
             r->iteration = i;
 
             SOLVER( INFO ) << "Iteration: " << i << " chi2: " << r->chi2(i) << " dChi2: " << dChi2 << " stepSize: " << r->stepSize(i) 

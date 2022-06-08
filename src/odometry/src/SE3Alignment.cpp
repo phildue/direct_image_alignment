@@ -15,7 +15,7 @@ namespace pd::vslam{
                 MotionPrior(const PoseWithCovariance& predictedPose, const PoseWithCovariance& referencePose)
                 :Prior()
                 , _xPred((predictedPose.pose() * referencePose.pose().inverse()).log())
-                ,_information(predictedPose.cov().inverse()){}
+                ,_information(MatXd::Identity(6,6)){}
                 
                 void apply(NormalEquations::ShPtr ne, const Eigen::VectorXd& x) const override{
                         const double normalizer = 1.0 / (255.0 * 255.0);//otherwise prior has no influence ?
@@ -78,7 +78,7 @@ namespace pd::vslam{
                                 _loss, prior );
 
                         auto results = _solver->solve(lk);
-                        auto covariance = MatXd::Identity(6,6);// !results->cov.empty() ? results->cov.at(results->cov.size()-1) : MatXd::Identity(6,6);
+                        auto covariance = results->normalEquations.at(results->iteration)->A().inverse();
                         pose = std::make_unique<PoseWithCovariance>(w->poseCur(),covariance) ;
                     
                 }
@@ -123,7 +123,7 @@ namespace pd::vslam{
                         auto lk = std::make_shared<lukas_kanade::InverseCompositionalStacked> (frames);
 
                         auto results = _solver->solve(lk);
-                        auto covariance = MatXd::Identity(6,6);// !results->cov.empty() ? results->cov.at(results->cov.size()-1) : MatXd::Identity(6,6);
+                        auto covariance = results->normalEquations.at(results->iteration)->A().inverse();
                         pose = std::make_unique<PoseWithCovariance>(warps[0]->poseCur(),covariance) ;
                     
                 }

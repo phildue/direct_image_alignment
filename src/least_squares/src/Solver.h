@@ -37,7 +37,7 @@ namespace pd::vslam::least_squares{
 
                 Eigen::VectorXd chi2,stepSize;
                 Eigen::MatrixXd x;
-                std::vector<Eigen::MatrixXd> cov;
+                std::vector<NormalEquations::ConstShPtr> normalEquations;
                 size_t iteration;
         };
           
