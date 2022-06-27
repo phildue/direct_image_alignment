@@ -2,7 +2,7 @@
 from math import factorial
 import numpy as np
 import matplotlib.pyplot as plt
-from manifpy import SE3,SE2,SE2Tangent
+import manifpy as mf
 
 """
 Vehicle Model
@@ -30,13 +30,15 @@ class DifferentialDrive:
                 #print(f"R={R}\np={p},t={t}")
                 return R.dot(p) + t
 
-class SE2_:
+class SE2:
+        DoF = 3
+
         def __init__(self,T):
                 self._T = T
 
         def __mul__(self,that):
-                if type(that) is SE2_:
-                        return SE2_(self._T.dot(that._T))
+                if type(that) is SE2:
+                        return SE2(self._T @ that._T)
                 if type(that) is np.array:
                         assert that.shape is [3,1]
                         return self._T.dot(that)
@@ -47,49 +49,59 @@ class SE2_:
                 return self._T[:2,:2]
         def t(self):
                 return self._T[:2,2]
+        def angle(self):
+                return np.arctan2(self._T[1,0],self._T[0,0])#log(R) R \in SO3
         
+        @staticmethod
+        def fromPosAngle(x,y,theta):
+                return SE2.fromRt(np.array([[np.cos(theta),-np.sin(theta)],[np.sin(theta),np.cos(theta)]]),np.array([x,y]))
         @staticmethod
         def fromRt(R,t):
                 T = np.identity(3)
                 T[:2,:2] = R
                 T[:2,2] = t
-                return SE2_(T)
+                return SE2(T)
         
         @staticmethod
         def exp(v):
                 x,y,theta = v
                 print(f'theta={theta}')
-                if theta < 0.001:
-                        V = np.zeros((2,2))
-                        for i in range(10):
-                                theta_2i = (-1)**i*theta**(2*i)*np.identity(2)
-                                theta_2i1 = (-1)**i*theta**(2*(i+1))*np.array([[0,-1],[1,0]])
-                                V += (theta_2i/(factorial(2*i+1)) + theta_2i1/(factorial(2*i+2)))
-                else: 
-                        V = 1/theta * np.array([
-                                [np.sin(theta), -1*(1-np.cos(theta))],
-                                [1-np.cos(theta), np.sin(theta)]
-                        ])
                 T = np.identity(3)
                 T[:2,:2] = np.array([
                         [np.cos(theta), -np.sin(theta)],
                         [np.sin(theta), np.cos(theta)]
                 ])  
-                T[:2,2] = V.dot(np.array([x,y]))
-                return SE2_(T)             
+                if theta < 0.001:
+                            #TODO how to handle numerical instability?
+
+                        V = np.zeros((2,2))
+                        for i in range(10):
+                                theta_2i = (-1)**i*theta**(2*i)*np.identity(2)
+                                theta_2i1 = (-1)**i*theta**(2*(i+1))*np.array([[0,-1],[1,0]])
+                                V += (theta_2i/(factorial(2*i+1)) + theta_2i1/(factorial(2*i+2)))
+                        T[:2,2] = V.dot(np.array([x,y]))
+                        #T[:2,2] = (np.array([x,y]))
+                else: 
+                        V = 1/theta * np.array([
+                                [np.sin(theta), -1*(1-np.cos(theta))],
+                                [1-np.cos(theta), np.sin(theta)]
+                        ])
+
+                        T[:2,2] = V.dot(np.array([x,y]))
+                return SE2(T)             
         
         def log(self):
-                theta = np.arctan2(self._T[1,0],self._T[0,0])
-                A = np.sin(theta)/theta
-                B = (1 - np.cos(theta))/theta
-                Vinv = 1/(A*A-B*B) * np.array([[A,B],
-                                               [-B,A]])
-
+                theta = np.arctan2(self._T[1,0],self._T[0,0])#log(R) R \in SO3
                 v = np.zeros((3,))
-                if theta > 0:
-                        v[:2] = Vinv.dot(self.t())
+                #TODO how to handle numerical instability?
+                f = theta/(2*(1-np.cos(theta)))
+                if not np.isnan(f):
+                        v[:2] = f*np.array([[np.sin(theta), 1-np.cos(theta)],
+                                           [np.cos(theta)-1,np.sin(theta)]]) @ self.t()
                 else:
-                        v[:2] = self.t()
+                        v[:2]=self.t()
+                        #V = np.sin(theta)/theta * np.identity(2) + (1 - np.cos(theta))/theta * np.array([[0,1],[-1,0]])
+                #v[:2] = np.linalg.inv(V) @ self.t()
                 v[2] = theta
                 return v
         
@@ -101,186 +113,119 @@ class SE2_:
                 return adj
 
         def inverse(self):
-                return SE2_(np.linalg.inv(self._T))
+                return SE2(np.linalg.inv(self._T))
 
-class ConstantVelocitySE2:
-        def __init__(self):
-                pass
-
-        def propagate(self,x,dt):
-                """
-                 X (+) x*dt = X * exp(x[:3*dt])
-                """
-                x_ = x.copy()
-                pos = x[:3]
-                vel = x[3:]
-                x_[:3] = (SE2.exp(pos) * SE2.exp(vel*dt)).log()
-                return x_
-       
-        def propagate_jacobian(self,x,dt):
-                """
-                Jacobian of  X * exp(x[:3*dt])
-                """
-                J = np.zeros((6,6))
-                vel = x[3:]
-                J[3:,3:] = np.linalg.inv(SE2.exp(vel*dt).adjoint())
-                return J
-        
-        def f(self,x,dt):
-                return self.propagate(x,dt)
-        
-        def F(self,x,dt):
-                return self.propagate_jacobian(x,dt)
-
-        def measurement_model(self,x,dt):
-                return SE2.exp(x[3:]*dt).log()
-
-        def measurement_model_jacobian(self,x,dt):
-                return np.hstack([np.zeros((3,3)),np.identity(3)])
-
-        def h(self,x,dt):
-                return self.measurement_model(x,dt)
-        def H(self,x,dt):
-                return self.measurement_model_jacobian(x,dt)
-
-
-class ExtendedKalmanFilter:
-        def __init__(self):
-                self._system = ConstantVelocitySE2()
-                self._x = np.zeros((6,)) # Initial state x,y,theta,vx,vy,vtheta
-                self._P = np.identity(6)*1 # Initial uncertainty
-                self._Q = np.identity(6) # Process noise
-                self._R = np.identity(3)*0.001 # Measurement noise
-
-        def predict(self,dt):
-                
-                x_ = self._system.f(self._x,dt)
-                F  = self._system.F(self._x,dt)
-               
-                return x_,F.dot(self._P.dot(F.transpose())) + self._Q
-
-        def update(self, z, dt):
-                
-                x_, P_ = self.predict(dt)
-
-                H = self._system.H(x_, dt) 
-                Z = H.dot(P_.dot(H.transpose())) + self._R
-                K = P_.dot(H.transpose().dot(np.linalg.inv(Z)))
-
-                self._x = self._x + K.dot(self._innovation(x_,z,dt))
-                
-                self._P = np.identity(6) - K.dot(H.dot(P_))
-                self._P = P - K.dot(Z.dot(K.transpose()))
-
-        def _innovation(self, x, z, dt):
-                return (SE2.exp(self._system.h(x,dt)).inverse() * SE2.exp(z)).log()
-
-class ExtendedKalmanFilterManif:
-        def __init__(self):
+class EKFConstantVelocity:
+        def __init__(self, covariance_process, covariance_measurement):
                 self._x = np.zeros((6,))
-                self._pos = SE2.Identity()
-                self._vel = SE2.Identity()
+                self._pos = SE2(np.identity(3))
+                self._vel = np.zeros((3,))
                 self._P = np.identity(6) # Initial uncertainty
-                self._Q = np.identity(6)*0.1 # Process noise
-                self._Q[:3,:3] = 0.001
-                self._R = np.identity(3)*1 # Measurement noise
+                self._Q = covariance_process
+                self._R = covariance_measurement
         
         def pose(self):
                 return self._pos
 
         def twist(self):
-                return self._vel.log()
+                return self._vel
 
         def update(self, y, dt):
                 
                 # Prediction
-                J_x = np.zeros((SE2.DoF, SE2.DoF))
-                J_u = np.zeros((SE2.DoF, SE2.DoF))
                 
-                self._pos = self._pos.plus(self._vel.log(),J_x,J_u)
-
-                self._P[3:,3:] = self._P[3:,3:] + self._Q[3:,3:]
-                self._P[:3,:3] = J_x @ self._P[:3,:3] @ J_x.transpose() + self._Q[:3,:3]
-
+                motion = SE2.exp(self._vel*dt)
+                self._pos = self._pos * motion #self._pos.plus(self._vel.log() * dt,J_x)
+                J_f_x = np.zeros((SE2.DoF*2, SE2.DoF*2))
+                J_f_x[3:,3:] = np.linalg.inv(motion.adjoint())
+                self._P = J_f_x @ self._P @ J_f_x.transpose() + self._Q.transpose()                 
 
                 # expectation
-                #e = (SE2Tangent(x_[3:]) - SE2Tangent(self._x[3:]/dt))
-                e = self._vel.log()
-                # TODO Jacobian
-                H = np.hstack([np.zeros((3,3)),np.identity((3))])
-                E = H @ self._P @ H.transpose()
+                h = self._vel*dt
+                J_h_x = np.hstack([np.zeros((3,3)),np.identity((3))*dt])
+                E = J_h_x @ self._P @ J_h_x.transpose()
                 print(f"E={E}")
 
 
                 # innovation
-                z = (SE2Tangent(y)-e).coeffs()
+                z = y-h
                 Z = E + self._R
                 print(f"Z={Z}")
 
                 # print(f"P={P_}")
 
                 # Kalman gain
-                K = self._P @ H.transpose() @ np.linalg.inv(Z)
+                K = self._P @ J_h_x.transpose() @ np.linalg.inv(Z)
                 print(f"K={K}")
 
                 # Correction
                 dx = K @ z
                 print(f"dx={dx}")
 
-                self._vel = self._vel + SE2Tangent(dx[3:])
+                self._vel = self._vel + dx[3:]
                 #self._pos = self._pos + SE2Tangent(dx[:3])                        
+                print(f"vel={self._vel}")
 
                 self._P = self._P - K @ Z @ K.transpose()
                 print(f"P={self._P}")
+        
+
                 
 if __name__ == '__main__':
-        kalman = ExtendedKalmanFilterManif()
         state = np.zeros((3,))
-        v = np.array([0.1, 0.2])
+        v = np.array([1, 2])
         dt = 0.1
+        sigma_measurement = 0.01
+        cov_measurement = (sigma_measurement**2) * np.identity(3)
+        cov_process = 0.01*np.identity(6)
+        kalman = EKFConstantVelocity(cov_process,cov_measurement)
+        
         vehicle = DifferentialDrive(0.5)
-        n_steps = 300
+        n_steps = 100
         trajectory = np.zeros((n_steps, 2))
         trajectory_pred = np.zeros((n_steps, 2))
-        trajectory_pred2 = np.zeros((n_steps, 2))
         velocity = np.zeros((n_steps,3))
+        velocity_noisy = np.zeros((n_steps,3))
         velocity_pred = np.zeros((n_steps, 3))
 
         uncertainty = np.zeros((n_steps, 1))
-
+        pose_gt_prev = None
         for ti in range(n_steps):
                 state_prev = state.copy()
                 state = vehicle.forward(v,state,dt)
-
-                trajectory[ti] = state[:2]
+                pose_gt = SE2.fromPosAngle(state[0],state[1],state[2])
+                dPose_ = SE2.exp(state_prev).inverse() * SE2.exp(state)
                 if ti > 0:
-                   trajectory_pred2[ti] = (kalman.twist().exp() * kalman.pose()).translation()
+                        dPose_ = (pose_gt_prev.inverse()*pose_gt)
+                pose_gt_prev = SE2(pose_gt._T)
+                trajectory[ti] = state[:2]
              
                 # print(f'x* = {x.transpose()}, x = {state_k}')
-                dPose = (SE2(state_prev[0],state_prev[1],state_prev[2]).inverse() * SE2(state[0],state[1],state[2]) ).log().coeffs()
-                dPoseNoisy = dPose + np.random.rand(3)/1000
+                dTwist = dPose_.log()
+                dPoseNoisy = dTwist.copy()
+                dPoseNoisy[0:2] += sigma_measurement * np.random.rand(2)
                 # print(f'dPose = {dPose.transpose()}')
                 kalman.update( dPoseNoisy, dt)
-                print(f'i={ti} \nx* = {kalman._x.transpose()}\nx={state}\ndx={dPose}')
 
-                trajectory_pred[ti] = kalman.pose().translation()
-                velocity_pred[ti] = kalman.twist().coeffs()/dt
-                velocity[ti] = dPose/dt
+                trajectory_pred[ti] = kalman.pose().t()
+                velocity_pred[ti] = kalman.twist()
+                velocity_noisy[ti] = dPoseNoisy/dt
+                velocity[ti] = dPose_.log()/dt
                 uncertainty[ti] = np.linalg.det(kalman._P)
 
         plt.plot(trajectory[:,0],trajectory[:,1])
-        plt.plot(trajectory_pred[:,0],trajectory_pred[:,1],'-o')
-        plt.plot(trajectory_pred2[:,0],trajectory_pred2[:,1],'-x')
+        plt.plot(trajectory_pred[:,0],trajectory_pred[:,1],'-.')
 
         plt.xlabel('x [m]')
         plt.ylabel('y [m]')
-        plt.legend(['GT','Estimated*','Estimated2'])
+        plt.legend(['GT','Estimated*','Integrated'])
 
         plt.figure()
         plt.ylabel('v [..]')
         plt.plot(np.linalg.norm(velocity[:,:2],axis=1))
+        plt.plot(np.linalg.norm(velocity_noisy[:,:2],axis=1))
         plt.plot(np.linalg.norm(velocity_pred[:,:2],axis=1))
-        plt.legend(['GT','Estimated'])
+        plt.legend(['GT','Noisy','Estimated'])
 
         plt.figure()
         plt.ylabel('va [$^\circ$]')
