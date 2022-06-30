@@ -35,12 +35,12 @@ State Estimation
 """
 class EKFConstantVelocitySE3:
 
-        def __init__(self, covariance_process, covariance_measurement):
+        def __init__(self, covariance_process):
                 self._pos = sp.SE3() 
                 self._vel = np.zeros((6,))
                 self._P = np.identity(12) 
                 self._Q = covariance_process
-                self._R = covariance_measurement
+                self._t = 0
 
         def _J_f_x(self,pose):
                 """
@@ -63,20 +63,26 @@ class EKFConstantVelocitySE3:
                 return np.hstack([np.zeros((6,6)),np.identity((6))*dt])
 
         
-        def pose(self):
-                return self._pos
-
-        def twist(self):
-                return self._vel
-
-        def update(self, z, dt):
-                
-                # Prediction
-                motion = sp.SE3.exp(self._vel*dt)
-                self._pos = self._pos * motion 
+        def predict(self,t):
+                x, P, _ = self._predict(t)
+                return x[:6], P[:6,:6], x[6:], P[6:,6:]
+        
+        def _predict(self,t):
+                dt = t - self._t
+                pos = self._pos * sp.SE3.exp(self._vel*dt) 
 
                 J_f_x = self._J_f_x(self._pos)
-                self._P = J_f_x @ self._P @ J_f_x.transpose() + self._Q.transpose()                 
+                P = J_f_x @ self._P @ J_f_x.transpose() + self._Q.transpose()                 
+                return np.hstack([pos.log(),self._vel]), P, J_f_x
+
+        def update(self, z, z_cov, t):
+                
+                dt = t - self._t
+                x, self._P, H = self._predict(t)
+                self._pos = sp.SE3.exp(x[:6])
+                self._vel = x[6:]
+
+                self._P = H @ self._P @ H.transpose() + self._Q.transpose()                 
 
                 # expectation
                 h = self._vel*dt
@@ -86,7 +92,7 @@ class EKFConstantVelocitySE3:
 
                 # innovation
                 y = z-h
-                Z = E + self._R
+                Z = E + z_cov
                 print(f"Z={Z}")
 
                 # print(f"P={P_}")
@@ -104,6 +110,7 @@ class EKFConstantVelocitySE3:
                 print(f"vel={self._vel}")
 
                 self._P = self._P - K @ Z @ K.transpose()
+                self._t = t
                 print(f"P={self._P}")
                 
 if __name__ == '__main__':
@@ -112,8 +119,8 @@ if __name__ == '__main__':
         dt = 0.1
         sigma_measurement = 0.01
         cov_measurement = (sigma_measurement**2) * np.identity(6)
-        cov_process = 0.01*np.identity(12)
-        kalman = EKFConstantVelocitySE3(cov_process,cov_measurement)
+        cov_process = 0.0001*np.identity(12)
+        kalman = EKFConstantVelocitySE3(cov_process)
         
         vehicle = DifferentialDrive(0.5)
         n_steps = 100
@@ -126,24 +133,25 @@ if __name__ == '__main__':
         uncertainty = np.zeros((n_steps, 1))
         pose_gt_prev = None
         for ti in range(n_steps):
+
                 pose_gt_prev = sp.SE3(R.from_euler('xyz', [0,0,state[2]]).as_matrix(), np.array([state[0], state[1], 0]))
                 state = vehicle.forward(v,state,dt)
                 pose_gt = sp.SE3(R.from_euler('xyz', [0,0,state[2]]).as_matrix(), np.array([state[0], state[1], 0]))
-                dPose = pose_gt_prev.inverse() * pose_gt
-                trajectory[ti,:2] = state[:2]
+                delta_pose = pose_gt_prev.inverse() * pose_gt
              
-                # print(f'x* = {x.transpose()}, x = {state_k}')
-                dTwist = dPose.log()
-                dPoseNoisy = dTwist.copy()
-                dPoseNoisy[0:2] += sigma_measurement * np.random.rand(2)
-                # print(f'dPose = {dPose.transpose()}')
-                kalman.update( dPoseNoisy, dt)
+                delta_pose_noisy = delta_pose.log()
+                delta_pose_noisy[0:2] += sigma_measurement * np.random.rand(2)
 
-                trajectory_pred[ti] = kalman.pose().translation()
-                velocity_pred[ti] = kalman.twist()
-                velocity_noisy[ti] = dPoseNoisy/dt
-                velocity[ti] = dPose.log()/dt
-                uncertainty[ti] = np.linalg.det(kalman._P)
+                kalman.update( delta_pose_noisy, cov_measurement, ti*dt)
+
+                xp,Pp,xv,Pv = kalman.predict(ti*dt)
+
+                trajectory[ti,:2] = state[:2]
+                trajectory_pred[ti] = sp.SE3.exp(xp).translation()
+                velocity_pred[ti] = xv
+                velocity_noisy[ti] = delta_pose_noisy/dt
+                velocity[ti] = delta_pose.log()/dt
+                uncertainty[ti] = np.linalg.det(Pp) + np.linalg.det(Pv)
 
         plt.plot(trajectory[:,0],trajectory[:,1])
         plt.plot(trajectory_pred[:,0],trajectory_pred[:,1],'-.')
