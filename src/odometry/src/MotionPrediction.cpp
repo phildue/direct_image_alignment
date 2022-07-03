@@ -13,7 +13,11 @@ namespace pd::vslam{
                 {
                         return std::make_shared<MotionPredictionConstant>();
 
-                }else{
+                }else if (model == "Kalman")
+                {
+                        return std::make_shared<MotionPredictionKalman>()
+                }
+                else{
                         LOG_MOTION_PREDICTION( WARNING ) << "Unknown motion model! Falling back to constant motion model.";
                         return std::make_shared<MotionPredictionConstant>();
                 }
@@ -35,5 +39,11 @@ namespace pd::vslam{
                 const SE3d predictedRelativePose = SE3d::exp(_speed * dT);
                 return std::make_unique<PoseWithCovariance>(predictedRelativePose * _lastPose->pose(),MatXd::Identity(6,6));
         }
+
+        MotionPredictionKalman::MotionPredictionKalman()
+        : MotionPrediction()
+        , _kalman(std::make_unique<kalman::EKFConstantVelocitySE3>(Matd<12,12>::Identity()))
+        {}
+        
        
 }

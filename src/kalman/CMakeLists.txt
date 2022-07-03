@@ -2,12 +2,12 @@ cmake_minimum_required(VERSION 3.8)
 project(kalman VERSION 1.0.0)
 
 set(sources
-        src/KalmanFilterSE3.cpp
+        src/EKFConstantVelocitySE3.cpp
         )
 
 set(headers
         src/KalmanFilter.h
-        src/KalmanFilterSE3.h
+        src/EKFConstantVelocitySE3.h
         include/kalman/kalman.h
         )
 
