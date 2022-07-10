@@ -51,7 +51,38 @@ def drawlines(img1,img2,lines,pts1,pts2):
                 img1 = cv.circle(img1,tuple(pt1),5,color,-1)
                 img2 = cv.circle(img2,tuple(pt2),5,color,-1)
         return img1,img2
+
+def triangulate_dlt(uv1, uv2, P1, P2):
+        """
+        Triangulation with direct linear transform (DLT)
+        """
+        n_points = uv1.shape[1]
+        p3d = np.zeros((3,n_points))
+        for i in range(0,n_points):
+                A = np.zeros((4,4))#(n views, 4)
+                u1 = uv1[0,i]
+                v1 = uv1[1,i]
+                u2 = uv2[0,i]
+                v2 = uv2[1,i]
+                A[0] = u1*P1[2] - P1[0]
+                A[1] = v1*P1[2] - P1[1]
+                A[2] = u2*P2[2] - P2[0]
+                A[3] = v2*P2[2] - P2[1]
+                
+                u, s, vh = np.linalg.svd(A, full_matrices=True)
+                p3d[:,i] = (vh[-1]/vh[-1,-1])[:3]
+        """
+        This should also work no?
+        A = np.hstack(As)
+        print(A.shape)
+        u, s, vh = np.linalg.svd(A,full_matrices=True)
+        print(vh.shape)
+        p3d = vh[-1].reshape((4,n_points))
+        p3d /= p3d[-1]
+        """
         
+        return p3d[:3]
+
 if __name__ == "__main__":
         img1 = cv.imread('/media/data/dataset/rgbd_dataset_freiburg2_desk/rgbd_dataset_freiburg2_desk/rgb/1311868164.399026.png',cv.IMREAD_GRAYSCALE)
         img2 = cv.imread('/media/data/dataset/rgbd_dataset_freiburg2_desk/rgbd_dataset_freiburg2_desk/rgb/1311868165.599188.png',cv.IMREAD_GRAYSCALE)
@@ -65,16 +96,24 @@ if __name__ == "__main__":
         pts1 = pts1[mask.ravel() == 1]
         pts2 = pts2[mask.ravel() == 1]
 
-
+        # uv1 = K (zR(K'uv0)+t)
+        # x1'Fx0 = 0
         x2 = np.row_stack([pts2[:,0],pts2[:,1],np.ones((pts2.shape[0],))])
         x1 = np.row_stack([pts1[:,0],pts1[:,1],np.ones((pts1.shape[0],))])
         lines1 = F.T @ x2
         error = (lines1.T * x1.T).sum(-1)# equivalent of diag(lines1.T @ x1) 
         print (f"error = {error.mean():.2f} +- {error.std():.2f}")
         lines2 = F @ x1
-        plt.figure()
+
+        Rt = np.identity(4)
+        Rt[:3,:3] = R
+        Rt[:3,3] = t.ravel()
+        P1 = K @ np.hstack([np.eye(3),np.zeros((3,1))]) @ np.eye(4)
+        P2 = K @ np.hstack([np.eye(3),np.zeros((3,1))]) @ Rt
+
+        p3d = triangulate_dlt(x1,x2,P1,P2)
         img5,img6 = drawlines(img1,img2,lines1.T,pts1,pts2)
         img3,img4 = drawlines(img2,img1,lines2.T,pts2,pts1)
-        plt.subplot(121),plt.imshow(img5)
-        plt.subplot(122),plt.imshow(img3)
-        plt.show()
+        img_stack = np.hstack([img5,img3])
+        cv.imshow("Out",img_stack)
+        cv.waitKey(0)
