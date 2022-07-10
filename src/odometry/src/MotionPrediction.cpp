@@ -15,7 +15,7 @@ namespace pd::vslam{
 
                 }else if (model == "Kalman")
                 {
-                        return std::make_shared<MotionPredictionKalman>()
+                        return std::make_shared<MotionPredictionKalman>();
                 }
                 else{
                         LOG_MOTION_PREDICTION( WARNING ) << "Unknown motion model! Falling back to constant motion model.";

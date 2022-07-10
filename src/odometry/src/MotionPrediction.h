@@ -2,6 +2,7 @@
 #define VSLAM_MOTION_PREDICTION
 
 #include "core/core.h"
+#include "kalman/kalman.h"
 namespace pd::vslam{
 class MotionPrediction{
         public:
@@ -51,6 +52,18 @@ class MotionPredictionConstant : public MotionPrediction{
         Vec6d _speed = Vec6d::Zero();
         PoseWithCovariance::ConstShPtr _lastPose;
         Timestamp _lastT;
+};
+class MotionPredictionKalman : public MotionPrediction{
+        public:
+        typedef std::shared_ptr<MotionPredictionKalman> ShPtr;
+        typedef std::unique_ptr<MotionPredictionKalman> UnPtr;
+        typedef std::shared_ptr<const MotionPredictionKalman> ConstShPtr;
+        typedef std::unique_ptr<const MotionPredictionKalman> ConstUnPtr;
+        MotionPredictionKalman();
+        void update(PoseWithCovariance::ConstShPtr pose, Timestamp timestamp) override;
+        PoseWithCovariance::UnPtr predict(Timestamp timestamp) const override;
+        private:
+        kalman::EKFConstantVelocitySE3::UnPtr _kalman;
 };
 }
 #endif// VSLAM_MOTION_PREDICTION

@@ -5,13 +5,14 @@ set(sources
         src/Log.cpp
         src/visuals.cpp
         src/utils.cpp
-        ${CMAKE_BINARY_DIR}/include/easylogging++.cc
+        /usr/local/include/easylogging++.cc
         )
 
 set(headers
         src/Log.h
         src/visuals.h
         include/utils/utils.h
+        /usr/local/include/easylogging++.h
         )
 
 pd_setup_lib(${PROJECT_NAME} ${PROJECT_VERSION} "${sources}" "${headers}" pd)
@@ -30,13 +31,12 @@ message(STATUS "Found OpenCV version ${OpenCV_VERSION}")
 target_include_directories(${PROJECT_NAME} PUBLIC ${OpenCV_INCLUDE_DIRS})
 target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBRARIES})
 
-find_package(Eigen3 3.4 REQUIRED)
-target_link_libraries(${PROJECT_NAME} Eigen3::Eigen3)
+find_package(Eigen3 REQUIRED)
+target_link_libraries(${PROJECT_NAME} Eigen3::Eigen)
 
 find_package(Sophus REQUIRED)
-find_package(easyloggingpp REQUIRED)
+
 target_link_libraries(${PROJECT_NAME} Sophus::Sophus)
-target_link_libraries(${PROJECT_NAME} easyloggingpp::easyloggingpp)
 
 find_package(matplotlib_cpp)
 target_link_libraries(${PROJECT_NAME} matplotlib_cpp::matplotlib_cpp)
@@ -44,8 +44,6 @@ target_link_libraries(${PROJECT_NAME} matplotlib_cpp::matplotlib_cpp)
 target_compile_definitions(${PROJECT_NAME} PUBLIC 
 $<BUILD_INTERFACE:LOG_DIR="${CMAKE_BINARY_DIR}/log">
 $<INSTALL_INTERFACE:LOG_DIR="/tmp/vslam/log">)
-
-
 
 target_compile_definitions(${PROJECT_NAME} PUBLIC
         ELPP_FEATURE_PERFORMANCE_TRACKING

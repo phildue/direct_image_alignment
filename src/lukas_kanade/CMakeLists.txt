@@ -6,7 +6,6 @@ set(sources
         src/InverseCompositional.cpp
         src/ForwardAdditive.cpp
         src/InverseCompositionalStacked.cpp
-        ${CMAKE_BINARY_DIR}/include/easylogging++.cc
         )
 
 set(headers
@@ -27,8 +26,8 @@ if (UNIX)
 	target_link_libraries(${PROJECT_NAME} stdc++fs)
 endif()
 
-find_package(Eigen3 3.4 REQUIRED)
-target_link_libraries(${PROJECT_NAME} Eigen3::Eigen3)
+find_package(Eigen3 REQUIRED)
+target_link_libraries(${PROJECT_NAME} Eigen3::Eigen)
 
 find_package(Sophus REQUIRED)
 target_link_libraries(${PROJECT_NAME} Sophus::Sophus)

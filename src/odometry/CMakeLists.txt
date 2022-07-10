@@ -38,8 +38,8 @@ if (UNIX)
 	target_link_libraries(${PROJECT_NAME} stdc++fs)
 endif()
 
-find_package(Eigen3 3.4 REQUIRED)
-target_link_libraries(${PROJECT_NAME} Eigen3::Eigen3)
+find_package(Eigen3 REQUIRED)
+target_link_libraries(${PROJECT_NAME} Eigen3::Eigen)
 
 find_package(Sophus REQUIRED)
 target_link_libraries(${PROJECT_NAME} Sophus::Sophus)
@@ -48,6 +48,10 @@ find_package(PCL REQUIRED)
 target_include_directories(${PROJECT_NAME} PUBLIC ${PCL_INCLUDE_DIRS})
 target_compile_definitions(${PROJECT_NAME} PRIVATE ${PCL_DEFINITIONS})
 target_link_libraries(${PROJECT_NAME} ${PCL_LIBRARIES})
+
+find_package(Ceres REQUIRED)
+target_include_directories(${PROJECT_NAME} PUBLIC ${CERES_INCLUDE_DIRS})
+target_link_libraries(${PROJECT_NAME} ${CERES_LIBRARIES})
 
 # Add tests
 option(VSLAM_BUILD_TESTS "Enable to build tests" ON)
