@@ -54,8 +54,8 @@ target_include_directories(${PROJECT_NAME} PUBLIC ${CERES_INCLUDE_DIRS})
 target_link_libraries(${PROJECT_NAME} ${CERES_LIBRARIES})
 
 # Add tests
-option(VSLAM_BUILD_TESTS "Enable to build tests" ON)
-if(VSLAM_BUILD_TESTS)
+option(VSLAM_ODOMETRY_BUILD_TESTS "Enable to build odometry tests" ON)
+if(VSLAM_ODOMETRY_BUILD_TESTS)
 	enable_testing()
         find_package(GTest CONFIG REQUIRED)
 
@@ -79,6 +79,12 @@ if(VSLAM_BUILD_TESTS)
         target_compile_definitions(trajectoryTest PUBLIC TEST_RESOURCE="${CMAKE_CURRENT_LIST_DIR}/test/resource")
        
         pd_add_test(odometry ${PROJECT_NAME})
+        target_compile_definitions(odometry PUBLIC TEST_RESOURCE="${CMAKE_CURRENT_LIST_DIR}/test/resource")
+        
+        pd_add_test(ceres_ba ${PROJECT_NAME})
+        target_compile_definitions(odometry PUBLIC TEST_RESOURCE="${CMAKE_CURRENT_LIST_DIR}/test/resource")
+
+        pd_add_test(ba ${PROJECT_NAME})
         target_compile_definitions(odometry PUBLIC TEST_RESOURCE="${CMAKE_CURRENT_LIST_DIR}/test/resource")
 
 endif()
