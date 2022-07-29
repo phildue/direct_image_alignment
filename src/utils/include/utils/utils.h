@@ -36,5 +36,35 @@ namespace pd::vslam::utils{
 
     void saveImage(const Image& img,const std::filesystem::path& path);
     void saveDepth(const Eigen::MatrixXd& img,const std::filesystem::path& path);
+
+     
+    /**
+     * @brief Load eigen matrix from csv
+     * 
+     * Usage: 
+     * Matrix3d A = load_csv<MatrixXd>("A.csv");
+     * Matrix3d B = load_csv<Matrix3d>("B.csv");
+     * Source: https://stackoverflow.com/questions/34247057/how-to-read-csv-file-and-assign-to-eigen-matrix
+     * 
+     * @param path to csv 
+     * @return Matrix 
+     */
+    template<typename M>
+    M  loadMatCsv (const std::filesystem::path& path, char delim = ',') {
+        std::ifstream indata;
+        indata.open(path);
+        std::string line;
+        std::vector<double> values;
+        uint rows = 0;
+        while (std::getline(indata, line)) {
+            std::stringstream lineStream(line);
+            std::string cell;
+            while (std::getline(lineStream, cell, delim)) {
+                values.push_back(std::stod(cell));
+            }
+            ++rows;
+        }
+        return Eigen::Map<const Eigen::Matrix<typename M::Scalar, M::RowsAtCompileTime, M::ColsAtCompileTime, Eigen::RowMajor>>(values.data(), rows, values.size()/rows);
+    }
 }
 #endif
