@@ -26,7 +26,7 @@ struct normal_random_variable
         static std::mt19937 gen{ std::random_device{}() };
         static std::normal_distribution<> dist;
 
-        return mean + transform * Eigen::VectorXd{ mean.size() }.unaryExpr([&](auto x) { return dist(gen); });
+        return mean + transform * Eigen::VectorXd{ mean.size() }.unaryExpr([&](auto UNUSED(x)) { return dist(gen); });
     }
 };
 
