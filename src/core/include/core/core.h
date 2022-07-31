@@ -10,5 +10,6 @@
 #include "Kernel2d.h"
 #include "image_transform.h"
 #include "Trajectory.h"
-
+#include "Point3D.h"
+#include "Feature2D.h"
 #endif// VSLAM_CORE_H__

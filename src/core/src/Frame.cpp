@@ -4,12 +4,16 @@
 #include <Eigen/Dense>
 #include <opencv4/opencv2/core/eigen.hpp>
 #include "Frame.h"
+#include "Point3D.h"
+#include "Exceptions.h"
 #define USE_OPENCV
 namespace pd::vslam{
+        std::uint64_t FrameRgb::_idCtr = 0U;
 
         FrameRgb::FrameRgb(const Image& intensity, Camera::ConstShPtr cam, size_t nLevels, const Timestamp& t, const PoseWithCovariance& pose)
-        :_t(t),
-        _pose(pose){
+        :_id(_idCtr++)
+        ,_t(t)
+        ,_pose(pose){
 
                 _intensity.resize(nLevels);
                 _dIx.resize(nLevels);
@@ -87,9 +91,67 @@ namespace pd::vslam{
         Eigen::Vector3d FrameRgb::image2world(const Eigen::Vector2d &pImage, double depth, size_t level) const
         {
                 return _pose.pose().inverse() * image2camera(pImage,depth,level);
-
         }
-        
+        Feature2D::ConstShPtr FrameRgb::observationOf(std::uint64_t pointId) const
+        {
+               for(const auto& ft : _features)
+                {
+                        if(ft->point() && ft->point()->id() == pointId)
+                        {
+                                return ft;
+                        }
+                } 
+                return nullptr;
+        }
+
+        void FrameRgb::addFeature(Feature2D::ShPtr ft) {
+            _features.push_back(ft);
+        }
+
+        void FrameRgb::addFeatures(const std::vector<Feature2D::ShPtr>& features)
+        {
+                _features.reserve(_features.size() + features.size());
+                for(const auto& ft : features)
+                {
+                        _features.push_back(ft);
+                }
+        }
+
+        void FrameRgb::removeFeatures() {
+
+            for (const auto& ft : _features)
+            {
+                ft->frame() = nullptr;
+                if ( ft->point() )
+                {
+                    ft->point()->removeFeature(ft);
+                    ft->point() = nullptr;
+                }
+            }
+            _features.clear();
+        }
+        void FrameRgb::removeFeature(Feature2D::ShPtr ft)
+        {
+            auto it = std::find(_features.begin(),_features.end(),ft);
+
+            if (it == _features.end())
+            {
+                throw pd::Exception("Did not find feature: [" + std::to_string(ft->id()) + " ] in frame: [" + std::to_string(_id) +"]");
+            }
+            _features.erase(it);
+            ft->frame() = nullptr;
+
+            if ( ft->point() )
+            {
+                ft->point()->removeFeature(ft);
+            }
+        }
+
+        FrameRgb::~FrameRgb()
+        {
+            removeFeatures();
+        }
+
 
 
         FrameRgbd::FrameRgbd(const Image& intensity,const MatXd& depth, Camera::ConstShPtr cam, size_t nLevels, const Timestamp& t, const PoseWithCovariance& pose)

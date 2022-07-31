@@ -10,6 +10,7 @@ set(sources
         src/IterativeClosestPointOcv.cpp
         src/SE3Alignment.cpp
         src/RgbdAlignmentOpenCv.cpp
+        src/BundleAdjustment.cpp
       #  src/PlotSE3.cpp
         )
 
@@ -21,6 +22,7 @@ set(headers
         src/IterativeClosestPointOcv.h
         src/SE3Alignment.h
         src/RgbdAlignmentOpenCv.h
+        src/BundleAdjustment.h
        # src/PlotSE3.h
         include/odometry/odometry.h
         )

@@ -7,7 +7,7 @@ namespace pd::vslam{
         ,_maxFrames(7)
         ,_maxKeyFrames(7)
         {}
-        void Map::update(FrameRgbd::ConstShPtr frame, bool isKeyFrame)
+        void Map::update(FrameRgbd::ShPtr frame, bool isKeyFrame)
         {
                 if(_frames.size() >= _maxFrames){
                         _frames.pop_back();
@@ -24,4 +24,9 @@ namespace pd::vslam{
 
                 }
         }
+        void Map::update(const std::vector<Point3D::ShPtr>& points)
+        {
+                _points = points;
+        }
+
 }

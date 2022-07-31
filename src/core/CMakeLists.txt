@@ -7,6 +7,8 @@ set(sources
         src/PoseWithCovariance.cpp
         src/Frame.cpp
         src/Trajectory.cpp
+        src/Point3D.cpp
+        src/Feature2D.cpp
         )
 
 set(headers
@@ -16,6 +18,8 @@ set(headers
         src/PoseWithCovariance.h
         src/Frame.h
         src/Trajectory.h
+        src/Point3D.h
+        src/Feature2D.h
         include/core/core.h
         )
 pd_setup_lib(${PROJECT_NAME} ${PROJECT_VERSION} "${sources}" "${headers}" pd)

@@ -5,4 +5,5 @@
 #include "KeyFrameSelection.h"
 #include "Odometry.h"
 #include "Map.h"
+#include "BundleAdjustment.h"
 #endif

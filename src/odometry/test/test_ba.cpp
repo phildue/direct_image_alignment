@@ -221,3 +221,41 @@ TEST_F(TestBundleAdjustment,BAManifold)
     std::cout << "Before: " << errorPrev << " -->  " << errorAfter << std::endl;
 }
 
+TEST_F(TestBundleAdjustment,BAClass)
+{
+    std::vector<FrameRgb::ShPtr> frames;
+
+    std::vector<Point3D::ShPtr> points;
+    for(size_t i = 0U; i < _poses.size(); ++i)
+    {
+        auto f = std::make_shared<FrameRgbd>(Image::Zero(600,400),DepthMap::Zero(600,400),_cam,1UL,0U,PoseWithCovariance(_poses[i],Matd<6,6>::Identity()));
+        for(int j = 0U; j < _observations[i].rows(); ++j)
+        {
+            f->addFeature(std::make_shared<Feature2D>(_observations[i].row(j),f));
+        }
+        frames.push_back(f);
+    }
+    for(size_t i = 0U; i < _pcl.size(); ++i)
+    {
+        std::vector<Feature2D::ConstShPtr> features;
+        for(size_t j = 0U; j < _observations.size(); ++j)
+        {
+            features.push_back(frames[j]->features()[i]);
+        }
+        auto p = std::make_shared<Point3D>(_pcl[i],features);
+        for(const auto& ft : features)
+        {
+            ft->point() = p;
+        }
+        points.push_back(p);
+    }
+    std::vector<FrameRgb::ConstShPtr> cframes(frames.begin(),frames.end());
+    mapping::BundleAdjustment ba(cframes,points);
+    double errorPrev = ba.computeError();
+    ba.optimize();
+    double errorAfter = ba.computeError();
+    EXPECT_LT(errorAfter,errorPrev) << "Error should decrease by optimization";
+    std::cout << "Before: " << errorPrev << " -->  " << errorAfter << std::endl;
+    
+
+}
