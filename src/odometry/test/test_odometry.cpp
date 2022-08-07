@@ -125,7 +125,7 @@ TEST_F(EvaluationOdometry, Sequential)
 
         _keyFrameSelection->update(fCur);
         
-        _map->update(fCur, _keyFrameSelection->isKeyFrame());
+        _map->insert(fCur, _keyFrameSelection->isKeyFrame());
         traj.append(fCur->t(),std::make_shared<PoseWithCovariance>(fCur->pose().inverse()));
         if(_map->lastKf())
         {

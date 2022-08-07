@@ -12,20 +12,26 @@ class Map{
 
         Map();
 
-        virtual void update(FrameRgbd::ShPtr frame, bool isKeyFrame);
-        virtual void update(const std::vector<Point3D::ShPtr>& points);
+        virtual void insert(FrameRgbd::ShPtr frame, bool isKeyFrame);
+        virtual void insert(Point3D::ShPtr point);
+        virtual void insert(const std::vector<Point3D::ShPtr>& points);
         
         FrameRgbd::ConstShPtr lastKf(size_t idx = 0) const { return _keyFrames.size() <= idx ? nullptr : _keyFrames.at(idx);}
         FrameRgbd::ConstShPtr lastFrame(size_t idx = 0) const { return _frames.size() <= idx ? nullptr : _frames.at(idx);}
 
-        const std::deque<FrameRgbd::ShPtr>& keyFrames() { return _keyFrames;}
-        const std::deque<FrameRgbd::ShPtr>& frames() { return _frames;}
-        const std::vector<Point3D::ShPtr>& points() {return _points;}
-      
+        std::vector<FrameRgbd::ShPtr> keyFrames();
+        std::vector<FrameRgbd::ShPtr> frames();
+        std::vector<FrameRgbd::ConstShPtr> keyFrames() const;
+        std::vector<FrameRgbd::ConstShPtr> frames() const;
+       
+        std::vector<Point3D::ShPtr> points();
+        std::vector<Point3D::ConstShPtr> points() const;
+
+        
         private:
         std::deque<FrameRgbd::ShPtr> _frames;
         std::deque<FrameRgbd::ShPtr> _keyFrames;
-        std::vector<Point3D::ShPtr> _points;
+        std::map<std::uint64_t, Point3D::ShPtr> _points;
         const size_t _maxFrames,_maxKeyFrames;
 
 };

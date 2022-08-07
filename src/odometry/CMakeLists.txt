@@ -11,6 +11,7 @@ set(sources
         src/SE3Alignment.cpp
         src/RgbdAlignmentOpenCv.cpp
         src/BundleAdjustment.cpp
+        src/FeatureTracking.cpp
       #  src/PlotSE3.cpp
         )
 
@@ -23,6 +24,7 @@ set(headers
         src/SE3Alignment.h
         src/RgbdAlignmentOpenCv.h
         src/BundleAdjustment.h
+        src/FeatureTracking.h
        # src/PlotSE3.h
         include/odometry/odometry.h
         )
@@ -84,9 +86,12 @@ if(VSLAM_ODOMETRY_BUILD_TESTS)
         target_compile_definitions(odometry PUBLIC TEST_RESOURCE="${CMAKE_CURRENT_LIST_DIR}/test/resource")
         
         pd_add_test(ceres_ba ${PROJECT_NAME})
-        target_compile_definitions(odometry PUBLIC TEST_RESOURCE="${CMAKE_CURRENT_LIST_DIR}/test/resource")
+        target_compile_definitions(ceres_baTest PUBLIC TEST_RESOURCE="${CMAKE_CURRENT_LIST_DIR}/test/resource")
 
         pd_add_test(ba ${PROJECT_NAME})
-        target_compile_definitions(odometry PUBLIC TEST_RESOURCE="${CMAKE_CURRENT_LIST_DIR}/test/resource")
+        target_compile_definitions(baTest PUBLIC TEST_RESOURCE="${CMAKE_CURRENT_LIST_DIR}/test/resource")
+        
+        pd_add_test(tracking ${PROJECT_NAME})
+        target_compile_definitions(trackingTest PUBLIC TEST_RESOURCE="${CMAKE_CURRENT_LIST_DIR}/test/resource")
 
 endif()

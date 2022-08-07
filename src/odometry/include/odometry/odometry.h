@@ -6,4 +6,5 @@
 #include "Odometry.h"
 #include "Map.h"
 #include "BundleAdjustment.h"
+#include "FeatureTracking.h"
 #endif

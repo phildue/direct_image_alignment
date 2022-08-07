@@ -237,7 +237,7 @@ TEST_F(TestBundleAdjustment,BAClass)
     }
     for(size_t i = 0U; i < _pcl.size(); ++i)
     {
-        std::vector<Feature2D::ConstShPtr> features;
+        std::vector<Feature2D::ShPtr> features;
         for(size_t j = 0U; j < _observations.size(); ++j)
         {
             features.push_back(frames[j]->features()[i]);
@@ -249,8 +249,9 @@ TEST_F(TestBundleAdjustment,BAClass)
         }
         points.push_back(p);
     }
-    std::vector<FrameRgb::ConstShPtr> cframes(frames.begin(),frames.end());
-    mapping::BundleAdjustment ba(cframes,points);
+    mapping::BundleAdjustment ba;
+    ba.insertFrames(frames.begin(),frames.end());
+    ba.insertPoints(points.begin(),points.end());
     double errorPrev = ba.computeError();
     ba.optimize();
     double errorAfter = ba.computeError();

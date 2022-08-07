@@ -42,30 +42,76 @@ namespace pd::vslam::mapping{
                 const Eigen::Vector2d _obs;
                 const Eigen::Matrix3d _K;
         };
-        BundleAdjustment::BundleAdjustment(const std::vector<FrameRgb::ConstShPtr>& frames, const std::vector<Point3D::ConstShPtr>& points)
-        :_frames(frames){
-                Log::get("bundle_adjustment",ODOMETRY_CFG_DIR"/log/bundle_adjustment.conf");
-                
-                for (const auto& f : frames) 
-                {
-                        _poses[f->id()] = f->pose().pose();
-                        _problem.AddParameterBlock(_poses[f->id()].data(),SE3d::num_parameters,new Sophus::Manifold<Sophus::SE3>());
-                }
-                for (const auto& p : points) 
-                {
-                        _points[p->id()] = p->position();
-                        for (const auto ft : p->features())
-                        {
-                                _problem.AddResidualBlock(ReprojectionErrorManifold::Create(
-                                                ft->position(),
-                                                ft->frame()->camera()->K()),
-                                        nullptr /* squared loss */,
-                                        _poses[ft->frame()->id()].data(),
-                                        _points[p->id()].data());
-                        }
-                }
+        BundleAdjustment::BundleAdjustment()
+        {
+                Log::get("mapping",ODOMETRY_CFG_DIR"/log/mapping.conf");
 
         }
+        void BundleAdjustment::optimize(const std::vector<FrameRgbd::ShPtr>& frames, const std::vector<Point3D::ShPtr>& points)
+        {
+                insertFrames(frames.begin(),frames.end());
+                insertPoints(points.begin(),points.end());
+                optimize();//new thread ?
+                getPoses(frames.begin(),frames.end());
+                getPositions(points.begin(),points.end());
+        }
+
+        void BundleAdjustment::insertFrame(std::uint64_t frameId, const SE3d& pose, const Mat3d& K)
+        {
+                _poses[frameId] = pose;
+                _Ks[frameId] = K;
+                _problem.AddParameterBlock(_poses[frameId].data(),SE3d::num_parameters,new Sophus::Manifold<Sophus::SE3>());
+  
+        }
+        void BundleAdjustment::insertPoint(std::uint64_t pointId, const Vec3d& position)
+        {
+                _points[pointId] = position;
+
+        }
+        void BundleAdjustment::insertObservation(std::uint64_t pointId, std::uint64_t frameId, const Vec2d& observation)
+        {
+                auto itF = _Ks.find(frameId);
+                if (itF == _Ks.end()){ throw pd::Exception("No corresponding frame found.");}
+                auto itP = _points.find(pointId);
+                if (itP == _points.end()){ throw pd::Exception("No corresponding point found.");}
+
+                auto& K = itF->second;
+                auto& pose = _poses.find(frameId)->second;
+                auto& point = itP->second;
+                 _problem.AddResidualBlock(ReprojectionErrorManifold::Create(
+                                        observation,
+                                        K),
+                                nullptr /* squared loss */,
+                                pose.data(),
+                                point.data());
+        }
+        
+        void BundleAdjustment::insertFrame(FrameRgb::ConstShPtr f)
+        {
+                _frames.push_back(FrameRgb::ConstShPtr(f));
+                insertFrame(f->id(),f->pose().pose(),f->camera()->K());
+  
+        }
+        void BundleAdjustment::insertPoint(Point3D::ConstShPtr p)
+        {
+                insertPoint(p->id(),p->position());
+                std::for_each(p->features().begin(),p->features().end(),
+                [&](auto ft){ insertObservation(p->id(),ft->frame()->id(),ft->position());});
+        }
+        
+        PoseWithCovariance::UnPtr BundleAdjustment::getPose(std::uint64_t frameId) const
+        {
+                auto it = _poses.find(frameId);
+                if(it == _poses.end()){ throw pd::Exception("Frame was not optimized;");}
+                return std::make_unique<PoseWithCovariance>(it->second,Matd<6,6>::Identity());
+        }
+        Vec3d BundleAdjustment::getPosition(std::uint64_t pointId) const
+        {
+                auto it = _points.find(pointId);
+                if(it == _points.end()){ throw pd::Exception("Point was not optimized;");}
+                return it->second;
+        }
+          
         void BundleAdjustment::optimize()
         {
                 ceres::Solver::Options options;
@@ -81,20 +127,6 @@ namespace pd::vslam::mapping{
                 //std::cout << "Before: " << errorPrev << " -->  " << errorAfter << std::endl;
         }
 
-        void BundleAdjustment::update(const std::vector<FrameRgb::ShPtr>& frames) const
-        {
-                for(const auto& f : frames)
-                {
-                        f->set(PoseWithCovariance(_poses.find(f->id())->second,Matd<6,6>::Identity()));
-                }
-        }
-        void BundleAdjustment::update(const std::vector<Point3D::ShPtr>& points) const
-        {
-                for(const auto& p : points)
-                {
-                        p->position() = _points.find(p->id())->second;
-                }
-        }
 
         double BundleAdjustment::computeError() const
         {
