@@ -116,6 +116,13 @@ namespace pd::vslam{
                         _features.push_back(ft);
                 }
         }
+        std::vector<Feature2D::ConstShPtr> FrameRgb::features() const
+        {
+                std::vector<Feature2D::ConstShPtr> features;
+                features.reserve(_features.size());
+                std::for_each(_features.begin(),_features.end(),[&](auto ft){features.push_back(ft);});
+                return features;
+        }
 
         void FrameRgb::removeFeatures() {
 
