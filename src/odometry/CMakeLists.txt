@@ -12,7 +12,7 @@ set(sources
         src/RgbdAlignmentOpenCv.cpp
         src/BundleAdjustment.cpp
         src/FeatureTracking.cpp
-      #  src/PlotSE3.cpp
+        src/MapOptimization.cpp
         )
 
 set(headers
@@ -25,7 +25,7 @@ set(headers
         src/RgbdAlignmentOpenCv.h
         src/BundleAdjustment.h
         src/FeatureTracking.h
-       # src/PlotSE3.h
+        src/MapOptimization.h
         include/odometry/odometry.h
         )
 

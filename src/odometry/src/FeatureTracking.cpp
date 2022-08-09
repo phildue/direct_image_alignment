@@ -14,7 +14,7 @@
 #include <opencv4/opencv2/core/eigen.hpp>
 namespace pd::vslam{
 
-        std::vector<Point3D::ShPtr> FeatureTracking::track(FrameRgbd::ShPtr frameCur, std::vector<FrameRgbd::ShPtr>& framesRef)
+        std::vector<Point3D::ShPtr> FeatureTracking::track(FrameRgbd::ShPtr frameCur,const std::vector<FrameRgbd::ShPtr>& framesRef)
         {
                 extractFeatures(frameCur);
                 return match(frameCur,selectCandidates(frameCur,framesRef));
@@ -88,7 +88,7 @@ namespace pd::vslam{
                 }
                 return points;
         }
-        std::vector<Feature2D::ShPtr> FeatureTracking::selectCandidates(FrameRgbd::ConstShPtr frameCur, std::vector<FrameRgbd::ShPtr>& framesRef) const
+        std::vector<Feature2D::ShPtr> FeatureTracking::selectCandidates(FrameRgbd::ConstShPtr frameCur,const std::vector<FrameRgbd::ShPtr>& framesRef) const
         {
                 std::set<std::uint64_t> pointIds;
                 

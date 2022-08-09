@@ -7,4 +7,5 @@
 #include "Map.h"
 #include "BundleAdjustment.h"
 #include "FeatureTracking.h"
+#include "MapOptimization.h"
 #endif

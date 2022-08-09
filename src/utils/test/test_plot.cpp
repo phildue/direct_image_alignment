@@ -25,7 +25,7 @@ TEST(LogTest,Plot)
 
 TEST(LogTest,Histogram)
 {
-    Eigen::Vector<double,9> v;
+    Eigen::Matrix<double,1,9> v;
     v << -1,-1,1,3,3,3,0,0,0;
     auto h = std::make_shared<vis::Histogram>(v,"TestHistogram");
     h->plot();

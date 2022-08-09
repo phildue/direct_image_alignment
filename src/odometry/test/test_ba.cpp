@@ -223,35 +223,23 @@ TEST_F(TestBundleAdjustment,BAManifold)
 
 TEST_F(TestBundleAdjustment,BAClass)
 {
+    mapping::BundleAdjustment ba;
     std::vector<FrameRgb::ShPtr> frames;
 
     std::vector<Point3D::ShPtr> points;
     for(size_t i = 0U; i < _poses.size(); ++i)
     {
-        auto f = std::make_shared<FrameRgbd>(Image::Zero(600,400),DepthMap::Zero(600,400),_cam,1UL,0U,PoseWithCovariance(_poses[i],Matd<6,6>::Identity()));
-        for(int j = 0U; j < _observations[i].rows(); ++j)
-        {
-            f->addFeature(std::make_shared<Feature2D>(_observations[i].row(j),f));
-        }
-        frames.push_back(f);
+        ba.setFrame(i,_poses[i],_cam->K());
     }
     for(size_t i = 0U; i < _pcl.size(); ++i)
     {
+        ba.setPoint(i,_pcl[i]);
         std::vector<Feature2D::ShPtr> features;
         for(size_t j = 0U; j < _observations.size(); ++j)
         {
-            features.push_back(frames[j]->features()[i]);
+            ba.setObservation(i,j,_observations.at(j).row(i));
         }
-        auto p = std::make_shared<Point3D>(_pcl[i],features);
-        for(const auto& ft : features)
-        {
-            ft->point() = p;
-        }
-        points.push_back(p);
     }
-    mapping::BundleAdjustment ba;
-    ba.insertFrames(frames.begin(),frames.end());
-    ba.insertPoints(points.begin(),points.end());
     double errorPrev = ba.computeError();
     ba.optimize();
     double errorAfter = ba.computeError();

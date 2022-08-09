@@ -10,10 +10,10 @@ namespace pd::vslam{
                 typedef std::shared_ptr<const FeatureTracking> ConstShPtr;
                 typedef std::unique_ptr<const FeatureTracking> ConstUnPtr;
 
-                std::vector<Point3D::ShPtr> track(FrameRgbd::ShPtr frameCur, std::vector<FrameRgbd::ShPtr>& framesRef);
+                std::vector<Point3D::ShPtr> track(FrameRgbd::ShPtr frameCur, const std::vector<FrameRgbd::ShPtr>& framesRef);
                 void extractFeatures(FrameRgbd::ShPtr frame) const;
                 std::vector<Point3D::ShPtr> match(FrameRgbd::ShPtr frameCur, const std::vector<Feature2D::ShPtr>& featuresRef) const;
-                std::vector<Feature2D::ShPtr> selectCandidates(FrameRgbd::ConstShPtr frameCur, std::vector<FrameRgbd::ShPtr>& framesRef) const;
+                std::vector<Feature2D::ShPtr> selectCandidates(FrameRgbd::ConstShPtr frameCur, const std::vector<FrameRgbd::ShPtr>& framesRef) const;
         private:
                 const size_t _nFeatures = 100;
         };

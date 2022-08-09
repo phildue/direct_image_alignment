@@ -42,8 +42,14 @@ namespace pd::vslam{
 
         MotionPredictionKalman::MotionPredictionKalman()
         : MotionPrediction()
-        , _kalman(std::make_unique<kalman::EKFConstantVelocitySE3>(Matd<12,12>::Identity()))
+      //  , _kalman(std::make_unique<kalman::EKFConstantVelocitySE3>(Matd<12,12>::Identity()))
         {}
-        
+        PoseWithCovariance::UnPtr MotionPredictionKalman::predict(Timestamp timestamp) const{
+                return std::make_unique<PoseWithCovariance>();
+        }
+        void MotionPredictionKalman::update(PoseWithCovariance::ConstShPtr pose, Timestamp timestamp)
+        {}
+
+
        
 }

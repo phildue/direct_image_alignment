@@ -63,7 +63,7 @@ class MotionPredictionKalman : public MotionPrediction{
         void update(PoseWithCovariance::ConstShPtr pose, Timestamp timestamp) override;
         PoseWithCovariance::UnPtr predict(Timestamp timestamp) const override;
         private:
-        kalman::EKFConstantVelocitySE3::UnPtr _kalman;
+        //kalman::EKFConstantVelocitySE3::UnPtr _kalman;
 };
 }
 #endif// VSLAM_MOTION_PREDICTION
